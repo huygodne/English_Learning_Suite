@@ -1,0 +1,15 @@
+# Backend (Maven/Spring Boot)
+**/target/
+**/.idea/
+**/*.iml
+**/*.iws
+*.log
+hs_err_pid*
+
+
+# File hệ điều hành/IDE khác
+.classpath
+.project
+.settings/
+nbproject/
+

@@ -1,0 +1,110 @@
+-- XÓA HẾT NỘI DUNG CŨ VÀ DÁN NỘI DUNG NÀY VÀO
+
+-- =================================================================
+-- Dữ liệu cho Bảng Accounts
+-- =================================================================
+-- Mật khẩu là 'adminpass' (Hãy đảm bảo chuỗi mã hóa này đúng với ứng dụng của bạn)
+INSERT INTO accounts (id, username, password, full_name, role) VALUES (1, 'admin', '$2a$10$E2oPZ3L.j6G3a5.rljExh.5WHwA4nAb8TzISx0Yo7m5f4.fS3.Lwe', 'Administrator', 'ADMIN');
+-- Mật khẩu là 'password123' (Hãy đảm bảo chuỗi mã hóa này đúng với ứng dụng của bạn)
+INSERT INTO accounts (id, username, password, full_name, role) VALUES (2, 'testuser', '$2a$10$g.jV/nAGUS2yY.4qBNo5fedTfXG9nprb3s1gMCXtE7gdwOBweVjCe', 'Test User', 'USER');
+
+-- =================================================================
+-- Dữ liệu cho Bảng Lessons
+-- =================================================================
+INSERT INTO lessons (id, lesson_number, level, name, audio_url) VALUES (1, 1, 1, 'Greetings and Introductions', 'audio/lesson1.mp3');
+INSERT INTO lessons (id, lesson_number, level, name, audio_url) VALUES (2, 2, 1, 'Family Members', 'audio/lesson2.mp3');
+
+-- =================================================================
+-- Nội dung cho Bài học 1 (ID = 1)
+-- =================================================================
+-- Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (1, 'Hello', '/həˈloʊ/', 'Xin chào');
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (1, 'Goodbye', '/ˌɡʊdˈbaɪ/', 'Tạm biệt');
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (1, 'Thank you', '/θæŋk juː/', 'Cảm ơn');
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (1, 'You''re welcome', '/jʊr ˈwɛlkəm/', 'Không có gì');
+
+-- Ngữ pháp
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES (1, 'Simple greetings are used to start a conversation.', 'Các câu chào đơn giản được dùng để bắt đầu một cuộc hội thoại.');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES (1, 'The verb ''to be'' (am/is/are) is used to describe states and conditions.', 'Động từ ''to be'' (am/is/are) được dùng để mô tả trạng thái và điều kiện.');
+
+-- Hội thoại
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (1, 1, 'Meeting a new friend', 'audio/convo1.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES (1, 'Anna', 'Hello!', 'Xin chào!');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES (1, 'Bob', 'Hi! My name is Bob. What''s your name?', 'Chào bạn! Tên tôi là Bob. Tên bạn là gì?');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES (1, 'Anna', 'My name is Anna. Nice to meet you.', 'Tên tôi là Anna. Rất vui được gặp bạn.');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES (1, 'Bob', 'Nice to meet you too.', 'Tôi cũng rất vui được gặp bạn.');
+
+
+-- =================================================================
+-- Nội dung cho Bài học 2 (ID = 2)
+-- =================================================================
+-- Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (2, 'Family', '/ˈfæməli/', 'Gia đình');
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (2, 'Father', '/ˈfɑːðər/', 'Bố');
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES (2, 'Mother', '/ˈmʌðər/', 'Mẹ');
+
+-- =================================================================
+-- Dữ liệu cho Bảng Tests
+-- =================================================================
+INSERT INTO tests (id, name, level, audio_url) VALUES (1, 'Level 1 - Midterm Exam', 1, 'audio/test1_audio.mp3');
+INSERT INTO tests (id, name, level, audio_url) VALUES (2, 'Level 1 - Final Exam', 1, 'audio/test2_audio.mp3');
+
+-- =================================================================
+-- Câu hỏi cho Test 1 (ID = 1)
+-- =================================================================
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (1, 1, 'Which word means "Tạm biệt"?', 'MULTIPLE_CHOICE');
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (2, 1, 'Choose the correct sentence:', 'MULTIPLE_CHOICE');
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (3, 1, 'What is "Father" in English?', 'MULTIPLE_CHOICE');
+
+-- Lựa chọn trả lời cho Câu hỏi 1 (ID = 1)
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (1, 'Hello', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (1, 'Goodbye', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (1, 'Family', false);
+
+-- Lựa chọn trả lời cho Câu hỏi 2 (ID = 2)
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (2, 'My name are Anna.', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (2, 'My name is Anna.', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (2, 'My name am Anna.', false);
+
+-- Lựa chọn trả lời cho Câu hỏi 3 (ID = 3)
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (3, 'Mother', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (3, 'Father', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (3, 'Thank you', false);
+
+
+-- =================================================================
+-- Câu hỏi cho Test 2 (ID = 2)
+-- =================================================================
+-- Câu hỏi Trắc nghiệm
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (4, 2, 'Which word means "Cảm ơn"?', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (4, 'Thank you', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (4, 'You''re welcome', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (4, 'Goodbye', false);
+
+-- Câu hỏi Điền vào chỗ trống
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (5, 2, 'My name ___ Anna.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (5, 'is', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (5, 'am', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (5, 'are', false);
+
+-- Câu hỏi Đúng/Sai
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (6, 2, 'The word "Father" means "Mẹ" in Vietnamese.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (6, 'True', false);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (6, 'False', true);
+
+-- Câu hỏi Sắp xếp câu
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (7, 2, 'Arrange the words to form a correct sentence:', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (7, 'is', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (7, 'Anna', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (7, 'name', true);
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (7, 'My', true);
+
+
+-- =================================================================
+-- Dữ liệu Mẫu cho Bảng Tiến trình
+-- =================================================================
+-- Giả sử 'testuser' (accountId=2) đã hoàn thành bài học 1
+INSERT INTO lesson_progress (account_id, lesson_id, score, is_completed) VALUES (2, 1, 95, true);
+
+-- Giả sử 'testuser' (accountId=2) đã làm bài test 1 và được 1 điểm
+INSERT INTO test_progress (account_id, test_id, score) VALUES (2, 1, 1);
