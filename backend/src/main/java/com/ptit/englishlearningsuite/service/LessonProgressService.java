@@ -8,6 +8,9 @@ import com.ptit.englishlearningsuite.repository.AccountRepository;
 import com.ptit.englishlearningsuite.repository.LessonRepository;
 import com.ptit.englishlearningsuite.repository.LessonProgressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,14 +26,19 @@ public class LessonProgressService {
     private LessonRepository lessonRepository;
 
     public LessonProgress completeLesson(LessonProgressDTO progressDto) {
-        // Tìm người dùng và bài học tương ứng
-        Account account = accountRepository.findById(progressDto.getAccountId())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        // Lấy username của người dùng đang đăng nhập từ token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
 
+        // Tìm Account entity dựa trên username
+        Account account = accountRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + currentUsername));
+
+        // Tìm bài học
         Lesson lesson = lessonRepository.findById(progressDto.getLessonId())
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
 
-        // Tìm tiến trình cũ, nếu không có thì tạo mới
+        // Tìm tiến trình cũ hoặc tạo mới (dùng Account entity thay vì accountId)
         LessonProgress progress = lessonProgressRepository.findByAccountAndLesson(account, lesson)
                 .orElse(new LessonProgress());
 
@@ -39,7 +47,6 @@ public class LessonProgressService {
         progress.setScore(progressDto.getScore());
         progress.setCompleted(progressDto.isCompleted());
 
-        // Lưu vào CSDL
         return lessonProgressRepository.save(progress);
     }
 }

@@ -3,10 +3,12 @@
 -- =================================================================
 -- Dữ liệu cho Bảng Accounts
 -- =================================================================
--- Mật khẩu là 'adminpass' (Hãy đảm bảo chuỗi mã hóa này đúng với ứng dụng của bạn)
-INSERT INTO accounts (id, username, password, full_name, role) VALUES (1, 'admin', '$2a$10$E2oPZ3L.j6G3a5.rljExh.5WHwA4nAb8TzISx0Yo7m5f4.fS3.Lwe', 'Administrator', 'ADMIN');
--- Mật khẩu là 'password123' (Hãy đảm bảo chuỗi mã hóa này đúng với ứng dụng của bạn)
-INSERT INTO accounts (id, username, password, full_name, role) VALUES (2, 'testuser', '$2a$10$g.jV/nAGUS2yY.4qBNo5fedTfXG9nprb3s1gMCXtE7gdwOBweVjCe', 'Test User', 'USER');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (1,'Administrator','$2a$10$Qktiagu59ee0qVAUE5O8KOQRDUIyevteKYhr6xcrpyDkTInGK9I/6',NULL,'ADMIN','admin');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (2,'Test User','$2a$10$g.jV/nAGUS2yY.4qBNo5fedTfXG9nprb3s1gMCXtE7gdwOBweVjCe',NULL,'USER','testuser');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (3,'A New User','$2a$10$sg0JjdFuH12ZysMQPVRLpOYq472kpx1buoFtLtNd.BKddB67ibCdS',NULL,'USER','newuser');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (4,'Postman Test User','$2a$10$nK9odMU0XnE8i40qAYCPVu8fJCBUTp7ZK9JlKb1DFkA1DN.GY4zM6',NULL,'USER','testuser_from_postman');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (5,'Postman Test User','$2a$10$fOyM9ONhsKKeTzT.KNNGAeurVhGsuStbJxrH88hEtZ.afK134jG6i',NULL,'USER','testuser_from_postman2');
+INSERT INTO `accounts` (`id`,`full_name`,`password`,`phone_number`,`role`,`username`) VALUES (6,'Test 26/10','$2a$10$4nbdG1o22WuxjWrsWWH2LOE.YdtmlxKCd8x9qtnCakCbeGm.JuDR.',NULL,'USER','test');
 
 -- =================================================================
 -- Dữ liệu cho Bảng Lessons

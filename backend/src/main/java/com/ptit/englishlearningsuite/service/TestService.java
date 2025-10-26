@@ -7,6 +7,9 @@ import com.ptit.englishlearningsuite.repository.QuestionRepository;
 import com.ptit.englishlearningsuite.repository.TestProgressRepository;
 import com.ptit.englishlearningsuite.repository.TestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,18 +46,24 @@ public class TestService {
     }
 
     public int submitTest(TestSubmissionDTO submission) {
-        // Tìm người dùng và bài test trong CSDL
-        Account account = accountRepository.findById(submission.getAccountId())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        // Lấy username của người dùng đang đăng nhập từ token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
 
+        // Tìm Account entity dựa trên username
+        Account account = accountRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + currentUsername));
+
+        // Tìm bài test
         Test test = testRepository.findById(submission.getTestId())
                 .orElseThrow(() -> new RuntimeException("Test not found"));
 
         int score = 0;
         List<Question> questions = questionRepository.findAllById(
-                submission.getAnswers().stream().map(a -> a.getQuestionId()).toList()
+                submission.getAnswers().stream().map(AnswerSubmissionDTO::getQuestionId).toList()
         );
 
+        // ... (phần chấm điểm giữ nguyên) ...
         for (AnswerSubmissionDTO userAnswer : submission.getAnswers()) {
             Question question = questions.stream()
                     .filter(q -> q.getId().equals(userAnswer.getQuestionId()))
@@ -71,18 +80,20 @@ public class TestService {
             }
         }
 
-        // Tạo hoặc cập nhật tiến trình làm bài
+
+        // Lưu tiến trình (dùng Account entity thay vì accountId)
         TestProgress progress = testProgressRepository.findByAccountAndTest(account, test)
-                .orElse(new TestProgress()); // Tìm progress cũ, nếu không có thì tạo mới
+                .orElse(new TestProgress());
 
         progress.setAccount(account);
         progress.setTest(test);
-        progress.setScore(score); // Cập nhật điểm số mới
+        progress.setScore(score);
 
-        testProgressRepository.save(progress); // Lưu vào CSDL
+        testProgressRepository.save(progress);
 
         return score;
     }
+
 
     // --- CÁC HÀM CHUYỂN ĐỔI ---
     private TestDetailDTO convertToDetailDto(Test test) {
