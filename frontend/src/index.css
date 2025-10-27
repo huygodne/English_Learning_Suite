@@ -1,0 +1,461 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-soft-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-soft-lg;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100 p-8 transition-all duration-300 ease-in-out hover:shadow-soft-xl hover:-translate-y-2;
+  }
+  
+  .card-feature {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100 p-8 transition-all duration-300 ease-in-out hover:shadow-soft-xl hover:-translate-y-3 hover:border-primary-200;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 ease-in-out hover:border-primary-300;
+  }
+  
+  .icon-container {
+    @apply w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 ease-in-out group-hover:scale-110;
+  }
+  
+  .nav-link {
+    @apply text-gray-700 hover:text-primary-600 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ease-in-out hover:bg-primary-50;
+  }
+}
+
+/* Scroll Animation Classes */
+.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Initial state for scroll animations */
+.opacity-0 {
+  opacity: 0;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(20px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Floating Elements */
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-reverse {
+  animation: floatReverse 6s ease-in-out infinite;
+}
+
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.rotate-slow {
+  animation: rotate 20s linear infinite;
+}
+
+.bounce-gentle {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* Gradient Animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Text Animation */
+@keyframes textGlow {
+  0%, 100% { text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+  50% { text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6); }
+}
+
+.text-glow {
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+/* Card Hover Effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Button Effects */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-glow:hover::before {
+  left: 100%;
+}
+
+/* Sidebar Animations */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes fadeInScale {
+  from { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes fadeOutScale {
+  from { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  background: white;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.hamburger-menu.open {
+  transform: translateX(0);
+}
+
+.hamburger-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hamburger-button {
+  position: relative;
+  z-index: 1001;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hamburger-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.hamburger-icon {
+  transition: transform 0.3s ease;
+}
+
+.hamburger-button.active .hamburger-icon {
+  transform: rotate(90deg);
+}
+
+/* Menu Item Animations */
+.menu-item {
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: slideInLeft 0.5s ease forwards;
+}
+
+.menu-item:nth-child(1) { animation-delay: 0.1s; }
+.menu-item:nth-child(2) { animation-delay: 0.2s; }
+.menu-item:nth-child(3) { animation-delay: 0.3s; }
+.menu-item:nth-child(4) { animation-delay: 0.4s; }
+.menu-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInLeft {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+/* Parallax Cards Animation */
+.features-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.feature-card-left {
+  transform: translateX(0);
+}
+
+.feature-card-right {
+  transform: translateX(0);
+}
+
+.feature-card-center {
+  transform: translateX(0);
+}
+
+/* Scroll down - cards move inward */
+.features-container.scroll-down .feature-card-left {
+  transform: translateX(50px);
+}
+
+.features-container.scroll-down .feature-card-right {
+  transform: translateX(-50px);
+}
+
+.features-container.scroll-down .feature-card-center {
+  transform: scale(1.05);
+}
+
+/* Scroll up - cards move outward */
+.features-container.scroll-up .feature-card-left {
+  transform: translateX(-30px);
+}
+
+.features-container.scroll-up .feature-card-right {
+  transform: translateX(30px);
+}
+
+.features-container.scroll-up .feature-card-center {
+  transform: scale(0.95);
+}
+
+/* Enhanced hover effects during scroll */
+.features-container.scroll-down .feature-card:hover {
+  transform: translateY(-10px) scale(1.02);
+}
+
+.features-container.scroll-up .feature-card:hover {
+  transform: translateY(-5px) scale(1.01);
+}
+
+/* Smooth scroll indicator */
+.scroll-indicator {
+  position: fixed;
+  top: 50%;
+  right: 30px;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.scroll-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.scroll-dot.active {
+  background: #3b82f6;
+  transform: scale(1.5);
+}
+
+.scroll-arrow {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-arrow:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+/* How It Works Parallax Animation */
+.how-it-works-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.how-it-works-card {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.how-it-works-card-left {
+  transform: translateX(0);
+}
+
+.how-it-works-card-right {
+  transform: translateX(0);
+}
+
+.how-it-works-card-center {
+  transform: translateX(0);
+}
+
+/* Scroll down - cards move inward */
+.how-it-works-container.scroll-down .how-it-works-card-left {
+  transform: translateX(40px);
+}
+
+.how-it-works-container.scroll-down .how-it-works-card-right {
+  transform: translateX(-40px);
+}
+
+.how-it-works-container.scroll-down .how-it-works-card-center {
+  transform: scale(1.03);
+}
+
+/* Scroll up - cards move outward */
+.how-it-works-container.scroll-up .how-it-works-card-left {
+  transform: translateX(-25px);
+}
+
+.how-it-works-container.scroll-up .how-it-works-card-right {
+  transform: translateX(25px);
+}
+
+.how-it-works-container.scroll-up .how-it-works-card-center {
+  transform: scale(0.97);
+}
+
+/* Enhanced spacing for How It Works */
+.how-it-works-card {
+  padding: 2rem 1rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
+}
+
+.how-it-works-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
