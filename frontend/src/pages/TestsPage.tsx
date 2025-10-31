@@ -5,15 +5,23 @@ import { testService } from '../services/api';
 import { TestSummary } from '../types';
 
 const TestsPage: React.FC = () => {
-  const [tests, setTests] = useState<TestSummary[]>([]);
+  const [allTests, setAllTests] = useState<TestSummary[]>([]);
+  const [displayedCount, setDisplayedCount] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  
+  const displayedTests = allTests.slice(0, displayedCount);
+  const hasMore = allTests.length > displayedCount;
 
   useEffect(() => {
     const fetchTests = async () => {
       try {
         const data = await testService.getAllTests();
-        setTests(data);
+        // Sort theo level (dễ -> khó) và process tên
+        const processed = data
+          .map(test => ({ ...test }))
+          .sort((a, b) => a.level - b.level);
+        setAllTests(processed);
       } catch (err: any) {
         setError('Không thể tải danh sách bài kiểm tra');
       } finally {
@@ -81,19 +89,25 @@ const TestsPage: React.FC = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tests.map((test) => (
+          {displayedTests.map((test) => (
             <div key={test.id} className="card hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between mb-4">
                 <span className="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">
                   Kiểm tra
                 </span>
-                <span className="bg-secondary-100 text-secondary-800 text-sm font-medium px-3 py-1 rounded-full">
-                  Cấp độ {test.level}
+                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  test.level === 1 
+                    ? 'bg-green-100 text-green-800' 
+                    : test.level === 2 
+                    ? 'bg-yellow-100 text-yellow-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {test.level === 1 ? 'Easy' : test.level === 2 ? 'Medium' : 'Hard'}
                 </span>
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                {test.name}
+                {(() => { const i=Math.max(test.name.lastIndexOf(':'), test.name.lastIndexOf('-')); return i>=0 ? test.name.slice(i+1).trim() : test.name; })()}
               </h3>
               
               <div className="flex justify-between items-center">
@@ -114,7 +128,18 @@ const TestsPage: React.FC = () => {
           ))}
         </div>
 
-        {tests.length === 0 && !error && (
+        {hasMore && (
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setDisplayedCount(prev => prev + 10)}
+              className="btn-primary"
+            >
+              Xem thêm ({allTests.length - displayedCount} bài nữa)
+            </button>
+          </div>
+        )}
+
+        {allTests.length === 0 && !error && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -7,4 +7,5 @@ public class AccountDTO {
     private Long id;
     private String username;
     private String fullName;
+    private String role;
 }

@@ -37,7 +37,7 @@ public class SecurityConfig {
 
                 .csrf(AbstractHttpConfigurer::disable) // Cách viết mới và chuẩn hơn cho Spring Boot 3+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

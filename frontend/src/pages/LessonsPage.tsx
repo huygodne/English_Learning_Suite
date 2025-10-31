@@ -5,12 +5,16 @@ import { lessonService } from '../services/api';
 import { LessonSummary } from '../types';
 
 const LessonsPage: React.FC = () => {
-  const [lessons, setLessons] = useState<LessonSummary[]>([]);
+  const [allLessons, setAllLessons] = useState<LessonSummary[]>([]);
+  const [displayedCount, setDisplayedCount] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   const lessonsRef = useRef<HTMLDivElement>(null);
+  
+  const displayedLessons = allLessons.slice(0, displayedCount);
+  const hasMore = allLessons.length > displayedCount;
 
   useEffect(() => {
     const observerOptions = {
@@ -41,10 +45,15 @@ const LessonsPage: React.FC = () => {
   useEffect(() => {
     const fetchLessons = async () => {
       try {
+        console.log('Fetching lessons...');
         const data = await lessonService.getAllLessons();
-        setLessons(data);
+        console.log('Lessons data:', data);
+        // Sort theo level (dễ -> khó)
+        const sorted = [...data].sort((a, b) => a.level - b.level);
+        setAllLessons(sorted);
       } catch (err: any) {
-        setError('Không thể tải danh sách bài học');
+        console.error('Error fetching lessons:', err);
+        setError('Không thể tải danh sách bài học: ' + (err.message || 'Unknown error'));
       } finally {
         setLoading(false);
       }
@@ -132,7 +141,7 @@ const LessonsPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div ref={headerRef} className="text-center mb-12 sm:mb-16 opacity-0">
+        <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
             Danh sách bài học
           </h1>
@@ -147,20 +156,26 @@ const LessonsPage: React.FC = () => {
           </div>
         )}
 
-        <div ref={lessonsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 opacity-0">
-          {lessons.map((lesson, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {displayedLessons.map((lesson, index) => (
             <div key={lesson.id} className="card-feature group">
               <div className="flex items-center justify-between mb-6">
                 <span className="bg-primary-100 text-primary-800 text-sm font-semibold px-4 py-2 rounded-xl">
                   Bài {lesson.lessonNumber}
                 </span>
-                <span className="bg-secondary-100 text-secondary-800 text-sm font-semibold px-4 py-2 rounded-xl">
-                  Cấp độ {lesson.level}
+                <span className={`text-sm font-semibold px-4 py-2 rounded-xl ${
+                  lesson.level === 1 
+                    ? 'bg-green-100 text-green-800' 
+                    : lesson.level === 2 
+                    ? 'bg-yellow-100 text-yellow-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {lesson.level === 1 ? 'Easy' : lesson.level === 2 ? 'Medium' : 'Hard'}
                 </span>
               </div>
               
               <h3 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-primary-600 transition-colors duration-300">
-                {lesson.name}
+                {(() => { const i=Math.max(lesson.name.lastIndexOf(':'), lesson.name.lastIndexOf('-')); return i>=0 ? lesson.name.slice(i+1).trim() : lesson.name; })()}
               </h3>
               
               <div className="flex justify-between items-center">
@@ -181,7 +196,18 @@ const LessonsPage: React.FC = () => {
           ))}
         </div>
 
-        {lessons.length === 0 && !error && (
+        {hasMore && (
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setDisplayedCount(prev => prev + 10)}
+              className="btn-primary"
+            >
+              Xem thêm ({allLessons.length - displayedCount} bài nữa)
+            </button>
+          </div>
+        )}
+
+        {allLessons.length === 0 && !error && (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-8">
               <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

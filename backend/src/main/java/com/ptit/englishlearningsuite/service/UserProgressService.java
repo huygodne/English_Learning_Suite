@@ -31,9 +31,10 @@ public class UserProgressService {
         return lessonProgressRepository.findAllByAccount(account).stream()
                 .map(progress -> {
                     UserLessonProgressDTO dto = new UserLessonProgressDTO();
+                    dto.setId(progress.getId());
+                    dto.setAccountId(progress.getAccount().getId());
                     dto.setLessonId(progress.getLesson().getId());
                     dto.setLessonName(progress.getLesson().getName());
-                    dto.setScore(progress.getScore());
                     dto.setCompleted(progress.isCompleted());
                     return dto;
                 }).collect(Collectors.toList());
@@ -46,6 +47,8 @@ public class UserProgressService {
         return testProgressRepository.findAllByAccount(account).stream()
                 .map(progress -> {
                     UserTestProgressDTO dto = new UserTestProgressDTO();
+                    dto.setId(progress.getId());
+                    dto.setAccountId(progress.getAccount().getId());
                     dto.setTestId(progress.getTest().getId());
                     dto.setTestName(progress.getTest().getName());
                     dto.setScore(progress.getScore());

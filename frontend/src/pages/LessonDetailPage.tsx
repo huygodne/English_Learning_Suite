@@ -10,6 +10,14 @@ const LessonDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation'>('vocabulary');
+  const [studyTime, setStudyTime] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStudyTime(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -90,13 +98,25 @@ const LessonDetailPage: React.FC = () => {
         <div className="card mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{lesson.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{(() => { const i=Math.max(lesson.name.lastIndexOf(':'), lesson.name.lastIndexOf('-')); return i>=0 ? lesson.name.slice(i+1).trim() : lesson.name; })()}</h1>
               <div className="flex items-center space-x-4">
                 <span className="bg-primary-100 text-primary-800 text-sm font-medium px-3 py-1 rounded-full">
                   Bài {lesson.lessonNumber}
                 </span>
-                <span className="bg-secondary-100 text-secondary-800 text-sm font-medium px-3 py-1 rounded-full">
-                  Cấp độ {lesson.level}
+                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  lesson.level === 1 
+                    ? 'bg-green-100 text-green-800' 
+                    : lesson.level === 2 
+                    ? 'bg-yellow-100 text-yellow-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {lesson.level === 1 ? 'Easy' : lesson.level === 2 ? 'Medium' : 'Hard'}
+                </span>
+                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {Math.floor(studyTime / 60)}:{(studyTime % 60).toString().padStart(2, '0')}
                 </span>
               </div>
             </div>

@@ -10,6 +10,8 @@ import com.ptit.englishlearningsuite.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,9 +51,38 @@ public class AuthController {
             final String jwt = jwtUtil.generateToken(userDetails);
 
             // Trả về token cho client
-            return ResponseEntity.ok(new LoginResponse(jwt));
+            LoginResponse response = new LoginResponse();
+            response.setJwt(jwt);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+            }
+
+            String username = authentication.getName();
+            Account account = accountService.findByUsername(username);
+            
+            if (account == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            AccountDTO accountDto = new AccountDTO();
+            accountDto.setId(account.getId());
+            accountDto.setUsername(account.getUsername());
+            accountDto.setFullName(account.getFullName());
+            accountDto.setRole(account.getRole());
+            
+            return ResponseEntity.ok(accountDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 }

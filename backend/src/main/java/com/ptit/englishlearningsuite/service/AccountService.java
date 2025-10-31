@@ -48,12 +48,18 @@ public class AccountService {
                 .collect(Collectors.toList());
     }
 
+    public Account findByUsername(String username) {
+        return accountRepository.findByUsername(username)
+                .orElse(null);
+    }
+
     // Hàm chuyển đổi từ Account Entity sang AccountDTO
     private AccountDTO convertToDto(Account account) {
         AccountDTO dto = new AccountDTO();
         dto.setId(account.getId());
         dto.setUsername(account.getUsername());
         dto.setFullName(account.getFullName());
+        dto.setRole(account.getRole());
         return dto;
     }
 }

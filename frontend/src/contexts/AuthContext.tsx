@@ -27,7 +27,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (storedToken && storedUser) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
   }, []);
 
@@ -39,17 +45,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('token', response.jwt);
       setToken(response.jwt);
       
-      // Tạo user object từ username (backend chỉ trả về token)
-      const userData: User = {
-        id: 0, // Sẽ được cập nhật khi có thông tin user từ API khác
-        username,
-        fullName: username, // Tạm thời dùng username
-        role: 'USER' // Mặc định là USER, sẽ được cập nhật từ backend
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      // Lấy thông tin user từ API
+      try {
+        const userInfo = await authService.getCurrentUser();
+        
+        if (userInfo && userInfo.id) {
+          const userData: User = {
+            id: userInfo.id,
+            username: userInfo.username,
+            fullName: userInfo.fullName,
+            role: userInfo.role
+          };
+          
+          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+        } else {
+          throw new Error('Failed to get user information');
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error);
+        throw error;
+      }
     } catch (error) {
+      // Xóa token nếu không lấy được user info
+      localStorage.removeItem('token');
+      setToken(null);
       throw error;
     }
   };

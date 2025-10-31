@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class UserLessonProgressDTO {
+    private Long id;
+    private Long accountId;
     private Long lessonId;
     private String lessonName;
-    private int score;
-    private boolean completed;
+    private boolean isCompleted;
 }

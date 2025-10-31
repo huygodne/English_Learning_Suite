@@ -12,19 +12,24 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProgress = async () => {
-      if (user?.id) {
-        try {
-          const [lessons, tests] = await Promise.all([
-            userProgressService.getLessonProgress(user.id),
-            userProgressService.getTestProgress(user.id)
-          ]);
-          setLessonProgress(lessons);
-          setTestProgress(tests);
-        } catch (error) {
-          console.error('Error fetching progress:', error);
-        } finally {
-          setLoading(false);
-        }
+      if (!user?.id || user.id === 0) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const [lessons, tests] = await Promise.all([
+          userProgressService.getLessonProgress(user.id),
+          userProgressService.getTestProgress(user.id)
+        ]);
+        setLessonProgress(lessons);
+        setTestProgress(tests);
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+        setLessonProgress([]);
+        setTestProgress([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -169,7 +174,7 @@ const ProfilePage: React.FC = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900">{test.testName}</h3>
                     <p className="text-sm text-gray-600">
-                      Hoàn thành: {new Date(test.completedAt).toLocaleDateString('vi-VN')}
+                      Điểm: {test.score}%
                     </p>
                   </div>
                   <div className="text-right">

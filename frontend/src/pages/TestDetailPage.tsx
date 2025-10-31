@@ -16,6 +16,7 @@ const TestDetailPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(20 * 60); // 20 phút = 1200 giây
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -33,6 +34,23 @@ const TestDetailPage: React.FC = () => {
 
     fetchTest();
   }, [id]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (showResult) return;
+    
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          submitTest();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showResult]);
 
   const handleAnswerSelect = (questionId: number, optionId: number) => {
     setAnswers(prev => ({
@@ -105,41 +123,45 @@ const TestDetailPage: React.FC = () => {
 
   if (showResult && score !== null) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="card max-w-md w-full text-center">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
-            score >= 80 ? 'bg-green-100' : score >= 60 ? 'bg-yellow-100' : 'bg-red-100'
-          }`}>
-            <span className={`text-3xl font-bold ${
-              score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-600'
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="card max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+              score >= 80 ? 'bg-green-100' : score >= 60 ? 'bg-yellow-100' : 'bg-red-100'
             }`}>
-              {score}%
-            </span>
+              <span className={`text-3xl font-bold ${
+                score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {score}%
+              </span>
+            </div>
+            
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {score >= 80 ? 'Xuất sắc!' : score >= 60 ? 'Khá tốt!' : 'Cần cải thiện'}
+            </h1>
+            
+            <p className="text-gray-600 mb-6">
+              {score >= 80 
+                ? 'Bạn đã hoàn thành bài kiểm tra một cách xuất sắc!'
+                : score >= 60 
+                ? 'Kết quả khá tốt, hãy tiếp tục cố gắng!'
+                : 'Hãy ôn tập lại và thử lại bài kiểm tra.'
+              }
+            </p>
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {score >= 80 ? 'Xuất sắc!' : score >= 60 ? 'Khá tốt!' : 'Cần cải thiện'}
-          </h1>
-          
-          <p className="text-gray-600 mb-6">
-            {score >= 80 
-              ? 'Bạn đã hoàn thành bài kiểm tra một cách xuất sắc!'
-              : score >= 60 
-              ? 'Kết quả khá tốt, hãy tiếp tục cố gắng!'
-              : 'Hãy ôn tập lại và thử lại bài kiểm tra.'
-            }
-          </p>
-          
-          <div className="space-y-3">
-            <Link to="/tests" className="btn-primary w-full">
+          <div className="space-y-4">
+            <Link to="/tests" className="btn-primary w-full block text-center">
               Làm bài kiểm tra khác
             </Link>
-            <Link to="/lessons" className="btn-secondary w-full">
+            <Link to="/lessons" className="btn-secondary w-full block text-center">
               Học bài học
             </Link>
-            <Link to="/profile" className="text-primary-600 hover:text-primary-700 font-medium">
-              Xem tiến độ học tập
-            </Link>
+            <div className="text-center">
+              <Link to="/profile" className="text-primary-600 hover:text-primary-700 font-medium inline-block">
+                Xem tiến độ học tập
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -180,13 +202,25 @@ const TestDetailPage: React.FC = () => {
         <div className="card mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{test.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{(() => { const i=Math.max(test.name.lastIndexOf(':'), test.name.lastIndexOf('-')); return i>=0 ? test.name.slice(i+1).trim() : test.name; })()}</h1>
               <div className="flex items-center space-x-4">
                 <span className="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">
                   Bài kiểm tra
                 </span>
-                <span className="bg-secondary-100 text-secondary-800 text-sm font-medium px-3 py-1 rounded-full">
-                  Cấp độ {test.level}
+                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  test.level === 1 
+                    ? 'bg-green-100 text-green-800' 
+                    : test.level === 2 
+                    ? 'bg-yellow-100 text-yellow-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {test.level === 1 ? 'Easy' : test.level === 2 ? 'Medium' : 'Hard'}
+                </span>
+                <span className={`text-sm font-medium px-3 py-1 rounded-full flex items-center ${timeRemaining < 300 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
                 </span>
               </div>
             </div>

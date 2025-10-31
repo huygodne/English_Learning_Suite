@@ -21,6 +21,7 @@ export interface AccountDTO {
   id: number;
   username: string;
   fullName: string;
+  role: string;
 }
 
 // Types cho Lessons
