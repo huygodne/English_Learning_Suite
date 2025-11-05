@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { lessonService } from '../services/api';
 import { LessonSummary } from '../types';
+import ScenicBackground from '../components/ScenicBackground';
 
 const LessonsPage: React.FC = () => {
   const [allLessons, setAllLessons] = useState<LessonSummary[]>([]);
@@ -76,27 +77,28 @@ const LessonsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="min-h-screen relative overflow-hidden">
+      <ScenicBackground variant="meadow" />
       {/* Header */}
-      <header className="bg-white shadow-soft">
+      <header className="bg-gradient-to-r from-primary-600 to-secondary-600 shadow-lg/60 glass relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-primary-600">
+              <Link to="/" className="text-2xl font-bold text-white hover:text-primary-100 transition-colors duration-300">
                 English Learning Suite
               </Link>
             </div>
             <nav className="hidden md:flex space-x-2">
-              <Link to="/" className="nav-link">
+              <Link to="/" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Trang chủ
               </Link>
-              <Link to="/lessons" className="nav-link bg-primary-50 text-primary-600">
+              <Link to="/lessons" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
                 Bài học
               </Link>
-              <Link to="/tests" className="nav-link">
+              <Link to="/tests" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Kiểm tra
               </Link>
-              <Link to="/profile" className="nav-link">
+              <Link to="/profile" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Hồ sơ
               </Link>
             </nav>
@@ -140,12 +142,12 @@ const LessonsPage: React.FC = () => {
         )}
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-contrast heading-glow mb-4 sm:mb-6">
             Danh sách bài học
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+          <p className="text-lg sm:text-xl text-gray-700/90 max-w-3xl mx-auto px-4">
             Chọn bài học phù hợp với trình độ của bạn
           </p>
         </div>
@@ -158,7 +160,14 @@ const LessonsPage: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {displayedLessons.map((lesson, index) => (
-            <div key={lesson.id} className="card-feature group">
+            <div 
+              key={lesson.id} 
+              className="card-feature group animate-fade-in-up"
+              style={{ 
+                animationDelay: `${index * 0.1}s`,
+                animationFillMode: 'both'
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
                 <span className="bg-primary-100 text-primary-800 text-sm font-semibold px-4 py-2 rounded-xl">
                   Bài {lesson.lessonNumber}
@@ -181,7 +190,7 @@ const LessonsPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <Link
                   to={`/lessons/${lesson.id}`}
-                  className="btn-primary"
+                  className="btn-primary transform transition-all duration-300 hover:scale-110"
                 >
                   Bắt đầu học
                 </Link>
@@ -197,10 +206,10 @@ const LessonsPage: React.FC = () => {
         </div>
 
         {hasMore && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 animate-fade-in">
             <button
               onClick={() => setDisplayedCount(prev => prev + 10)}
-              className="btn-primary"
+              className="btn-primary transform transition-all duration-300 hover:scale-110 animate-bounce-gentle"
             >
               Xem thêm ({allLessons.length - displayedCount} bài nữa)
             </button>

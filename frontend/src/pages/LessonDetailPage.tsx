@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { lessonService } from '../services/api';
 import { LessonDetail } from '../types';
 import QuickTranslate from '../components/QuickTranslate';
+import ScenicBackground from '../components/ScenicBackground';
 
 const LessonDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,10 +46,10 @@ const LessonDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Đang tải...</p>
         </div>
       </div>
     );
@@ -56,7 +57,7 @@ const LessonDetailPage: React.FC = () => {
 
   if (error || !lesson) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy bài học</h1>
           <Link to="/lessons" className="btn-primary">
@@ -68,9 +69,10 @@ const LessonDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen">
+      <ScenicBackground variant="lake" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="glass shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">

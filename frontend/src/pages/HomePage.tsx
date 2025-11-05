@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ScenicBackground from '../components/ScenicBackground';
+import AnimatedMascot from '../components/AnimatedMascot';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -64,9 +66,10 @@ const HomePage: React.FC = () => {
   }, [lastScrollY]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="relative min-h-screen">
+      <ScenicBackground variant="mountain" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 shadow-lg/60 glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
@@ -81,20 +84,20 @@ const HomePage: React.FC = () => {
               </button>
               
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-primary-600">English Learning Suite</h1>
+                <h1 className="text-2xl font-bold text-white">English Learning Suite</h1>
               </div>
             </div>
             <nav className="hidden md:flex space-x-2">
-              <Link to="/" className="nav-link">
+              <Link to="/" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
                 Trang chủ
               </Link>
-              <Link to="/lessons" className="nav-link">
+              <Link to="/lessons" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Bài học
               </Link>
-              <Link to="/tests" className="nav-link">
+              <Link to="/tests" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Kiểm tra
               </Link>
-              <Link to="/profile" className="nav-link">
+              <Link to="/profile" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Hồ sơ
               </Link>
             </nav>
@@ -202,26 +205,32 @@ const HomePage: React.FC = () => {
             <div className="absolute bottom-20 right-10 w-24 h-24 bg-primary-200 rounded-full opacity-10 floating-reverse"></div>
           </div>
           
-          <div className="text-center relative z-10 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight">
-              Học tiếng Anh
-              <span className="text-primary-600 block mt-2 text-glow">hiệu quả</span>
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed px-4">
-              Khám phá phương pháp học tiếng Anh hiện đại với hệ thống bài học đa dạng, 
-              kiểm tra thông minh và theo dõi tiến độ chi tiết.
-            </p>
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-center animate-gentle-pop">
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-contrast mb-6 sm:mb-8 leading-tight heading-glow">
+                Học tiếng Anh
+                <span className="block mt-2 heading-gradient">hiệu quả</span>
+              </h1>
             
-            {!isAuthenticated && (
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link to="/register" className="btn-primary text-lg px-10 py-4 btn-glow pulse-animation">
-                  Bắt đầu học ngay
-                </Link>
-                <Link to="/login" className="btn-outline text-lg px-10 py-4 btn-glow">
-                  Đăng nhập
-                </Link>
-              </div>
-            )}
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-700/90 mb-8 sm:mb-12 max-w-3xl md:max-w-none leading-relaxed px-4 md:px-0">
+                Khám phá phương pháp học tiếng Anh hiện đại với hệ thống bài học đa dạng, 
+                kiểm tra thông minh và theo dõi tiến độ chi tiết.
+              </p>
+            
+              {!isAuthenticated && (
+                <div className="flex flex-col sm:flex-row gap-6 md:justify-start justify-center">
+                  <Link to="/register" className="btn-primary text-lg px-10 py-4 btn-glow pulse-animation">
+                    Bắt đầu học ngay
+                  </Link>
+                  <Link to="/login" className="btn-outline text-lg px-10 py-4 btn-glow">
+                    Đăng nhập
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="hidden md:flex justify-center md:justify-end">
+              <AnimatedMascot mood="happy" size="lg" className="scale-90 md:scale-100" />
+            </div>
           </div>
         </div>
 

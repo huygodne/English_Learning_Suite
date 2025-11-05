@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userProgressService } from '../services/api';
 import { UserLessonProgress, UserTestProgress } from '../types';
+import ScenicBackground from '../components/ScenicBackground';
 
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -54,35 +55,36 @@ const ProfilePage: React.FC = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative overflow-hidden">
+      <ScenicBackground variant="mountain" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 shadow-lg/60 glass relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-primary-600">
+              <Link to="/" className="text-2xl font-bold text-white hover:text-primary-100 transition-colors duration-300">
                 English Learning Suite
               </Link>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Trang chủ
               </Link>
-              <Link to="/lessons" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/lessons" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Bài học
               </Link>
-              <Link to="/tests" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/tests" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Kiểm tra
               </Link>
-              <Link to="/profile" className="text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/profile" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
                 Hồ sơ
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">Xin chào, {user?.fullName}</span>
+              <span className="text-sm text-white">Xin chào, {user?.fullName}</span>
               <button 
                 onClick={logout}
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium"
+                className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20"
               >
                 Đăng xuất
               </button>
@@ -91,9 +93,9 @@ const ProfilePage: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         {/* Profile Header */}
-        <div className="card mb-8">
+        <div className="card mb-8 animate-fade-in transform transition-all duration-300 hover:scale-[1.01]">
           <div className="flex items-center space-x-6">
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-primary-600">
@@ -101,7 +103,7 @@ const ProfilePage: React.FC = () => {
               </span>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{user?.fullName}</h1>
+              <h1 className="text-3xl font-extrabold text-contrast heading-glow">{user?.fullName}</h1>
               <p className="text-gray-600">@{user?.username}</p>
               <span className="inline-block bg-primary-100 text-primary-800 text-sm font-medium px-3 py-1 rounded-full mt-2">
                 {user?.role}
@@ -112,21 +114,21 @@ const ProfilePage: React.FC = () => {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card text-center">
+          <div className="card text-center animate-fade-in-up transform transition-all duration-300 hover:scale-105" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
             <div className="text-3xl font-bold text-primary-600 mb-2">
               {completedLessons}/{totalLessons}
             </div>
             <div className="text-gray-600">Bài học hoàn thành</div>
           </div>
           
-          <div className="card text-center">
+          <div className="card text-center animate-fade-in-up transform transition-all duration-300 hover:scale-105" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
             <div className="text-3xl font-bold text-secondary-600 mb-2">
               {testProgress.length}
             </div>
             <div className="text-gray-600">Bài kiểm tra đã làm</div>
           </div>
           
-          <div className="card text-center">
+          <div className="card text-center animate-fade-in-up transform transition-all duration-300 hover:scale-105" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
             <div className="text-3xl font-bold text-green-600 mb-2">
               {averageTestScore.toFixed(1)}%
             </div>
@@ -135,12 +137,16 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Lesson Progress */}
-        <div className="card mb-8">
+        <div className="card mb-8 animate-fade-in transform transition-all duration-300 hover:scale-[1.01]">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Tiến độ bài học</h2>
           {lessonProgress.length > 0 ? (
             <div className="space-y-4">
-              {lessonProgress.map((lesson) => (
-                <div key={lesson.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              {lessonProgress.map((lesson, index) => (
+                <div 
+                  key={lesson.id} 
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg animate-fade-in-up transform transition-all duration-300 hover:scale-[1.02] hover:bg-gray-100"
+                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
+                >
                   <div>
                     <h3 className="font-semibold text-gray-900">{lesson.lessonName}</h3>
                     <p className="text-sm text-gray-600">
@@ -165,12 +171,16 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Test Results */}
-        <div className="card">
+        <div className="card animate-fade-in transform transition-all duration-300 hover:scale-[1.01]">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Kết quả kiểm tra</h2>
           {testProgress.length > 0 ? (
             <div className="space-y-4">
-              {testProgress.map((test) => (
-                <div key={test.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              {testProgress.map((test, index) => (
+                <div 
+                  key={test.id} 
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg animate-fade-in-up transform transition-all duration-300 hover:scale-[1.02] hover:bg-gray-100"
+                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
+                >
                   <div>
                     <h3 className="font-semibold text-gray-900">{test.testName}</h3>
                     <p className="text-sm text-gray-600">

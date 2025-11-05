@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { testService } from '../services/api';
 import { TestDetail, AnswerSubmission, TestSubmission } from '../types';
+import ScenicBackground from '../components/ScenicBackground';
 
 const TestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +82,7 @@ const TestDetailPage: React.FC = () => {
       };
 
       const result = await testService.submitTest(submission);
+      // Score is now returned as percentage (0-100)
       setScore(result.score);
       setShowResult(true);
     } catch (err: any) {
@@ -123,8 +125,9 @@ const TestDetailPage: React.FC = () => {
 
   if (showResult && score !== null) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="card max-w-md w-full">
+      <div className="relative min-h-screen flex items-center justify-center p-4 animate-fade-in">
+        <ScenicBackground variant="meadow" />
+        <div className="card bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 border-2 border-primary-200 max-w-md w-full animate-scale-in shadow-soft-xl">
           <div className="text-center mb-8">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
               score >= 80 ? 'bg-green-100' : score >= 60 ? 'bg-yellow-100' : 'bg-red-100'
@@ -172,24 +175,25 @@ const TestDetailPage: React.FC = () => {
   const totalQuestions = test.questions.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen animate-fade-in">
+      <ScenicBackground variant="lake" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-gradient-to-r from-primary-600 to-secondary-600 shadow-lg/60 glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-primary-600">
+              <Link to="/" className="text-2xl font-bold text-white hover:text-primary-100 transition-colors duration-300">
                 English Learning Suite
               </Link>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Trang chủ
               </Link>
-              <Link to="/lessons" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/lessons" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
                 Bài học
               </Link>
-              <Link to="/tests" className="text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/tests" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
                 Kiểm tra
               </Link>
             </nav>
@@ -199,7 +203,7 @@ const TestDetailPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Test Header */}
-        <div className="card mb-8">
+        <div className="card bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 border-2 border-primary-200 mb-8 animate-slide-in-up">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{(() => { const i=Math.max(test.name.lastIndexOf(':'), test.name.lastIndexOf('-')); return i>=0 ? test.name.slice(i+1).trim() : test.name; })()}</h1>
@@ -260,7 +264,7 @@ const TestDetailPage: React.FC = () => {
         {/* Questions */}
         <div className="space-y-6">
           {test.questions.map((question, index) => (
-            <div key={question.id} className="card">
+            <div key={question.id} className="card bg-gradient-to-br from-white to-primary-50/20 border-2 border-primary-100 hover:border-primary-300 transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Câu {index + 1}: {question.questionText}
@@ -310,7 +314,7 @@ const TestDetailPage: React.FC = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="card mt-8">
+        <div className="card bg-gradient-to-r from-primary-100 to-secondary-100 border-2 border-primary-300 mt-8 animate-scale-in">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
               {answeredCount === totalQuestions 

@@ -63,21 +63,34 @@ public class TestService {
                 submission.getAnswers().stream().map(AnswerSubmissionDTO::getQuestionId).toList()
         );
 
-        // ... (phần chấm điểm giữ nguyên) ...
+        // Improved scoring logic that supports:
+        // 1. Multiple correct answers (check if selected option is among correct ones)
+        // 2. Ordering questions (for now, treat as multiple choice but can be extended)
         for (AnswerSubmissionDTO userAnswer : submission.getAnswers()) {
             Question question = questions.stream()
                     .filter(q -> q.getId().equals(userAnswer.getQuestionId()))
                     .findFirst().orElse(null);
 
             if (question != null) {
-                AnswerOption correctOption = question.getAnswerOptions().stream()
+                // Get all correct answer options for this question
+                List<Long> correctOptionIds = question.getAnswerOptions().stream()
                         .filter(AnswerOption::isCorrect)
-                        .findFirst().orElse(null);
+                        .map(AnswerOption::getId)
+                        .toList();
 
-                if (correctOption != null && correctOption.getId().equals(userAnswer.getSelectedOptionId())) {
+                // Check if user's selected answer is among the correct ones
+                if (!correctOptionIds.isEmpty() && correctOptionIds.contains(userAnswer.getSelectedOptionId())) {
                     score++;
                 }
+                // For ordering questions (questionType = "ORDERING"), we would need to check the order
+                // For now, treat ordering questions same as multiple choice with multiple correct answers
             }
+        }
+        
+        // Calculate percentage score (score out of total questions)
+        int totalQuestions = questions.size();
+        if (totalQuestions == 0) {
+            return 0;
         }
 
 
@@ -87,11 +100,13 @@ public class TestService {
 
         progress.setAccount(account);
         progress.setTest(test);
-        progress.setScore(score);
+        // Store score as percentage (0-100)
+        int scorePercentage = (score * 100) / totalQuestions;
+        progress.setScore(scorePercentage);
 
         testProgressRepository.save(progress);
 
-        return score;
+        return scorePercentage;
     }
 
 

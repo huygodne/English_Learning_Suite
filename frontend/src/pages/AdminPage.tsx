@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/api';
 import { AccountDTO } from '../types';
+import ScenicBackground from '../components/ScenicBackground';
 
 const AdminPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -37,9 +38,10 @@ const AdminPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen">
+      <ScenicBackground variant="meadow" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="glass shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
