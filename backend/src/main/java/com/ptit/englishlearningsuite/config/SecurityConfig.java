@@ -32,7 +32,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tích hợp CORS vào Security Filter Chain
+                    // Tích hợp CORS vào Security Filter Chain
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .csrf(AbstractHttpConfigurer::disable) // Cách viết mới và chuẩn hơn cho Spring Boot 3+
