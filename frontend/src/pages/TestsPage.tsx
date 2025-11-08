@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { testService } from '../services/api';
 import { TestSummary } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
+import SiteHeader from '../components/SiteHeader';
 
 const TestsPage: React.FC = () => {
   const [allTests, setAllTests] = useState<TestSummary[]>([]);
@@ -48,31 +48,7 @@ const TestsPage: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <ScenicBackground variant="sunset" />
       {/* Header */}
-      <header className="bg-gradient-to-r from-secondary-600 to-primary-600 shadow-lg/60 glass relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-white hover:text-primary-100 transition-colors duration-300">
-                English Learning Suite
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
-                Trang chủ
-              </Link>
-              <Link to="/lessons" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
-                Bài học
-              </Link>
-              <Link to="/tests" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
-                Kiểm tra
-              </Link>
-              <Link to="/profile" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
-                Hồ sơ
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <SiteHeader active="tests" className="relative z-10" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <div className="text-center mb-12">
