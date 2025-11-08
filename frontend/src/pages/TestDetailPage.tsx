@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { testService } from '../services/api';
 import { TestDetail, AnswerSubmission, TestSubmission } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
+import SiteHeader from '../components/SiteHeader';
 
 const TestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -178,28 +179,7 @@ const TestDetailPage: React.FC = () => {
     <div className="relative min-h-screen animate-fade-in">
       <ScenicBackground variant="lake" />
       {/* Header */}
-      <header className="bg-gradient-to-r from-primary-600 to-secondary-600 shadow-lg/60 glass">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-white hover:text-primary-100 transition-colors duration-300">
-                English Learning Suite
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
-                Trang chủ
-              </Link>
-              <Link to="/lessons" className="text-white hover:text-primary-100 px-3 py-2 text-sm font-medium transition-colors duration-300 rounded-lg hover:bg-white/20">
-                Bài học
-              </Link>
-              <Link to="/tests" className="text-white bg-white/30 px-3 py-2 text-sm font-medium rounded-lg">
-                Kiểm tra
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <SiteHeader active="tests" />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Test Header */}

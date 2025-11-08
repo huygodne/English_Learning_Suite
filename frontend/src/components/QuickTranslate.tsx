@@ -47,7 +47,6 @@ const QuickTranslate: React.FC<QuickTranslateProps> = ({ className = '' }) => {
         }
       } catch (libreErr) {
         // Fallback to MyMemory if LibreTranslate fails
-        console.log('LibreTranslate failed, trying MyMemory...');
       }
 
       // Fallback to MyMemory API
