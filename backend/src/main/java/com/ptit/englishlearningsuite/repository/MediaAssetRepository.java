@@ -8,3 +8,5 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
 
 
 
+
+
