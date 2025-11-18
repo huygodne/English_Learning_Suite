@@ -2,7 +2,7 @@ package com.ptit.englishlearningsuite.dto;
 
 import lombok.Data;
 
-import java.util.Set;
+import java.util.List;
 
 @Data
 public class TestDetailDTO {
@@ -10,5 +10,5 @@ public class TestDetailDTO {
     private String name;
     private int level;
     private String audioUrl;
-    private Set<QuestionDTO> questions;
+    private List<QuestionDTO> questions;
 }

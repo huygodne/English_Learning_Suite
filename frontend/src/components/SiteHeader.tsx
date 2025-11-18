@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-type NavKey = 'home' | 'lessons' | 'tests' | 'profile';
+type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library' | 'translate' | 'pronunciation';
 
 interface SiteHeaderProps {
   active?: NavKey;
@@ -13,6 +13,9 @@ const navItems: Array<{ key: NavKey; label: string; to: string }> = [
   { key: 'home', label: 'Trang chủ', to: '/' },
   { key: 'lessons', label: 'Bài học', to: '/lessons' },
   { key: 'tests', label: 'Kiểm tra', to: '/tests' },
+  { key: 'library', label: 'Thư viện', to: '/library' },
+  { key: 'translate', label: 'Dịch thuật', to: '/translate' },
+  { key: 'pronunciation', label: 'Phát âm', to: '/pronunciation' },
   { key: 'profile', label: 'Hồ sơ', to: '/profile' }
 ];
 

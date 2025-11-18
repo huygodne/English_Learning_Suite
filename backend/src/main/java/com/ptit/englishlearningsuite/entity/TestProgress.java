@@ -1,7 +1,12 @@
 package com.ptit.englishlearningsuite.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "test_progress")
@@ -23,4 +28,8 @@ public class TestProgress {
     private Test test;
 
     private int score;
+
+    private Integer timeSpentSeconds;
+
+    private LocalDateTime completedAt;
 }

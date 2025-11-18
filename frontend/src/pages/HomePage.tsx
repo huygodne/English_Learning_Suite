@@ -936,10 +936,10 @@ const HomePage: React.FC = () => {
 
       {/* Hamburger Menu Dropdown */}
       {hamburgerMenuOpen && (
-        <div className="fixed top-0 left-0 w-80 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
-          <div className="p-6">
-            {/* Close Button */}
-            <div className="flex justify-between items-center mb-8">
+        <div className="fixed top-0 left-0 w-80 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col">
+          {/* Header - Fixed */}
+          <div className="flex-shrink-0 p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">Menu</h2>
               <button
                 onClick={() => setHamburgerMenuOpen(false)}
@@ -949,6 +949,48 @@ const HomePage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+          </div>
+          
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
+
+            {/* Tools Section */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🛠️</span>
+                Công cụ học tập
+              </h3>
+              <div className="space-y-3">
+                <Link to="/library" onClick={() => setHamburgerMenuOpen(false)} className="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-300">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📚</span>
+                    <div>
+                      <div className="font-semibold text-gray-900">Thư viện</div>
+                      <div className="text-sm text-gray-600">Tài liệu và tài nguyên học tập</div>
+                    </div>
+                  </div>
+                </Link>
+                <Link to="/translate" onClick={() => setHamburgerMenuOpen(false)} className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors duration-300">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">🌐</span>
+                    <div>
+                      <div className="font-semibold text-gray-900">Dịch thuật</div>
+                      <div className="text-sm text-gray-600">Dịch văn bản nhanh chóng</div>
+                    </div>
+                  </div>
+                </Link>
+                <Link to="/pronunciation" onClick={() => setHamburgerMenuOpen(false)} className="block p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">🎤</span>
+                    <div>
+                      <div className="font-semibold text-gray-900">Phát âm</div>
+                      <div className="text-sm text-gray-600">Luyện phát âm chuẩn</div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             </div>
 
             {/* Quick Lessons */}
@@ -1059,6 +1101,7 @@ const HomePage: React.FC = () => {
                   <span className="text-sm text-gray-700">Đạt điểm cao nhất</span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 export type MascotMood =
   | 'idle'
@@ -93,58 +93,14 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
   const scale = size === 'lg' ? 1 : 0.75;
   
   // Use state with stable initialization to ensure consistency
-  const [handCoverMode, setHandCoverMode] = useState<'none' | 'one' | 'two'>(() => {
-    if (coveringEyes) {
-      const modes: ('one' | 'two')[] = ['one', 'two'];
-      return modes[Math.floor(Math.random() * modes.length)];
-    }
-    return 'none';
-  });
+  const [handCoverMode, setHandCoverMode] = useState<'none' | 'one' | 'two'>('none');
   
-  // Update handCoverMode when coveringEyes changes - only when transitioning
   useEffect(() => {
-    if (coveringEyes) {
-      // Only set mode if currently 'none' (transitioning from not covering to covering)
-      setHandCoverMode(current => {
-        if (current === 'none') {
-          const modes: ('one' | 'two')[] = ['one', 'two'];
-          return modes[Math.floor(Math.random() * modes.length)];
-        }
-        return current; // Keep existing mode if already set
-      });
-    } else {
-      // When not covering, always set to 'none'
-      setHandCoverMode(current => current !== 'none' ? 'none' : current);
-    }
+    setHandCoverMode(coveringEyes ? 'two' : 'none');
   }, [coveringEyes]);
   
-  // Force re-render key when coveringEyes changes to ensure animations start fresh
   const robotKey = useMemo(() => `robot-${coveringEyes}-${handCoverMode}`, [coveringEyes, handCoverMode]);
-  
-  // Force CSS refresh on mount to ensure styles are applied immediately
-  const [styleKey, setStyleKey] = useState(0);
-  
-  useLayoutEffect(() => {
-    setStyleKey(prev => prev + 1);
-  }, []);
-  
-  useEffect(() => {
-    // Force animations to start
-    const frame = requestAnimationFrame(() => {
-      const robotElement = document.querySelector('.robot-simple');
-      if (robotElement) {
-        robotElement.getBoundingClientRect();
-        void robotElement.offsetHeight;
-      }
-    });
-    
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, [coveringEyes, handCoverMode, styleKey]);
-
-
-  const styleId = useMemo(() => `robot-styles-${styleKey}`, [styleKey]);
+  const styleId = useMemo(() => `robot-styles-${Math.random().toString(36).slice(2)}`, []);
   
   return (
     <div
@@ -1015,7 +971,7 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
           {coveringEyes && handCoverMode !== 'none' && (
             <div 
               className="robot-covering-hands" 
-              key={`hands-${handCoverMode}-${styleKey}`}
+              key={`hands-${handCoverMode}`}
               style={{
                 display: 'block',
                 visibility: 'visible',

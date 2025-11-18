@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { adminService } from '../services/api';
-import { AccountDTO } from '../types';
+import { adminService, mediaService } from '../services/api';
+import { AccountDTO, AdminDashboard, MediaAsset } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 
 const AdminPage: React.FC = () => {
@@ -10,21 +10,95 @@ const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<AccountDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
+  const [mediaError, setMediaError] = useState('');
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mediaForm, setMediaForm] = useState({
+    type: 'IMAGE' as 'IMAGE' | 'AUDIO' | 'VIDEO',
+    category: '',
+    description: ''
+  });
+
+  const totalUsersCount = dashboard?.totalUsers ?? users.length;
+  const adminCount = dashboard?.adminUsers ?? users.filter(u => u.role === 'ADMIN').length;
+  const learnerCount = dashboard?.learnerUsers ?? (totalUsersCount - adminCount);
+  const totalLessonsCount = dashboard?.totalLessons ?? 0;
+  const totalTestsCount = dashboard?.totalTests ?? 0;
+  const totalMediaCount = dashboard?.totalMediaAssets ?? mediaAssets.length;
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        const data = await adminService.getAllUsers();
-        setUsers(data);
+        const [usersData, dashboardData, mediaData] = await Promise.all([
+          adminService.getAllUsers(),
+          adminService.getDashboard(),
+          mediaService.list()
+        ]);
+        setUsers(usersData);
+        setDashboard(dashboardData);
+        setMediaAssets(mediaData);
       } catch (err: any) {
-        setError('Không thể tải danh sách người dùng');
+        setError('Không thể tải dữ liệu quản trị');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
+
+  const refreshMedia = async () => {
+    try {
+      const assets = await mediaService.list();
+      setMediaAssets(assets);
+    } catch (err) {
+      setMediaError('Không thể tải danh sách media');
+    }
+  };
+
+  const handleUploadMedia = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMediaError('');
+    if (!selectedFile) {
+      setMediaError('Vui lòng chọn file tải lên');
+      return;
+    }
+    try {
+      setUploadingMedia(true);
+      await mediaService.upload({
+        file: selectedFile,
+        type: mediaForm.type,
+        category: mediaForm.category,
+        description: mediaForm.description
+      });
+      setSelectedFile(null);
+      setMediaForm((prev) => ({ ...prev, description: '' }));
+      await refreshMedia();
+    } catch (err) {
+      setMediaError('Không thể tải lên file.');
+      console.error(err);
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  const handleDeleteMedia = async (id: number) => {
+    if (!window.confirm('Bạn có chắc muốn xóa nội dung này?')) return;
+    try {
+      await mediaService.remove(id);
+      await refreshMedia();
+    } catch (err) {
+      setMediaError('Không thể xóa nội dung.');
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
 
   if (loading) {
     return (
@@ -92,33 +166,47 @@ const AdminPage: React.FC = () => {
         )}
 
         {/* Admin Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
           <div className="card text-center">
             <div className="text-3xl font-bold text-primary-600 mb-2">
-              {users.length}
+              {totalUsersCount}
             </div>
             <div className="text-gray-600">Tổng người dùng</div>
           </div>
           
           <div className="card text-center">
             <div className="text-3xl font-bold text-secondary-600 mb-2">
-              {users.filter(u => u.role === 'ADMIN').length}
+              {adminCount}
             </div>
             <div className="text-gray-600">Quản trị viên</div>
           </div>
           
           <div className="card text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {users.filter(u => u.role === 'USER').length}
+              {learnerCount}
             </div>
             <div className="text-gray-600">Người dùng</div>
           </div>
           
           <div className="card text-center">
             <div className="text-3xl font-bold text-yellow-600 mb-2">
-              0
+              {totalLessonsCount}
             </div>
             <div className="text-gray-600">Bài học</div>
+          </div>
+
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-pink-600 mb-2">
+              {totalTestsCount}
+            </div>
+            <div className="text-gray-600">Bài kiểm tra</div>
+          </div>
+
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-indigo-600 mb-2">
+              {totalMediaCount}
+            </div>
+            <div className="text-gray-600">Kho media</div>
           </div>
         </div>
 
@@ -242,6 +330,115 @@ const AdminPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Media Management */}
+        <div className="card mt-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Kho nội dung media</h2>
+              <p className="text-gray-600 text-sm">Quản lý hình ảnh, âm thanh và video dùng trong khóa học</p>
+            </div>
+            <div className="text-sm text-gray-600">
+              Tổng cộng: <span className="font-semibold">{totalMediaCount}</span> tệp
+            </div>
+          </div>
+
+          <form onSubmit={handleUploadMedia} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">Loại nội dung</label>
+                <select
+                  value={mediaForm.type}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, type: e.target.value as 'IMAGE' | 'AUDIO' | 'VIDEO' }))}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                >
+                  <option value="IMAGE">Ảnh</option>
+                  <option value="AUDIO">Âm thanh</option>
+                  <option value="VIDEO">Video</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">Chủ đề</label>
+                <input
+                  type="text"
+                  value={mediaForm.category}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, category: e.target.value }))}
+                  placeholder="Ví dụ: Hội họa, Hội thoại..."
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">Mô tả</label>
+                <input
+                  type="text"
+                  value={mediaForm.description}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Mô tả ngắn cho nội dung"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+              />
+              <button
+                type="submit"
+                disabled={uploadingMedia}
+                className="px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+              >
+                {uploadingMedia ? 'Đang tải lên...' : 'Tải lên nội dung'}
+              </button>
+            </div>
+            {mediaError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm">
+                {mediaError}
+              </div>
+            )}
+          </form>
+
+          {mediaAssets.length === 0 ? (
+            <p className="text-center text-gray-500 py-6">Chưa có nội dung nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Loại</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Chủ đề</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Mô tả</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Xem nhanh</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-600">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {mediaAssets.map((asset) => (
+                    <tr key={asset.id}>
+                      <td className="px-4 py-3 font-semibold text-gray-900">{asset.type}</td>
+                      <td className="px-4 py-3 text-gray-700">{asset.category || 'Chưa đặt'}</td>
+                      <td className="px-4 py-3 text-gray-600">{asset.description || '—'}</td>
+                      <td className="px-4 py-3">
+                        <a href={asset.publicUrl} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">
+                          Xem nội dung
+                        </a>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleDeleteMedia(asset.id)}
+                          className="text-red-600 hover:text-red-800 font-semibold"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </main>
     </div>

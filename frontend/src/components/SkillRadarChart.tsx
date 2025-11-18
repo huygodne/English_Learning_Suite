@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface SkillData {
@@ -17,11 +17,10 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
   data = { grammar: 75, vocabulary: 82, listening: 68, speaking: 65 },
   loading = false
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const maxValue = 100;
-  const centerX = 120;
-  const centerY = 120;
+  const center = 120;
   const radius = 90;
+  const gridLevels = [20, 40, 60, 80, 100];
 
   const skills = [
     { name: 'Ngữ pháp', value: data.grammar, color: '#8b5cf6' },
@@ -30,91 +29,32 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
     { name: 'Nói', value: data.speaking, color: '#f59e0b' }
   ];
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const angleStep = (Math.PI * 2) / skills.length;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const buildPolygon = useMemo(() => {
+    return skills
+      .map((skill, index) => {
+        const angle = index * angleStep - Math.PI / 2;
+        const valueRadius = (radius * skill.value) / maxValue;
+        const x = center + Math.cos(angle) * valueRadius;
+        const y = center + Math.sin(angle) * valueRadius;
+        return `${x},${y}`;
+      })
+      .join(' ');
+  }, [skills, angleStep]);
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw grid circles
-    for (let i = 1; i <= 5; i++) {
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, (radius * i) / 5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Draw axes
-    const angleStep = (Math.PI * 2) / skills.length;
-    skills.forEach((_, index) => {
-      const angle = (index * angleStep) - Math.PI / 2;
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius;
-
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    });
-
-    // Draw data polygon
-    ctx.fillStyle = 'rgba(79, 70, 229, 0.2)';
-    ctx.strokeStyle = '#4f46e5';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-
-    skills.forEach((skill, index) => {
-      const angle = (index * angleStep) - Math.PI / 2;
-      const valueRadius = (radius * skill.value) / maxValue;
-      const x = centerX + Math.cos(angle) * valueRadius;
-      const y = centerY + Math.sin(angle) * valueRadius;
-
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw points
-    skills.forEach((skill, index) => {
-      const angle = (index * angleStep) - Math.PI / 2;
-      const valueRadius = (radius * skill.value) / maxValue;
-      const x = centerX + Math.cos(angle) * valueRadius;
-      const y = centerY + Math.sin(angle) * valueRadius;
-
-      ctx.fillStyle = skill.color;
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    // Draw labels
-    ctx.font = '12px sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    skills.forEach((skill, index) => {
-      const angle = (index * angleStep) - Math.PI / 2;
-      const labelRadius = radius + 25;
-      const x = centerX + Math.cos(angle) * labelRadius;
-      const y = centerY + Math.sin(angle) * labelRadius;
-
-      ctx.fillText(skill.name, x, y);
-    });
-  }, [data, skills]);
+  const gridPolygons = gridLevels.map((level) => {
+    const levelRadius = (radius * level) / maxValue;
+    const points = skills
+      .map((_, index) => {
+        const angle = index * angleStep - Math.PI / 2;
+        const x = center + Math.cos(angle) * levelRadius;
+        const y = center + Math.sin(angle) * levelRadius;
+        return `${x},${y}`;
+      })
+      .join(' ');
+    return { level, points };
+  });
 
   return (
     <motion.div
@@ -138,12 +78,61 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
         </div>
       ) : (
         <div className="relative">
-          <canvas
-            ref={canvasRef}
-            width={240}
-            height={240}
-            className="w-full max-w-full"
-          />
+          <svg viewBox="0 0 240 240" className="w-full max-w-full">
+            <circle cx={center} cy={center} r={radius} fill="none" stroke="#e2e8f0" strokeDasharray="4 4" />
+            {gridPolygons.map((grid) => (
+              <polygon
+                key={grid.level}
+                points={grid.points}
+                fill="none"
+                stroke="#e2e8f0"
+                strokeWidth={grid.level === 100 ? 1.5 : 1}
+              />
+            ))}
+            {skills.map((_, index) => {
+              const angle = index * angleStep - Math.PI / 2;
+              const x = center + Math.cos(angle) * radius;
+              const y = center + Math.sin(angle) * radius;
+              return (
+                <line key={index} x1={center} y1={center} x2={x} y2={y} stroke="#cbd5e1" strokeWidth={1} />
+              );
+            })}
+            <polygon
+              points={buildPolygon}
+              fill="rgba(79, 70, 229, 0.25)"
+              stroke="#4f46e5"
+              strokeWidth={2}
+            />
+            {skills.map((skill, index) => {
+              const angle = index * angleStep - Math.PI / 2;
+              const valueRadius = (radius * skill.value) / maxValue;
+              const x = center + Math.cos(angle) * valueRadius;
+              const y = center + Math.sin(angle) * valueRadius;
+              return (
+                <circle key={skill.name} cx={x} cy={y} r={4} fill={skill.color} stroke="#fff" strokeWidth={1.5} />
+              );
+            })}
+            {skills.map((skill, index) => {
+              const angle = index * angleStep - Math.PI / 2;
+              const labelRadius = radius + 24;
+              const x = center + Math.cos(angle) * labelRadius;
+              const y = center + Math.sin(angle) * labelRadius;
+              return (
+                <text
+                  key={skill.name}
+                  x={x}
+                  y={y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="#475569"
+                  fontSize="11"
+                  fontWeight={600}
+                >
+                  {skill.name}
+                </text>
+              );
+            })}
+          </svg>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {skills.map((skill) => (
               <motion.div
@@ -160,7 +149,7 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
                   />
                   <span className="text-sm font-medium text-slate-700">{skill.name}</span>
                 </div>
-                <span className="text-sm font-bold text-slate-900">{skill.value}%</span>
+                <span className="text-sm font-bold text-slate-900">{Math.min(skill.value, 100)}%</span>
               </motion.div>
             ))}
           </div>

@@ -1,0 +1,34 @@
+spring.application.name=English_Learning_Suite
+
+spring.datasource.url=jdbc:mysql://localhost:3306/englishwebsite?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=123456
+
+# Cau hinh JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# Media storage
+media.upload-dir=uploads
+media.public-prefix=/uploads
+
+# Pronunciation seed toggle
+pronunciation.seed.enabled=true
+
+# ===================================
+# CHATBOT AI CONFIG (GOOGLE GEMINI)
+# ===================================
+# Tạo API key mới tại: https://aistudio.google.com/app/apikey
+# Sau đó thay thế YOUR_API_KEY_HERE bằng API key của bạn
+
+gemini.api.key=YOUR_API_KEY_HERE
+gemini.api.url=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+
+# ===================================
+# TRANSLATION SERVICE
+# ===================================
+# Có thể dùng Google Translate API hoặc dịch vụ khác tương thích
+translation.api.key=YOUR_TRANSLATION_API_KEY
+translation.api.url=https://translation.googleapis.com/language/translate/v2
+

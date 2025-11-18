@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { translationService } from '../services/api';
 
 interface QuickTranslateProps {
   className?: string;
@@ -7,6 +8,7 @@ interface QuickTranslateProps {
 const QuickTranslate: React.FC<QuickTranslateProps> = ({ className = '' }) => {
   const [text, setText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
+  const [provider, setProvider] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [translationDirection, setTranslationDirection] = useState<'en-vi' | 'vi-en'>('en-vi');
@@ -18,47 +20,17 @@ const QuickTranslate: React.FC<QuickTranslateProps> = ({ className = '' }) => {
     setError('');
 
     try {
-      // Use LibreTranslate (free and open-source translation API)
       const sourceLang = translationDirection === 'en-vi' ? 'en' : 'vi';
       const targetLang = translationDirection === 'en-vi' ? 'vi' : 'en';
-      
-      // Try LibreTranslate first (public API)
-      try {
-        const response = await fetch('https://libretranslate.de/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLang,
-            target: targetLang,
-            format: 'text'
-          })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.translatedText) {
-            setTranslatedText(data.translatedText);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (libreErr) {
-        // Fallback to MyMemory if LibreTranslate fails
-      }
 
-      // Fallback to MyMemory API
-      const langPair = translationDirection === 'en-vi' ? 'en|vi' : 'vi|en';
-      const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
-      const data = await response.json();
-      
-      if (data.responseStatus === 200 && data.responseData.translatedText) {
-        setTranslatedText(data.responseData.translatedText);
-      } else {
-        throw new Error('Translation failed');
-      }
+      const response = await translationService.translate({
+        text,
+        sourceLang,
+        targetLang,
+      });
+
+      setTranslatedText(response.translatedText);
+      setProvider(response.provider);
     } catch (err) {
       setError('Không thể dịch văn bản. Vui lòng thử lại.');
       console.error('Translation error:', err);
@@ -70,6 +42,7 @@ const QuickTranslate: React.FC<QuickTranslateProps> = ({ className = '' }) => {
   const clearText = () => {
     setText('');
     setTranslatedText('');
+    setProvider('');
     setError('');
   };
 
@@ -159,6 +132,11 @@ const QuickTranslate: React.FC<QuickTranslateProps> = ({ className = '' }) => {
             <div className="w-full px-4 py-4 bg-gradient-to-br from-secondary-50 to-primary-50 border-2 border-secondary-200 rounded-xl text-gray-900 font-medium shadow-inner">
               {translatedText}
             </div>
+            {provider && (
+              <p className="text-xs text-gray-500 mt-2">
+                Nguồn dịch: {provider}
+              </p>
+            )}
           </div>
         )}
       </div>

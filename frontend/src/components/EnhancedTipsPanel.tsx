@@ -17,13 +17,21 @@ const EnhancedTipsPanel: React.FC = () => {
     {
       id: 1,
       type: 'tip',
+      title: 'Mẹo giữ streak',
+      content: 'Hoàn thành ít nhất một bài luyện tập mỗi ngày để giữ streak và nhận thêm XP thưởng. Lên lịch nhắc nhở trong ứng dụng để không bỏ lỡ!',
+      icon: '🔥',
+      color: 'from-red-400 to-orange-500'
+    },
+    {
+      id: 2,
+      type: 'tip',
       title: 'Mẹo học tập',
       content: 'Ôn tập từ vựng vào buổi sáng giúp ghi nhớ lâu hơn 40% so với các thời điểm khác trong ngày.',
       icon: '💡',
       color: 'from-amber-400 to-orange-500'
     },
     {
-      id: 2,
+      id: 3,
       type: 'notification',
       title: 'Thông báo hệ thống',
       content: 'Bài học mới "Business English" đã được thêm vào. Hãy khám phá ngay!',
@@ -31,12 +39,20 @@ const EnhancedTipsPanel: React.FC = () => {
       color: 'from-blue-400 to-indigo-500'
     },
     {
-      id: 3,
+      id: 4,
       type: 'tip',
       title: 'Mẹo học tập',
       content: 'Luyện phát âm 15 phút mỗi ngày sẽ cải thiện khả năng nói của bạn đáng kể sau 2 tuần.',
       icon: '🎯',
       color: 'from-emerald-400 to-teal-500'
+    },
+    {
+      id: 5,
+      type: 'tip',
+      title: 'Thưởng streak',
+      content: 'Mỗi 5 ngày streak liên tiếp, bạn sẽ nhận được +50 XP thưởng. Hãy duy trì chuỗi học tập của mình!',
+      icon: '⭐',
+      color: 'from-purple-400 to-pink-500'
     }
   ];
 

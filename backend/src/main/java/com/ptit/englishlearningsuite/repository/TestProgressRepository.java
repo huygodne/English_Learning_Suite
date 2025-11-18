@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface TestProgressRepository extends JpaRepository<TestProgress, Long> {
     Optional<TestProgress> findByAccountAndTest(Account account, Test test);
     List<TestProgress> findAllByAccount(Account account);
+    List<TestProgress> findAllByAccountOrderByCompletedAtAsc(Account account);
+    int countByAccount(Account account);
 }

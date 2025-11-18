@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { lessonService } from '../services/api';
-import { LessonDetail } from '../types';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { lessonService, progressService, vocabularyProgressService } from '../services/api';
+import { LessonDetail, VocabularyProgress } from '../types';
 import QuickTranslate from '../components/QuickTranslate';
 import FlipCard from '../components/FlipCard';
 import ScenicBackground from '../components/ScenicBackground';
@@ -14,6 +14,12 @@ const LessonDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation'>('vocabulary');
   const [studyTime, setStudyTime] = useState(0);
   const [currentVocabIndex, setCurrentVocabIndex] = useState(0);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [vocabProgress, setVocabProgress] = useState<Record<number, VocabularyProgress>>({});
+  const [rememberingId, setRememberingId] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const studyTimeRef = useRef(0);
+  const hasSavedRef = useRef(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -21,6 +27,10 @@ const LessonDetailPage: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    studyTimeRef.current = studyTime;
+  }, [studyTime]);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -40,12 +50,68 @@ const LessonDetailPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    const fetchVocabProgress = async () => {
+      if (!lesson?.id) return;
+      try {
+        const data = await vocabularyProgressService.getLessonProgress(lesson.id);
+        const map: Record<number, VocabularyProgress> = {};
+        data.forEach((item) => {
+          map[item.vocabularyId] = item;
+        });
+        setVocabProgress(map);
+      } catch (err) {
+        console.error('Không thể tải tiến độ từ vựng', err);
+      }
+    };
+
+    fetchVocabProgress();
+  }, [lesson?.id]);
+
+  useEffect(() => {
     setCurrentVocabIndex(0);
   }, [activeTab]);
 
   useEffect(() => {
     setCurrentVocabIndex(0);
   }, [lesson?.id]);
+
+  const persistProgress = useCallback(async (completed: boolean, exitAfter: boolean) => {
+    if (!lesson) return;
+    setSavingProgress(true);
+    try {
+      await progressService.completeLesson({
+        lessonId: lesson.id,
+        score: completed ? 100 : 0,
+        isCompleted: completed,
+        timeSpentSeconds: studyTimeRef.current,
+        completedAt: new Date().toISOString(),
+      });
+      if (completed) {
+        hasSavedRef.current = true;
+      }
+      if (exitAfter) {
+        navigate('/lessons');
+      }
+    } catch (err) {
+      console.error('Không thể lưu tiến độ bài học', err);
+    } finally {
+      setSavingProgress(false);
+    }
+  }, [lesson, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (lesson && !hasSavedRef.current) {
+        progressService.completeLesson({
+          lessonId: lesson.id,
+          score: 0,
+          isCompleted: false,
+          timeSpentSeconds: studyTimeRef.current,
+          completedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+    };
+  }, [lesson]);
 
   const playAudio = (audioUrl: string) => {
     if (audioUrl) {
@@ -60,6 +126,29 @@ const LessonDetailPage: React.FC = () => {
     utterance.lang = 'en-US';
     speechSynthesis.speak(utterance);
   };
+
+  const handleVocabularyAudio = (word: string, audioUrl?: string) => {
+    if (audioUrl) {
+      playAudio(audioUrl);
+      return;
+    }
+    speakWord(word);
+  };
+
+  const handleToggleRemembered = async (vocabularyId: number, remembered: boolean) => {
+    try {
+      setRememberingId(vocabularyId);
+      const updated = await vocabularyProgressService.markRemembered(vocabularyId, remembered);
+      setVocabProgress((prev) => ({ ...prev, [vocabularyId]: updated }));
+    } catch (err) {
+      console.error('Không thể cập nhật ghi nhớ từ vựng', err);
+    } finally {
+      setRememberingId(null);
+    }
+  };
+
+  const handleSaveProgress = () => persistProgress(false, false);
+  const handleCompleteAndExit = () => persistProgress(true, true);
 
   if (loading) {
     return (
@@ -108,11 +197,44 @@ const LessonDetailPage: React.FC = () => {
                 Kiểm tra
               </Link>
             </nav>
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={handleSaveProgress}
+                disabled={savingProgress}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors disabled:opacity-50"
+              >
+                Lưu tiến độ
+              </button>
+              <button
+                onClick={handleCompleteAndExit}
+                disabled={savingProgress}
+                className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+              >
+                Hoàn thành &amp; Thoát
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="md:hidden flex flex-col sm:flex-row gap-3 mb-6">
+          <button
+            onClick={handleSaveProgress}
+            disabled={savingProgress}
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors disabled:opacity-50"
+          >
+            Lưu tiến độ
+          </button>
+          <button
+            onClick={handleCompleteAndExit}
+            disabled={savingProgress}
+            className="w-full px-4 py-3 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+          >
+            Hoàn thành &amp; Thoát
+          </button>
+        </div>
+
         {/* Lesson Header */}
         <div className="card mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -207,6 +329,11 @@ const LessonDetailPage: React.FC = () => {
                         const total = lesson.vocabularies.length;
                         const hasPrev = currentVocabIndex > 0;
                         const hasNext = currentVocabIndex < total - 1;
+                        const vocabState = vocabProgress[vocab.id];
+                        const isRemembered = vocabState?.remembered ?? false;
+                        const masteryLevel = vocabState?.masteryLevel ?? 0;
+                        const reviewCount = vocabState?.reviewCount ?? 0;
+                        const audioButtonLabel = vocab.audioUrl ? 'Nghe bản thu' : 'Nghe phát âm';
 
                         return (
                           <div className="flex flex-col items-center gap-6">
@@ -214,13 +341,25 @@ const LessonDetailPage: React.FC = () => {
                               key={vocab.id}
                               className="mx-auto"
                               frontContent={
-                                <div className="h-full flex flex-col justify-between">
+                                <div className="h-full flex flex-col gap-3">
+                                  {vocab.imageUrl && (
+                                    <div className="h-32 w-full rounded-xl overflow-hidden">
+                                      <img
+                                        src={vocab.imageUrl}
+                                        alt={vocab.wordEnglish}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  )}
                                   <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 mb-2">
                                       Từ vựng
                                     </p>
                                     <h4 className="text-2xl font-bold leading-tight">{vocab.wordEnglish}</h4>
                                     <p className="text-white/80 italic mt-1">{vocab.phoneticSpelling}</p>
+                                    <p className="text-xs text-white/70 mt-2">
+                                      Mức độ nhớ: <span className="font-semibold">{masteryLevel}/5</span>
+                                    </p>
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <button
@@ -228,13 +367,13 @@ const LessonDetailPage: React.FC = () => {
                                       className="inline-flex items-center gap-2 text-sm font-semibold text-white/90 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl transition-colors duration-300"
                                       onClick={(event) => {
                                         event.stopPropagation();
-                                        speakWord(vocab.wordEnglish);
+                                        handleVocabularyAudio(vocab.wordEnglish, vocab.audioUrl);
                                       }}
                                     >
                                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                                       </svg>
-                                      Nghe phát âm
+                                      {audioButtonLabel}
                                     </button>
                                     <span className="text-xs uppercase tracking-[0.35em] text-white/60">
                                       Click để lật
@@ -251,6 +390,17 @@ const LessonDetailPage: React.FC = () => {
                                     <p className="text-lg font-semibold leading-relaxed">
                                       {vocab.vietnameseMeaning}
                                     </p>
+                                    {vocab.exampleSentenceEnglish && (
+                                      <div className="mt-4">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 mb-2">
+                                          Ví dụ
+                                        </p>
+                                        <p className="text-sm leading-relaxed">{vocab.exampleSentenceEnglish}</p>
+                                        {vocab.exampleSentenceVietnamese && (
+                                          <p className="text-xs text-white/80 mt-1">{vocab.exampleSentenceVietnamese}</p>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   <p className="text-xs text-white/60">
                                     Nhấn lần nữa để quay lại mặt trước.
@@ -258,6 +408,28 @@ const LessonDetailPage: React.FC = () => {
                                 </div>
                               }
                             />
+                            <div className="w-full max-w-sm">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleToggleRemembered(vocab.id, !isRemembered);
+                                }}
+                                disabled={rememberingId === vocab.id}
+                                className={`w-full px-4 py-2 rounded-xl font-semibold transition-colors duration-300 ${
+                                  isRemembered
+                                    ? 'bg-emerald-200 text-emerald-800 border border-emerald-300'
+                                    : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                                } ${rememberingId === vocab.id ? 'opacity-60 cursor-not-allowed' : ''}`}
+                              >
+                                {isRemembered ? 'Đã nhớ' : 'Đánh dấu đã nhớ'}
+                              </button>
+                              {reviewCount > 0 && (
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                  Đã ôn {reviewCount} lần
+                                </p>
+                              )}
+                            </div>
                             <div className="flex items-center gap-4">
                               <button
                                 type="button"

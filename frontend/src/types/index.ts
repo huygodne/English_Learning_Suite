@@ -49,6 +49,10 @@ export interface Vocabulary {
   wordEnglish: string;
   phoneticSpelling: string;
   vietnameseMeaning: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  exampleSentenceEnglish?: string;
+  exampleSentenceVietnamese?: string;
 }
 
 // Types cho Grammar
@@ -110,6 +114,7 @@ export interface TestSubmission {
   testId: number;
   accountId: number;
   answers: AnswerSubmission[];
+  timeSpentSeconds?: number;
 }
 
 // Types cho Progress
@@ -120,6 +125,7 @@ export interface UserLessonProgress {
   lessonName: string;
   isCompleted: boolean;
   completedAt?: string;
+  timeSpentSeconds?: number;
 }
 
 export interface UserTestProgress {
@@ -128,7 +134,74 @@ export interface UserTestProgress {
   testId: number;
   testName: string;
   score: number;
-  completedAt: string;
+  completedAt?: string;
+  timeSpentSeconds?: number;
+}
+
+export interface VocabularyProgress {
+  vocabularyId: number;
+  remembered: boolean;
+  masteryLevel: number;
+  reviewCount?: number;
+  lastReviewedAt?: string;
+}
+
+export interface UserProgressSummary {
+  accountId: number;
+  totalLessons: number;
+  completedLessons: number;
+  totalTests: number;
+  completedTests: number;
+  averageTestScore: number;
+  currentStreak: number;
+  longestStreak: number;
+  lessonTimeSpentSeconds: number;
+  testTimeSpentSeconds: number;
+  lastLessonCompletedAt?: string;
+  lastTestCompletedAt?: string;
+}
+
+export interface PronunciationSample {
+  id: number;
+  category: string;
+  term: string;
+  ipa: string;
+  description: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}
+
+export interface TranslationResponse {
+  translatedText: string;
+  provider: string;
+  latencyMs: number;
+}
+
+export interface TranslationPayload {
+  text: string;
+  sourceLang: string;
+  targetLang: string;
+}
+
+export interface MediaAsset {
+  id: number;
+  originalFilename: string;
+  storedFilename: string;
+  contentType: string;
+  type: 'IMAGE' | 'AUDIO' | 'VIDEO';
+  category?: string;
+  description?: string;
+  publicUrl: string;
+  createdAt: string;
+}
+
+export interface AdminDashboard {
+  totalUsers: number;
+  adminUsers: number;
+  learnerUsers: number;
+  totalLessons: number;
+  totalTests: number;
+  totalMediaAssets: number;
 }
 
 // Types cho API Response
@@ -154,4 +227,20 @@ export interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+}
+
+// Types cho Chatbot
+export interface ChatMessage {
+  id: number;
+  messageContent: string;
+  sender: 'USER' | 'BOT';
+  timestamp: string;
+}
+
+export interface ChatRequest {
+  userMessage: string;
+}
+
+export interface ChatResponse {
+  botReply: string;
 }
