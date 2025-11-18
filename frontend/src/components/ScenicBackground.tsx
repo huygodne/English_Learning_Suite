@@ -62,10 +62,10 @@ const ScenicBackground: React.FC<ScenicBackgroundProps> = ({ variant = 'mountain
 
       {variant === 'lake' && (
         <>
-          <svg className="absolute bottom-24 w-full h-40 text-teal-200" viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <svg className="absolute bottom-24 w-full h-40 text-teal-200 animate-[wave_8s_ease-in-out_infinite]" viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path fill="currentColor" d="M0,160L48,176C96,192,192,224,288,245.3C384,267,480,277,576,261.3C672,245,768,203,864,170.7C960,139,1056,117,1152,122.7C1248,128,1344,160,1392,176L1440,192L1440,320L0,320Z" />
           </svg>
-          <svg className="absolute bottom-0 w-full h-48 text-teal-400/90" viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <svg className="absolute bottom-0 w-full h-48 text-teal-400/90 animate-[wave_6s_ease-in-out_infinite_reverse]" viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path fill="currentColor" d="M0,288L60,288C120,288,240,288,360,261.3C480,235,600,181,720,181.3C840,181,960,235,1080,240C1200,245,1320,203,1380,181.3L1440,160L1440,320L0,320Z" />
           </svg>
           <div className="absolute inset-x-0 bottom-8 h-8 bg-gradient-to-r from-cyan-300/40 via-sky-300/40 to-teal-300/40 blur-xl" />

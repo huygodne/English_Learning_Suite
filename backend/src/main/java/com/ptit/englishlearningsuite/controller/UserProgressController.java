@@ -1,6 +1,7 @@
 package com.ptit.englishlearningsuite.controller;
 
 import com.ptit.englishlearningsuite.dto.UserLessonProgressDTO;
+import com.ptit.englishlearningsuite.dto.UserProgressSummaryDTO;
 import com.ptit.englishlearningsuite.dto.UserTestProgressDTO;
 import com.ptit.englishlearningsuite.service.UserProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,5 +27,10 @@ public class UserProgressController {
     public ResponseEntity<List<UserTestProgressDTO>> getTestProgress(@PathVariable Long accountId) {
         List<UserTestProgressDTO> progressList = userProgressService.getTestProgressByAccountId(accountId);
         return ResponseEntity.ok(progressList);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<UserProgressSummaryDTO> getSummary(@PathVariable Long accountId) {
+        return ResponseEntity.ok(userProgressService.getProgressSummary(accountId));
     }
 }

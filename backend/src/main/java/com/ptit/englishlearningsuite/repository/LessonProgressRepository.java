@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface LessonProgressRepository extends JpaRepository<LessonProgress, Long> {
     Optional<LessonProgress> findByAccountAndLesson(Account account, Lesson lesson);
     List<LessonProgress> findAllByAccount(Account account);
+    List<LessonProgress> findAllByAccountOrderByCompletedAtAsc(Account account);
 }

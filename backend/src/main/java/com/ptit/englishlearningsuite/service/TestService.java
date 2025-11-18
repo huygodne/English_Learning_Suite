@@ -11,7 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ptit.englishlearningsuite.dto.TestDetailDTO;
@@ -19,6 +23,8 @@ import com.ptit.englishlearningsuite.dto.QuestionDTO;
 
 @Service
 public class TestService {
+
+    private static final Set<String> SUPPORTED_QUESTION_TYPES = Set.of("MULTIPLE_CHOICE", "SINGLE_CHOICE");
 
     @Autowired
     private TestRepository testRepository;
@@ -60,30 +66,49 @@ public class TestService {
 
         int score = 0;
         List<Question> questions = questionRepository.findAllById(
-                submission.getAnswers().stream().map(AnswerSubmissionDTO::getQuestionId).toList()
+                submission.getAnswers().stream().map(AnswerSubmissionDTO::getQuestionId).distinct().toList()
         );
 
+        // Group answers by questionId to handle MULTIPLE_CHOICE correctly
+        Map<Long, List<Long>> answersByQuestion = submission.getAnswers().stream()
+                .collect(Collectors.groupingBy(
+                        AnswerSubmissionDTO::getQuestionId,
+                        Collectors.mapping(AnswerSubmissionDTO::getSelectedOptionId, Collectors.toList())
+                ));
+
         // Improved scoring logic that supports:
-        // 1. Multiple correct answers (check if selected option is among correct ones)
-        // 2. Ordering questions (for now, treat as multiple choice but can be extended)
-        for (AnswerSubmissionDTO userAnswer : submission.getAnswers()) {
-            Question question = questions.stream()
-                    .filter(q -> q.getId().equals(userAnswer.getQuestionId()))
-                    .findFirst().orElse(null);
+        // 1. SINGLE_CHOICE: Check if selected option is correct
+        // 2. MULTIPLE_CHOICE: Check if all selected options match all correct options (exact match)
+        for (Question question : questions) {
+            List<Long> userSelectedOptions = answersByQuestion.getOrDefault(question.getId(), List.of());
+            
+            // Get all correct answer options for this question
+            List<Long> correctOptionIds = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::isCorrect)
+                    .map(AnswerOption::getId)
+                    .sorted()
+                    .collect(Collectors.toList());
 
-            if (question != null) {
-                // Get all correct answer options for this question
-                List<Long> correctOptionIds = question.getAnswerOptions().stream()
-                        .filter(AnswerOption::isCorrect)
-                        .map(AnswerOption::getId)
-                        .toList();
-
-                // Check if user's selected answer is among the correct ones
-                if (!correctOptionIds.isEmpty() && correctOptionIds.contains(userAnswer.getSelectedOptionId())) {
-                    score++;
+            boolean isCorrect = false;
+            
+            if ("MULTIPLE_CHOICE".equals(question.getQuestionType())) {
+                // For MULTIPLE_CHOICE: Check if selected options exactly match correct options
+                // Both sets must have the same size and contain the same elements
+                List<Long> sortedUserOptions = userSelectedOptions.stream().sorted().collect(Collectors.toList());
+                if (sortedUserOptions.size() == correctOptionIds.size() && 
+                    sortedUserOptions.equals(correctOptionIds)) {
+                    isCorrect = true;
                 }
-                // For ordering questions (questionType = "ORDERING"), we would need to check the order
-                // For now, treat ordering questions same as multiple choice with multiple correct answers
+            } else {
+                // For SINGLE_CHOICE: Check if the single selected option is correct
+                if (userSelectedOptions.size() == 1 && 
+                    correctOptionIds.contains(userSelectedOptions.get(0))) {
+                    isCorrect = true;
+                }
+            }
+            
+            if (isCorrect) {
+                score++;
             }
         }
         
@@ -100,9 +125,12 @@ public class TestService {
 
         progress.setAccount(account);
         progress.setTest(test);
-        // Store score as percentage (0-100)
-        int scorePercentage = (score * 100) / totalQuestions;
+        // Store score as percentage (0-100), ensure it never exceeds 100
+        int scorePercentage = Math.min((score * 100) / totalQuestions, 100);
         progress.setScore(scorePercentage);
+
+        progress.setTimeSpentSeconds(submission.getTimeSpentSeconds());
+        progress.setCompletedAt(java.time.LocalDateTime.now());
 
         testProgressRepository.save(progress);
 
@@ -118,7 +146,10 @@ public class TestService {
         dto.setLevel(test.getLevel());
         dto.setAudioUrl(test.getAudioUrl());
         dto.setQuestions(test.getQuestions().stream()
-                .map(this::convertQuestionToDto).collect(Collectors.toSet()));
+                .filter(question -> SUPPORTED_QUESTION_TYPES.contains(question.getQuestionType()))
+                .sorted(Comparator.comparing(Question::getId))
+                .map(this::convertQuestionToDto)
+                .collect(Collectors.toList()));
         return dto;
     }
 
@@ -129,7 +160,9 @@ public class TestService {
         dto.setQuestionType(question.getQuestionType());
         dto.setImageUrl(question.getImageUrl());
         dto.setAnswerOptions(question.getAnswerOptions().stream()
-                .map(this::convertAnswerOptionToDto).collect(Collectors.toSet()));
+                .sorted(Comparator.comparing(AnswerOption::getId))
+                .map(this::convertAnswerOptionToDto)
+                .collect(Collectors.toList()));
         return dto;
     }
 

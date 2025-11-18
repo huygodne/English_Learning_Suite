@@ -5,7 +5,14 @@
 **/*.iws
 *.log
 hs_err_pid*
+backend/uploads/
 
+# Configuration files with sensitive data
+**/application.properties
+**/application-local.properties
+**/application-*.local.properties
+**/.env
+**/.env.local
 
 # File hệ điều hành/IDE khác
 .classpath

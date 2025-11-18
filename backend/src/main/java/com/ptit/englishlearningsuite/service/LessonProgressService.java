@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class LessonProgressService {
 
@@ -46,6 +48,8 @@ public class LessonProgressService {
         progress.setLesson(lesson);
         progress.setScore(progressDto.getScore());
         progress.setCompleted(progressDto.isCompleted());
+        progress.setTimeSpentSeconds(progressDto.getTimeSpentSeconds());
+        progress.setCompletedAt(progressDto.getCompletedAt() != null ? progressDto.getCompletedAt() : LocalDateTime.now());
 
         return lessonProgressRepository.save(progress);
     }

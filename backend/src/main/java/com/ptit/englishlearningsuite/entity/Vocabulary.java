@@ -26,4 +26,8 @@ public class Vocabulary {
     private String wordEnglish;
     private String phoneticSpelling;
     private String vietnameseMeaning;
+    private String imageUrl;
+    private String audioUrl;
+    private String exampleSentenceEnglish;
+    private String exampleSentenceVietnamese;
 }

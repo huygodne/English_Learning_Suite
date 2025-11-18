@@ -1,7 +1,12 @@
 package com.ptit.englishlearningsuite.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "lesson_progress")
@@ -25,5 +30,7 @@ public class LessonProgress {
     private int score; // Điểm từ vựng
     private boolean isCompleted;
 
+    private Integer timeSpentSeconds;
 
+    private LocalDateTime completedAt;
 }

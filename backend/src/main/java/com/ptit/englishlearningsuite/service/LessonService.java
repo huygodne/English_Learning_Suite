@@ -78,6 +78,10 @@ public class LessonService {
         dto.setWordEnglish(vocab.getWordEnglish());
         dto.setPhoneticSpelling(vocab.getPhoneticSpelling());
         dto.setVietnameseMeaning(vocab.getVietnameseMeaning());
+        dto.setImageUrl(vocab.getImageUrl());
+        dto.setAudioUrl(vocab.getAudioUrl());
+        dto.setExampleSentenceEnglish(vocab.getExampleSentenceEnglish());
+        dto.setExampleSentenceVietnamese(vocab.getExampleSentenceVietnamese());
         return dto;
     }
 
