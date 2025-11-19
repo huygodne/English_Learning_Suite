@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library' | 'translate' | 'pronunciation';
+type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library' | 'pronunciation';
 
 interface SiteHeaderProps {
   active?: NavKey;
@@ -14,7 +14,6 @@ const navItems: Array<{ key: NavKey; label: string; to: string }> = [
   { key: 'lessons', label: 'Bài học', to: '/lessons' },
   { key: 'tests', label: 'Kiểm tra', to: '/tests' },
   { key: 'library', label: 'Thư viện', to: '/library' },
-  { key: 'translate', label: 'Dịch thuật', to: '/translate' },
   { key: 'pronunciation', label: 'Phát âm', to: '/pronunciation' },
   { key: 'profile', label: 'Hồ sơ', to: '/profile' }
 ];
@@ -24,7 +23,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ active, className = '' }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className={`relative z-30 bg-white/75 backdrop-blur-xl border-b border-white/60 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)] ${className}`}>
+    <header className={`relative z-[30] bg-white/75 backdrop-blur-xl border-b border-white/60 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)] ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           <Link to="/" className="flex items-center gap-3">

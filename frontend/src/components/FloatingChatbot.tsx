@@ -217,7 +217,7 @@ const FloatingChatbot: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={toggleChat}
-            className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+            className="fixed bottom-6 right-6 z-[70] w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 flex items-center justify-center group"
             aria-label="Mở chatbot"
           >
             <motion.div
@@ -252,7 +252,7 @@ const FloatingChatbot: React.FC = () => {
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.3, type: 'spring' }}
-            className={`fixed bottom-6 right-6 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${
+            className={`fixed bottom-6 right-6 z-[70] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${
               isMinimized ? 'w-16 h-16' : 'w-[400px] h-[600px]'
             }`}
             style={{ maxHeight: 'calc(100vh - 3rem)' }}

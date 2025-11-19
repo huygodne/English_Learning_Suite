@@ -204,6 +204,13 @@ export interface AdminDashboard {
   totalMediaAssets: number;
 }
 
+export interface AdminAccountPayload {
+  username: string;
+  fullName: string;
+  password?: string;
+  role: 'ADMIN' | 'USER';
+}
+
 // Types cho API Response
 export interface ApiResponse<T> {
   data: T;

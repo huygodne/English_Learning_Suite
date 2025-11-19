@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { lessonService, progressService, vocabularyProgressService } from '../services/api';
 import { LessonDetail, VocabularyProgress } from '../types';
 import QuickTranslate from '../components/QuickTranslate';
 import FlipCard from '../components/FlipCard';
 import ScenicBackground from '../components/ScenicBackground';
+import LessonGamesPanel from '../components/games/LessonGamesPanel';
+import SiteHeader from '../components/SiteHeader';
 
 const LessonDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -17,9 +20,15 @@ const LessonDetailPage: React.FC = () => {
   const [savingProgress, setSavingProgress] = useState(false);
   const [vocabProgress, setVocabProgress] = useState<Record<number, VocabularyProgress>>({});
   const [rememberingId, setRememberingId] = useState<number | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [completionState, setCompletionState] = useState<'idle' | 'saved' | 'completed'>('idle');
+  const [vocabReviewMode, setVocabReviewMode] = useState<'all' | 'unremembered'>('all');
   const navigate = useNavigate();
   const studyTimeRef = useRef(0);
   const hasSavedRef = useRef(false);
+  
+  const activityParam = searchParams.get('activity');
+  const gamesPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,6 +36,15 @@ const LessonDetailPage: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-scroll to games panel when activity param is present and lesson is loaded
+  useEffect(() => {
+    if (activityParam && lesson && gamesPanelRef.current) {
+      setTimeout(() => {
+        gamesPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+    }
+  }, [activityParam, lesson]);
 
   useEffect(() => {
     studyTimeRef.current = studyTime;
@@ -67,6 +85,31 @@ const LessonDetailPage: React.FC = () => {
     fetchVocabProgress();
   }, [lesson?.id]);
 
+  const vocabList = useMemo(() => {
+    if (!lesson) return [];
+    if (vocabReviewMode === 'unremembered') {
+      return lesson.vocabularies.filter((vocab) => !(vocabProgress[vocab.id]?.remembered));
+    }
+    return lesson.vocabularies;
+  }, [lesson, vocabProgress, vocabReviewMode]);
+
+  const unrememberedCount = useMemo(() => {
+    if (!lesson) return 0;
+    return lesson.vocabularies.filter((vocab) => !(vocabProgress[vocab.id]?.remembered)).length;
+  }, [lesson, vocabProgress]);
+  const totalVocab = lesson?.vocabularies.length ?? 0;
+  const learnedCount = Math.max(0, totalVocab - unrememberedCount);
+  const learnedPercent = totalVocab > 0 ? Math.round((learnedCount / totalVocab) * 100) : 0;
+  const studyTimeLabel = `${Math.floor(studyTime / 60)}:${(studyTime % 60).toString().padStart(2, '0')}`;
+  const completionLabel =
+    completionState === 'completed' ? 'Hoàn thành' : completionState === 'saved' ? 'Đã lưu' : 'Đang học';
+  const completionBadgeClass =
+    completionState === 'completed'
+      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+      : completionState === 'saved'
+      ? 'bg-amber-50 text-amber-700 border-amber-100'
+      : 'bg-slate-50 text-slate-600 border-slate-100';
+
   useEffect(() => {
     setCurrentVocabIndex(0);
   }, [activeTab]);
@@ -74,6 +117,22 @@ const LessonDetailPage: React.FC = () => {
   useEffect(() => {
     setCurrentVocabIndex(0);
   }, [lesson?.id]);
+
+  useEffect(() => {
+    setCurrentVocabIndex(0);
+  }, [vocabReviewMode]);
+
+  useEffect(() => {
+    if (currentVocabIndex >= vocabList.length && vocabList.length > 0) {
+      setCurrentVocabIndex(vocabList.length - 1);
+    }
+  }, [vocabList.length, currentVocabIndex]);
+
+  const buildCompletedAtPayload = useCallback(() => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 19);
+  }, []);
 
   const persistProgress = useCallback(async (completed: boolean, exitAfter: boolean) => {
     if (!lesson) return;
@@ -84,20 +143,33 @@ const LessonDetailPage: React.FC = () => {
         score: completed ? 100 : 0,
         isCompleted: completed,
         timeSpentSeconds: studyTimeRef.current,
-        completedAt: new Date().toISOString(),
+        completedAt: buildCompletedAtPayload(),
       });
-      if (completed) {
-        hasSavedRef.current = true;
-      }
+      hasSavedRef.current = true;
+      setStatusMessage({
+        type: 'success',
+        text: completed ? 'Bạn đã hoàn thành bài học!' : 'Tiến độ đã được lưu.',
+      });
+      setCompletionState(completed ? 'completed' : 'saved');
       if (exitAfter) {
         navigate('/lessons');
       }
     } catch (err) {
       console.error('Không thể lưu tiến độ bài học', err);
+      setStatusMessage({
+        type: 'error',
+        text: completed ? 'Không thể hoàn thành bài học. Vui lòng thử lại.' : 'Lưu tiến độ thất bại. Kiểm tra kết nối và thử lại.',
+      });
     } finally {
       setSavingProgress(false);
     }
-  }, [lesson, navigate]);
+  }, [lesson, navigate, buildCompletedAtPayload]);
+
+  useEffect(() => {
+    if (!statusMessage) return;
+    const timeout = setTimeout(() => setStatusMessage(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [statusMessage]);
 
   useEffect(() => {
     return () => {
@@ -133,6 +205,22 @@ const LessonDetailPage: React.FC = () => {
       return;
     }
     speakWord(word);
+  };
+
+  const handleReviewRestart = (mode: 'all' | 'unremembered') => {
+    if (mode === 'unremembered' && unrememberedCount === 0) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Bạn đã ghi nhớ tất cả từ vựng! Không còn từ chưa nhớ.',
+      });
+      return;
+    }
+    setVocabReviewMode(mode);
+    setCurrentVocabIndex(0);
+    setStatusMessage({
+      type: 'success',
+      text: mode === 'all' ? 'Đã bắt đầu ôn lại toàn bộ từ vựng.' : 'Đang ôn lại những từ chưa nhớ.',
+    });
   };
 
   const handleToggleRemembered = async (vocabularyId: number, remembered: boolean) => {
@@ -177,45 +265,38 @@ const LessonDetailPage: React.FC = () => {
   return (
     <div className="relative min-h-screen">
       <ScenicBackground variant="lake" />
-      {/* Header */}
-      <header className="glass shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-primary-600">
-                English Learning Suite
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
-                Trang chủ
-              </Link>
-              <Link to="/lessons" className="text-primary-600 px-3 py-2 text-sm font-medium">
-                Bài học
-              </Link>
-              <Link to="/tests" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
-                Kiểm tra
-              </Link>
-            </nav>
-            <div className="hidden md:flex items-center gap-3">
-              <button
-                onClick={handleSaveProgress}
-                disabled={savingProgress}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors disabled:opacity-50"
-              >
-                Lưu tiến độ
-              </button>
-              <button
-                onClick={handleCompleteAndExit}
-                disabled={savingProgress}
-                className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
-              >
-                Hoàn thành &amp; Thoát
-              </button>
-            </div>
-          </div>
+      {statusMessage && (
+        <div
+          className={`fixed top-24 right-6 z-[90] px-4 py-3 rounded-2xl shadow-lg border ${
+            statusMessage.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {statusMessage.text}
         </div>
-      </header>
+      )}
+      {/* Header - Use SiteHeader component for consistency */}
+      <SiteHeader active="lessons" />
+      {/* Action buttons bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="hidden md:flex items-center gap-3 justify-end py-4">
+          <button
+            onClick={handleSaveProgress}
+            disabled={savingProgress}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors disabled:opacity-50"
+          >
+            Lưu tiến độ
+          </button>
+          <button
+            onClick={handleCompleteAndExit}
+            disabled={savingProgress || completionState === 'completed'}
+            className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+          >
+            {completionState === 'completed' ? 'Đã hoàn thành' : 'Hoàn thành & Thoát'}
+          </button>
+        </div>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="md:hidden flex flex-col sm:flex-row gap-3 mb-6">
@@ -228,60 +309,57 @@ const LessonDetailPage: React.FC = () => {
           </button>
           <button
             onClick={handleCompleteAndExit}
-            disabled={savingProgress}
+            disabled={savingProgress || completionState === 'completed'}
             className="w-full px-4 py-3 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
           >
-            Hoàn thành &amp; Thoát
+            {completionState === 'completed' ? 'Đã hoàn thành' : 'Hoàn thành & Thoát'}
           </button>
         </div>
 
-        {/* Lesson Header */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{(() => { const i=Math.max(lesson.name.lastIndexOf(':'), lesson.name.lastIndexOf('-')); return i>=0 ? lesson.name.slice(i+1).trim() : lesson.name; })()}</h1>
-              <div className="flex items-center space-x-4">
-                <span className="bg-primary-100 text-primary-800 text-sm font-medium px-3 py-1 rounded-full">
-                  Bài {lesson.lessonNumber}
-                </span>
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                  lesson.level === 1 
-                    ? 'bg-green-100 text-green-800' 
-                    : lesson.level === 2 
-                    ? 'bg-yellow-100 text-yellow-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {lesson.level === 1 ? 'Easy' : lesson.level === 2 ? 'Medium' : 'Hard'}
-                </span>
-                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {Math.floor(studyTime / 60)}:{(studyTime % 60).toString().padStart(2, '0')}
-                </span>
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-8">
+          <div className="space-y-8">
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{(() => { const i=Math.max(lesson.name.lastIndexOf(':'), lesson.name.lastIndexOf('-')); return i>=0 ? lesson.name.slice(i+1).trim() : lesson.name; })()}</h1>
+                  <div className="flex items-center flex-wrap gap-3">
+                    <span className="bg-primary-100 text-primary-800 text-sm font-medium px-3 py-1 rounded-full">
+                      Bài {lesson.lessonNumber}
+                    </span>
+                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                      lesson.level === 1 
+                        ? 'bg-green-100 text-green-800' 
+                        : lesson.level === 2 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {lesson.level === 1 ? 'Easy' : lesson.level === 2 ? 'Medium' : 'Hard'}
+                    </span>
+                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {studyTimeLabel}
+                    </span>
+                  </div>
+                </div>
+                {lesson.audioUrl && (
+                  <button
+                    onClick={() => playAudio(lesson.audioUrl!)}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                    <span>Phát âm</span>
+                  </button>
+                )}
               </div>
             </div>
-            {lesson.audioUrl && (
-              <button
-                onClick={() => playAudio(lesson.audioUrl!)}
-                className="btn-primary flex items-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                </svg>
-                <span>Phát âm</span>
-              </button>
-            )}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Tabs */}
-            <div className="card mb-6">
+            <div className="card">
               <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8">
+                <nav className="-mb-px flex space-x-8 overflow-x-auto">
                   <button
                     onClick={() => setActiveTab('vocabulary')}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -316,17 +394,16 @@ const LessonDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Tab Content */}
             <div className="card">
               {activeTab === 'vocabulary' && (
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-gray-900">Từ vựng</h3>
-                  {lesson.vocabularies.length > 0 ? (
+                  {vocabList.length > 0 ? (
                     <>
                       {(() => {
-                        const vocab = lesson.vocabularies[currentVocabIndex] ?? null;
+                        const vocab = vocabList[currentVocabIndex] ?? null;
                         if (!vocab) return null;
-                        const total = lesson.vocabularies.length;
+                        const total = vocabList.length;
                         const hasPrev = currentVocabIndex > 0;
                         const hasNext = currentVocabIndex < total - 1;
                         const vocabState = vocabProgress[vocab.id];
@@ -464,7 +541,40 @@ const LessonDetailPage: React.FC = () => {
                       })()}
                     </>
                   ) : (
-                    <p className="text-gray-600 text-center py-8">Chưa có từ vựng nào trong bài học này.</p>
+                    <p className="text-gray-600 text-center py-8">
+                      {vocabReviewMode === 'unremembered'
+                        ? 'Tuyệt vời! Bạn đã đánh dấu nhớ tất cả từ vựng.'
+                        : 'Chưa có từ vựng nào trong bài học này.'}
+                    </p>
+                  )}
+                  {vocabList.length > 0 && currentVocabIndex === vocabList.length - 1 && (
+                    <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-3">
+                      <p className="text-sm text-slate-600">
+                        Bạn đã hoàn thành lượt học với {vocabReviewMode === 'unremembered' ? 'những từ chưa nhớ' : 'toàn bộ từ vựng'}.
+                        Chọn một lựa chọn bên dưới để ôn lại:
+                      </p>
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleReviewRestart('all')}
+                          className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors"
+                        >
+                          Ôn lại tất cả
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleReviewRestart('unremembered')}
+                          disabled={unrememberedCount === 0}
+                          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                            unrememberedCount === 0
+                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                          }`}
+                        >
+                          Ôn lại từ chưa nhớ ({unrememberedCount})
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -532,11 +642,48 @@ const LessonDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
+            {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 && (
+              <div ref={gamesPanelRef}>
+                <LessonGamesPanel 
+                  vocabularies={lesson.vocabularies} 
+                  initialGame={activityParam && ['flashcard', 'blast'].includes(activityParam) ? activityParam as 'flashcard' | 'blast' : undefined}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <QuickTranslate />
+          <div className="space-y-6 xl:sticky xl:top-32">
+            <QuickTranslate className="w-full" />
+            <div className="card space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Tiến độ bài học</h3>
+                <span className="text-sm font-bold text-primary-600">{learnedPercent}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-500 to-secondary-500"
+                  style={{ width: `${learnedPercent}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-2xl bg-primary-50 border border-primary-100">
+                  <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide">Thời gian</p>
+                  <p className="text-lg font-bold text-primary-900 mt-1">{studyTimeLabel}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Đã nhớ</p>
+                  <p className="text-lg font-bold text-emerald-900 mt-1">{learnedCount}/{totalVocab}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100">
+                  <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">Chưa nhớ</p>
+                  <p className="text-lg font-bold text-amber-900 mt-1">{unrememberedCount}</p>
+                </div>
+                <div className={`p-3 rounded-2xl border ${completionBadgeClass}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wide">Trạng thái</p>
+                  <p className="text-lg font-bold mt-1">{completionLabel}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

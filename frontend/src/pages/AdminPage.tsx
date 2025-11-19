@@ -20,6 +20,16 @@ const AdminPage: React.FC = () => {
     category: '',
     description: ''
   });
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [userFormError, setUserFormError] = useState('');
+  const [savingUser, setSavingUser] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [userForm, setUserForm] = useState({
+    username: '',
+    fullName: '',
+    password: '',
+    role: 'USER' as 'ADMIN' | 'USER',
+  });
 
   const totalUsersCount = dashboard?.totalUsers ?? users.length;
   const adminCount = dashboard?.adminUsers ?? users.filter(u => u.role === 'ADMIN').length;
@@ -27,6 +37,15 @@ const AdminPage: React.FC = () => {
   const totalLessonsCount = dashboard?.totalLessons ?? 0;
   const totalTestsCount = dashboard?.totalTests ?? 0;
   const totalMediaCount = dashboard?.totalMediaAssets ?? mediaAssets.length;
+
+  const loadUsers = async () => {
+    try {
+      const data = await adminService.getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      setError('Không thể tải danh sách người dùng');
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,6 +116,86 @@ const AdminPage: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
+    }
+  };
+
+  const openCreateUserModal = () => {
+    setEditingUserId(null);
+    setUserForm({
+      username: '',
+      fullName: '',
+      password: '',
+      role: 'USER'
+    });
+    setUserFormError('');
+    setIsUserModalOpen(true);
+  };
+
+  const openEditUserModal = (account: AccountDTO) => {
+    setEditingUserId(account.id);
+    setUserForm({
+      username: account.username,
+      fullName: account.fullName,
+      password: '',
+      role: account.role as 'ADMIN' | 'USER'
+    });
+    setUserFormError('');
+    setIsUserModalOpen(true);
+  };
+
+  const closeUserModal = () => {
+    setIsUserModalOpen(false);
+    setSavingUser(false);
+    setUserFormError('');
+  };
+
+  const handleUserFormSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setUserFormError('');
+    if (!userForm.username.trim() || !userForm.fullName.trim()) {
+      setUserFormError('Vui lòng nhập đầy đủ tên đăng nhập và họ tên');
+      return;
+    }
+    if (!editingUserId && !userForm.password.trim()) {
+      setUserFormError('Vui lòng nhập mật khẩu cho người dùng mới');
+      return;
+    }
+    try {
+      setSavingUser(true);
+      if (editingUserId) {
+        const payload: Partial<AdminAccountPayload> = {
+          username: userForm.username.trim(),
+          fullName: userForm.fullName.trim(),
+          role: userForm.role,
+        };
+        if (userForm.password.trim()) {
+          payload.password = userForm.password.trim();
+        }
+        await adminService.updateUser(editingUserId, payload);
+      } else {
+        await adminService.createUser({
+          username: userForm.username.trim(),
+          fullName: userForm.fullName.trim(),
+          password: userForm.password.trim(),
+          role: userForm.role,
+        });
+      }
+      await loadUsers();
+      closeUserModal();
+    } catch (err: any) {
+      setUserFormError(err?.response?.data?.message || 'Không thể lưu người dùng');
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
+    try {
+      await adminService.deleteUser(id);
+      await loadUsers();
+    } catch (err) {
+      setError('Không thể xóa người dùng');
     }
   };
 
@@ -214,7 +313,7 @@ const AdminPage: React.FC = () => {
         <div className="card">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Quản lý người dùng</h2>
-            <button className="btn-primary">
+            <button className="btn-primary" onClick={openCreateUserModal}>
               Thêm người dùng
             </button>
           </div>
@@ -242,31 +341,37 @@ const AdminPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id}>
+                  {users.map((account) => (
+                    <tr key={account.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.id}
+                        {account.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.username}
+                        {account.username}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.fullName}
+                        {account.fullName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'ADMIN' 
+                          account.role === 'ADMIN' 
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {user.role}
+                          {account.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-primary-600 hover:text-primary-900 mr-4">
+                        <button 
+                          className="text-primary-600 hover:text-primary-900 mr-4"
+                          onClick={() => openEditUserModal(account)}
+                        >
                           Sửa
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDeleteUser(account.id)}
+                        >
                           Xóa
                         </button>
                       </td>
@@ -441,6 +546,88 @@ const AdminPage: React.FC = () => {
           )}
         </div>
       </main>
+      {isUserModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900">
+                {editingUserId ? 'Cập nhật người dùng' : 'Thêm người dùng mới'}
+              </h3>
+              <button onClick={closeUserModal} className="text-gray-500 hover:text-gray-700">
+                ✕
+              </button>
+            </div>
+            {userFormError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-sm mb-4">
+                {userFormError}
+              </div>
+            )}
+            <form className="space-y-4" onSubmit={handleUserFormSubmit}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                <input
+                  type="text"
+                  value={userForm.username}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, username: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                  disabled={savingUser}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+                <input
+                  type="text"
+                  value={userForm.fullName}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                  disabled={savingUser}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {editingUserId ? 'Mật khẩu (để trống nếu không đổi)' : 'Mật khẩu'}
+                </label>
+                <input
+                  type="password"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                  disabled={savingUser}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, role: e.target.value as 'ADMIN' | 'USER' }))}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                  disabled={savingUser}
+                >
+                  <option value="USER">USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeUserModal}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50"
+                  disabled={savingUser}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-60"
+                  disabled={savingUser}
+                >
+                  {savingUser ? 'Đang lưu...' : editingUserId ? 'Cập nhật' : 'Tạo mới'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

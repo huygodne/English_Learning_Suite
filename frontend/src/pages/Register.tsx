@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Account } from '../types';
@@ -15,10 +15,21 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
-  const [coveringEyes, setCoveringEyes] = useState(false);
+  const [isWaving, setIsWaving] = useState(false);
+  const waveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const triggerWave = () => {
+    if (waveTimeoutRef.current) {
+      clearTimeout(waveTimeoutRef.current);
+    }
+    setIsWaving(true);
+    waveTimeoutRef.current = window.setTimeout(() => {
+      setIsWaving(false);
+    }, 1800);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,13 +38,12 @@ const Register: React.FC = () => {
       [name]: value
     }));
 
-    // Update mascot - cover face when typing in any field
+    // Trigger friendly wave when user interacts with the fields
     if (name === 'password') {
       if (value.length > 0) {
-        setCoveringEyes(true);
+        triggerWave();
         setMascotMood('peek');
       } else if (!formData.username && !formData.fullName) {
-        setCoveringEyes(false);
         setMascotMood('idle');
       }
     } else if (name === 'username' || name === 'fullName' || name === 'phoneNumber') {
@@ -41,7 +51,7 @@ const Register: React.FC = () => {
         setMascotMood('typing');
         // Cover eyes if password field has value
         if (formData.password && formData.password.length > 0) {
-          setCoveringEyes(true);
+          triggerWave();
         }
       } else {
         // Check if any other field has value
@@ -50,7 +60,6 @@ const Register: React.FC = () => {
                               (name === 'phoneNumber' && (formData.username || formData.fullName));
         if (!hasOtherValue && !formData.password) {
           setMascotMood('idle');
-          setCoveringEyes(false);
         }
       }
     }
@@ -59,9 +68,17 @@ const Register: React.FC = () => {
   useEffect(() => {
     if (error) {
       setMascotMood('sad');
-      setCoveringEyes(false);
+      setIsWaving(false);
     }
   }, [error]);
+
+  useEffect(() => {
+    return () => {
+      if (waveTimeoutRef.current) {
+        clearTimeout(waveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,14 +89,14 @@ const Register: React.FC = () => {
     try {
       await register(formData);
       setMascotMood('happy');
-      setCoveringEyes(false);
+      triggerWave();
       setTimeout(() => {
         navigate('/');
       }, 1000);
     } catch (err: any) {
       setError(err.response?.data || 'Đăng ký thất bại');
       setMascotMood('sad');
-      setCoveringEyes(false);
+      setIsWaving(false);
       setLoading(false);
     }
   };
@@ -585,14 +602,14 @@ const Register: React.FC = () => {
         <div className="hidden lg:flex flex-1 justify-center items-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <AnimatedMascot
             mood={mascotMood}
-            coveringEyes={coveringEyes}
+            isWaving={isWaving}
             accentTone="secondary"
             size="lg"
             floating={true}
             bubbleText={
               error ? 'Ôi không, thử lại nhé! 😢' :
               loading ? 'Đang tạo tài khoản... ⚡' :
-              coveringEyes ? 'Tớ sẽ không nhìn đâu! 🔒' :
+              isWaving ? 'Xin chào! 👋' :
               mascotMood === 'happy' ? 'Chào mừng bạn gia nhập! 🎉' :
               mascotMood === 'typing' ? 'Đang nhập thông tin... 👀' :
               'Hãy điền thông tin để tạo tài khoản nhé! 👋'
@@ -650,23 +667,15 @@ const Register: React.FC = () => {
                     value={formData.password}
                     onChange={handleChange}
                     onFocus={() => {
-                      setCoveringEyes(true);
+                      triggerWave();
                       setMascotMood('peek');
                     }}
                     onBlur={() => {
                       if (!error && formData.password.length === 0 && formData.username.length === 0 && !formData.fullName && !formData.phoneNumber) {
-                        setCoveringEyes(false);
                         setMascotMood('idle');
-                      } else if (formData.password.length > 0) {
-                        setCoveringEyes(true);
                       }
                     }}
                   />
-                  {coveringEyes && (
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 animate-pulse">
-                      <span className="text-xl">👀</span>
-                    </div>
-                  )}
                 </div>
               </div>
               

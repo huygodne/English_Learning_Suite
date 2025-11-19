@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AnimatedMascot, { MascotMood } from '../components/AnimatedMascot';
@@ -11,13 +11,24 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
-  const [coveringEyes, setCoveringEyes] = useState(false);
+  const [isWaving, setIsWaving] = useState(false);
+  const waveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname || '/';
+
+  const triggerWave = () => {
+    if (waveTimeoutRef.current) {
+      clearTimeout(waveTimeoutRef.current);
+    }
+    setIsWaving(true);
+    waveTimeoutRef.current = window.setTimeout(() => {
+      setIsWaving(false);
+    }, 1800);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,25 +37,22 @@ const Login: React.FC = () => {
       [name]: value
     }));
 
-    // Update mascot - cover face when typing in any field
+    // Trigger friendly wave when user interacts with the fields
     if (name === 'password') {
       if (value.length > 0) {
-        setCoveringEyes(true);
+        triggerWave();
         setMascotMood('peek');
       } else if (!formData.username) {
-        setCoveringEyes(false);
         setMascotMood('idle');
       }
     } else if (name === 'username') {
       if (value.length > 0) {
         setMascotMood('typing');
-        // Cover eyes if password field has value
         if (formData.password.length > 0) {
-          setCoveringEyes(true);
+          triggerWave();
         }
       } else if (!formData.password) {
         setMascotMood('idle');
-        setCoveringEyes(false);
       }
     }
   };
@@ -52,9 +60,17 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (error) {
       setMascotMood('sad');
-      setCoveringEyes(false);
+      setIsWaving(false);
     }
   }, [error]);
+
+  useEffect(() => {
+    return () => {
+      if (waveTimeoutRef.current) {
+        clearTimeout(waveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,14 +81,14 @@ const Login: React.FC = () => {
     try {
       await login(formData.username, formData.password);
       setMascotMood('happy');
-      setCoveringEyes(false);
+      triggerWave();
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 1000);
     } catch (err: any) {
       setError(err.response?.data || 'Đăng nhập thất bại');
       setMascotMood('sad');
-      setCoveringEyes(false);
+      setIsWaving(false);
       setLoading(false);
     }
   };
@@ -534,16 +550,18 @@ const Login: React.FC = () => {
         ))}
         
         {/* Saturn-like planet */}
-        <div className="planet-saturn">
-          <div className="planet-saturn-rings"></div>
+        <Link to="/lessons" className="planet-saturn group">
+          <div className="planet-saturn-rings group-hover:scale-110 transition-transform duration-300"></div>
           <div className="planet-saturn-body"></div>
-        </div>
+          <span className="planet-callout">Bài học</span>
+        </Link>
         
         {/* Blue planet */}
-        <div className="planet-blue">
-          <div className="planet-blue-ring"></div>
+        <Link to="/library" className="planet-blue group">
+          <div className="planet-blue-ring group-hover:scale-110 transition-transform duration-300"></div>
           <div className="planet-blue-body"></div>
-        </div>
+          <span className="planet-callout">Thư viện</span>
+        </Link>
         
         {/* Moon */}
         <div className="moon">
@@ -562,15 +580,16 @@ const Login: React.FC = () => {
         <div className="shooting-star shooting-star-4"></div>
         
         {/* Rocket */}
-        <div className="rocket">
+        <Link to="/tests" className="rocket group">
           <div className="rocket-body">
             <div className="rocket-nose"></div>
             <div className="rocket-window"></div>
             <div className="rocket-window rocket-window-2"></div>
             <div className="rocket-window rocket-window-3"></div>
           </div>
-          <div className="rocket-flames"></div>
-        </div>
+          <div className="rocket-flames group-hover:scale-110 transition-transform duration-300"></div>
+          <span className="planet-callout">Kiểm tra</span>
+        </Link>
       </div>
 
       <div className="max-w-6xl w-full flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-16 relative z-10">
@@ -578,7 +597,7 @@ const Login: React.FC = () => {
         <div className="hidden lg:flex flex-1 justify-center items-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <AnimatedMascot
             mood={mascotMood}
-            coveringEyes={coveringEyes}
+            isWaving={isWaving}
             accentTone="primary"
             size="lg"
             floating={true}
@@ -587,7 +606,8 @@ const Login: React.FC = () => {
               loading ? 'Đang kiểm tra... ⚡' :
               mascotMood === 'happy' ? 'Tuyệt vời! Đăng nhập thành công! 🎉' :
               mascotMood === 'typing' ? 'Đang nhập thông tin... 👀' :
-              'Chào bạn! Hãy điền thông tin để đăng nhập nhé! 👋'
+              isWaving ? 'Xin chào! 👋' :
+              'Chào bạn! Hãy điền thông tin để đăng nhập nhé!'
             }
           />
         </div>
@@ -626,13 +646,12 @@ const Login: React.FC = () => {
                   onChange={handleChange}
                   onFocus={() => {
                     if (formData.password.length > 0) {
-                      setCoveringEyes(true);
+                      triggerWave();
                     }
                     setMascotMood('typing');
                   }}
                   onBlur={() => {
                     if (!formData.password && !formData.username && !error) {
-                      setCoveringEyes(false);
                       setMascotMood('idle');
                     }
                   }}
@@ -654,23 +673,15 @@ const Login: React.FC = () => {
                     value={formData.password}
                     onChange={handleChange}
                     onFocus={() => {
-                      setCoveringEyes(true);
+                      triggerWave();
                       setMascotMood('peek');
                     }}
                     onBlur={() => {
                       if (!error && formData.password.length === 0 && formData.username.length === 0) {
-                        setCoveringEyes(false);
                         setMascotMood('idle');
-                      } else if (formData.password.length > 0) {
-                        setCoveringEyes(true);
                       }
                     }}
                   />
-                  {coveringEyes && (
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 animate-pulse">
-                      <span className="text-xl">👀</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

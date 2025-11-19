@@ -18,7 +18,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   onToggleMobileMenu,
   onToggleHamburgerMenu
 }) => (
-  <header className="relative z-40 bg-white/70 backdrop-blur-xl border-b border-white/60 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)]">
+  <header className="relative z-[30] bg-white/70 backdrop-blur-xl border-b border-white/60 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)]">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center py-6">
         <div className="flex items-center">
@@ -56,6 +56,12 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
             className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-semibold transition-all duration-300 rounded-xl hover:bg-primary-50"
           >
             Kiểm tra
+          </Link>
+          <Link
+            to="/library"
+            className="text-slate-600 hover:text-primary-600 px-3 py-2 text-sm font-semibold transition-all duration-300 rounded-xl hover:bg-primary-50"
+          >
+            Thư viện
           </Link>
           <Link
             to="/profile"
@@ -118,6 +124,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           </Link>
           <Link to="/tests" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
             Kiểm tra
+          </Link>
+          <Link to="/library" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
+            Thư viện
           </Link>
           <Link to="/profile" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
             Hồ sơ

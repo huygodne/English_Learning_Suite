@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 
 export type MascotMood =
   | 'idle'
@@ -20,7 +20,6 @@ interface AnimatedMascotProps {
   className?: string;
   size?: 'md' | 'lg';
   floating?: boolean;
-  coveringEyes?: boolean;
 }
 
 const MOOD_PRESETS: Record<MascotMood, {
@@ -86,20 +85,12 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
   className = '',
   size = 'lg',
   floating = true,
-  coveringEyes = false,
 }) => {
   const preset = useMemo(() => MOOD_PRESETS[mood] ?? MOOD_PRESETS.idle, [mood]);
   const speechBubble = bubbleText === null ? null : bubbleText ?? DEFAULT_BUBBLE[mood];
   const scale = size === 'lg' ? 1 : 0.75;
-  
-  // Use state with stable initialization to ensure consistency
-  const [handCoverMode, setHandCoverMode] = useState<'none' | 'one' | 'two'>('none');
-  
-  useEffect(() => {
-    setHandCoverMode(coveringEyes ? 'two' : 'none');
-  }, [coveringEyes]);
-  
-  const robotKey = useMemo(() => `robot-${coveringEyes}-${handCoverMode}`, [coveringEyes, handCoverMode]);
+
+  const robotKey = useMemo(() => `robot-${mood}`, [mood]);
   const styleId = useMemo(() => `robot-styles-${Math.random().toString(36).slice(2)}`, []);
   
   return (
@@ -290,12 +281,10 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
           }
         }
 
-        ${!coveringEyes ? `
         .robot-eye {
           animation: eyeBlink 5s cubic-bezier(0.4, 0, 0.2, 1) infinite, eyeGlow 2s ease-in-out infinite !important;
           animation-play-state: running !important;
         }
-        ` : ''}
 
         @keyframes eyeBlink {
           0%, 82%, 100% {
@@ -315,57 +304,6 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
             border-radius: 50%;
           }
         }
-
-        /* Eyes animation when hands cover */
-        ${coveringEyes ? `
-        .robot-eye {
-          opacity: 1;
-          animation: eyeCoveredState 2.2s linear infinite, eyeGlow 2s ease-in-out infinite !important;
-          animation-play-state: running !important;
-        }
-          /* Overlay che mắt từ trên xuống khi chớp */
-        .robot-eye::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: var(--dark-blue);
-          border-radius: 50%;
-          z-index: 3;
-          transform-origin: top;
-          transform: scaleY(0);
-          animation: blinkFromTop 2.2s ease-in-out infinite;
-        }
-        @keyframes eyeCoveredState {
-          /* 0-50%: Tay che - mắt nhắm */
-          0%, 49.99% {
-            height: 2px;
-            border-radius: 50%;
-            background: var(--black);
-          }
-          /* 50%: Tay hạ xuống - mắt mở */
-          50%, 100% {
-            height: 16px;
-            border-radius: 50%;
-            background: var(--black);
-          }
-        }
-        @keyframes blinkFromTop {
-          /* 0-50%: Tay che - KHÔNG chớp mắt */
-          0%, 50% { transform: scaleY(0); }
-          /* 50-75%: Tay hạ và đưa lên lại - KHÔNG chớp mắt */
-          75% { transform: scaleY(0); }
-          /* 75-85%: Sau khi tay đã đưa lên, mới chớp mắt */
-          77% { transform: scaleY(1); }
-          78% { transform: scaleY(0); }
-          80% { transform: scaleY(1); }
-          81% { transform: scaleY(0); }
-          /* 85-100%: Giữ mở cho đến cuối chu kỳ */
-          100% { transform: scaleY(0); }
-        }
-        ` : ''}
 
         /* Mouth - Cat smile shape (W shape) */
         .robot-mouth {
@@ -499,446 +437,6 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
           will-change: transform;
         }
 
-        /* Arms - Short stubby rounded, dark blue shoulder, light gray with mitten */
-        .robot-arms {
-          position: absolute;
-          top: 133px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 224px;
-          height: 63px;
-          z-index: 1;
-        }
-
-        .robot-arm {
-          position: absolute;
-          width: 22px;
-          height: 56px;
-        }
-
-        /* Dark blue shoulder joint - small rounded circle */
-        .robot-arm::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 25px;
-          height: 25px;
-          background: var(--dark-blue);
-          border-radius: 50%;
-          box-shadow: 
-            inset 0 2px 4px rgba(0, 0, 0, 0.4),
-            0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Light gray arm with segmentation lines */
-        .robot-arm::after {
-          content: "";
-          position: absolute;
-          top: 22px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 22px;
-          height: 42px;
-          background: var(--light-gray);
-          border-radius: 11px;
-          box-shadow: 
-            inset 0 2px 4px rgba(255, 255, 255, 0.7),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.1),
-            0 2px 6px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Curved segmentation lines on outer side of arm */
-        .robot-arm {
-          position: relative;
-        }
-        .robot-arm.left::after {
-          background-image: 
-            radial-gradient(ellipse at 120% 30%, rgba(0,0,0,0.1) 0%, transparent 50%),
-            radial-gradient(ellipse at 120% 70%, rgba(0,0,0,0.1) 0%, transparent 50%),
-            var(--light-gray);
-        }
-        .robot-arm.right::after {
-          background-image: 
-            radial-gradient(ellipse at -20% 30%, rgba(0,0,0,0.1) 0%, transparent 50%),
-            radial-gradient(ellipse at -20% 70%, rgba(0,0,0,0.1) 0%, transparent 50%),
-            var(--light-gray);
-        }
-
-        /* Mitten hand - simple rounded */
-        .robot-hand {
-          position: absolute;
-          bottom: -8px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 25px;
-          height: 22px;
-          background: var(--light-gray);
-          border-radius: 13px 13px 10px 10px;
-          box-shadow: 
-            inset 0 2px 4px rgba(255, 255, 255, 0.7),
-            0 2px 4px rgba(0, 0, 0, 0.15);
-        }
-
-        .robot-arm.left {
-          left: -25px;
-          transform: rotate(-12deg);
-          transform-origin: top center;
-          ${!coveringEyes ? 'animation: armFloat 3s ease-in-out infinite; opacity: 1; display: block;' : 'opacity: 0 !important; pointer-events: none; display: none !important;'}
-        }
-
-        .robot-arm.right {
-          right: -25px;
-          transform: rotate(12deg);
-          transform-origin: top center;
-          ${!coveringEyes ? 'animation: armFloat 3s ease-in-out infinite; opacity: 1; display: block;' : 'opacity: 0 !important; pointer-events: none; display: none !important;'}
-        }
-        
-        ${coveringEyes ? `
-        .robot-arms {
-          display: none !important;
-          opacity: 0 !important;
-          visibility: hidden !important;
-        }
-        ` : ''}
-
-        @keyframes armFloat {
-          0%, 100% { transform: translateY(0) rotate(var(--arm-rotate, -12deg)); }
-          50% { transform: translateY(-2px) rotate(calc(var(--arm-rotate, -12deg) + 2deg)); }
-        }
-
-        ${mood === 'happy' && !coveringEyes ? `
-        .robot-arm.left {
-          animation: armFloat 3s ease-in-out infinite, armWave 0.8s ease infinite !important;
-          --arm-rotate: -12deg;
-          animation-play-state: running !important;
-          will-change: transform;
-        }
-        .robot-arm.right {
-          animation: armFloat 3s ease-in-out infinite, armWave 0.8s ease infinite !important;
-          --arm-rotate: 12deg;
-          animation-play-state: running !important;
-          will-change: transform;
-        }
-        @keyframes armWave {
-          0%, 100% { transform: rotate(var(--arm-rotate)) translateY(0); }
-          50% { transform: rotate(calc(var(--arm-rotate) - 10deg)) translateY(-3px); }
-        }
-        ` : ''}
-
-        /* Covering Hands - TAY ĐƯA LÊN CHE MẮT */
-        .robot-covering-hands {
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 150px;
-          height: 150px;
-          z-index: 15;
-          pointer-events: none;
-          opacity: 1;
-          visibility: visible;
-        }
-
-        ${coveringEyes ? `
-        .robot-covering-hands {
-          display: block;
-        }
-        ` : `
-        .robot-covering-hands {
-          display: none;
-        }
-        `}
-
-        .covering-hand {
-          position: absolute;
-          width: 50px;
-          height: 60px;
-          background: var(--light-gray);
-          border: 2.8px solid rgba(0, 0, 0, 0.1);
-          border-radius: 25px 25px 6px 25px;
-          box-shadow: 
-            0 6px 16px rgba(0, 0, 0, 0.25),
-            inset 0 2px 4px rgba(255, 255, 255, 0.6),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-          z-index: 15;
-          animation-play-state: running !important;
-          animation-delay: 0s !important;
-          will-change: transform, opacity;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-          opacity: 1 !important;
-          visibility: visible !important;
-        }
-
-
-        ${handCoverMode === 'one' ? `
-        .covering-hand.left {
-          left: 0px !important;
-          top: 30px !important;
-          width: 60px !important;
-          height: 70px !important;
-          border-radius: 30px 30px 8px 30px;
-          transform-origin: bottom center;
-          opacity: 1 !important;
-          visibility: visible !important;
-          display: block !important;
-          animation: handMoveUpFromBodyLeft 0.8s ease-out forwards, handPeekMoveLeft 2.5s ease-in-out infinite 0.8s !important;
-          animation-play-state: running !important;
-          animation-fill-mode: both !important;
-          animation-delay: 0s, 0.8s !important;
-        }
-        .covering-hand.right.peek-right {
-          display: block !important;
-          visibility: visible !important;
-          right: 0px !important;
-          top: 30px !important;
-          width: 60px !important;
-          height: 70px !important;
-          border-radius: 30px 30px 30px 8px;
-          transform-origin: bottom center;
-          opacity: 1 !important;
-          animation: handMoveUpFromBodyRight 0.8s ease-out forwards, handPeekPeek 2.5s ease-in-out infinite 0.8s !important;
-          animation-play-state: running !important;
-          animation-fill-mode: both !important;
-          animation-delay: 0s, 0.8s !important;
-        }
-        ` : handCoverMode === 'two' ? `
-        .covering-hand.left {
-          left: 10px !important;
-          top: 30px !important;
-          width: 60px !important;
-          height: 70px !important;
-          border-radius: 30px 30px 8px 30px;
-          transform-origin: bottom center;
-          opacity: 1 !important;
-          visibility: visible !important;
-          display: block !important;
-          animation: handMoveUpFromBodyLeft 0.8s ease-out forwards, handPeekMoveLeft 2.5s ease-in-out infinite 0.8s !important;
-          animation-play-state: running !important;
-          animation-fill-mode: both !important;
-          animation-delay: 0s, 0.8s !important;
-        }
-        .covering-hand.right {
-          display: block !important;
-          visibility: visible !important;
-          right: 10px !important;
-          top: 30px !important;
-          width: 60px !important;
-          height: 70px !important;
-          border-radius: 30px 30px 30px 8px;
-          transform-origin: bottom center;
-          opacity: 1 !important;
-          animation: handMoveUpFromBodyRight 0.8s ease-out forwards, handPeekMoveRight 2.5s ease-in-out infinite 0.8s !important;
-          animation-play-state: running !important;
-          animation-fill-mode: both !important;
-          animation-delay: 0s, 0.8s !important;
-        }
-        ` : ''}
-        @keyframes handMoveUpFromBodyLeft {
-          0% {
-            opacity: 0;
-            transform: translateY(70px) translateX(-40px) rotate(-35deg) scale(0.8);
-          }
-          40% {
-            opacity: 0.7;
-            transform: translateY(35px) translateX(-20px) rotate(-5deg) scale(0.9);
-          }
-          70% {
-            opacity: 0.95;
-            transform: translateY(12px) translateX(-5px) rotate(10deg) scale(0.97);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) translateX(0) rotate(18deg) scale(1);
-          }
-        }
-        @keyframes handMoveUpFromBodyRight {
-          0% {
-            opacity: 0;
-            transform: translateY(70px) translateX(40px) rotate(35deg) scale(0.8);
-          }
-          40% {
-            opacity: 0.7;
-            transform: translateY(35px) translateX(20px) rotate(5deg) scale(0.9);
-          }
-          70% {
-            opacity: 0.95;
-            transform: translateY(12px) translateX(5px) rotate(-10deg) scale(0.97);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) translateX(0) rotate(-18deg) scale(1);
-          }
-        }
-        /* Tay trái di chuyển lên xuống - hướng vào trong, che hết mắt */
-        @keyframes handPeekMoveLeft {
-          0% {
-            transform: translateY(0) translateX(0) rotate(18deg) scale(1);
-            opacity: 1;
-          }
-          45% {
-            transform: translateY(0) translateX(0) rotate(18deg) scale(1);
-            opacity: 1;
-          }
-          49% {
-            transform: translateY(0) translateX(0) rotate(18deg) scale(1);
-            opacity: 1;
-          }
-          /* 1.25s: Tay hạ xuống NHANH về vị trí cánh tay */
-          50% {
-            transform: translateY(75px) translateX(-40px) rotate(-30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          52% {
-            transform: translateY(75px) translateX(-40px) rotate(-30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          /* 1.25-1.56s: Tay ở vị trí cánh tay */
-          62% {
-            transform: translateY(75px) translateX(-40px) rotate(-30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          /* 1.56-2.5s: Tay từ từ đưa lên lại từ thân - hướng vào trong */
-          65% {
-            transform: translateY(75px) translateX(-40px) rotate(-30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          75% {
-            transform: translateY(38px) translateX(-20px) rotate(5deg) scale(0.92);
-            opacity: 0.95;
-          }
-          85% {
-            transform: translateY(18px) translateX(-8px) rotate(15deg) scale(0.96);
-            opacity: 0.98;
-          }
-          95% {
-            transform: translateY(6px) translateX(-2px) rotate(17deg) scale(0.99);
-            opacity: 0.99;
-          }
-          100% {
-            transform: translateY(0) translateX(0) rotate(18deg) scale(1);
-            opacity: 1;
-          }
-        }
-        /* Tay phải di chuyển lên xuống - hướng vào trong, che hết mắt */
-        @keyframes handPeekMoveRight {
-          0% {
-            transform: translateY(0) translateX(0) rotate(-18deg) scale(1);
-            opacity: 1;
-          }
-          45% {
-            transform: translateY(0) translateX(0) rotate(-18deg) scale(1);
-            opacity: 1;
-          }
-          49% {
-            transform: translateY(0) translateX(0) rotate(-18deg) scale(1);
-            opacity: 1;
-          }
-          /* 1.25s: Tay hạ xuống NHANH về vị trí cánh tay */
-          50% {
-            transform: translateY(75px) translateX(40px) rotate(30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          52% {
-            transform: translateY(75px) translateX(40px) rotate(30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          /* 1.25-1.56s: Tay ở vị trí cánh tay */
-          62% {
-            transform: translateY(75px) translateX(40px) rotate(30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          /* 1.56-2.5s: Tay từ từ đưa lên lại từ thân - hướng vào trong */
-          65% {
-            transform: translateY(75px) translateX(40px) rotate(30deg) scale(0.8);
-            opacity: 0.9;
-          }
-          75% {
-            transform: translateY(38px) translateX(20px) rotate(-5deg) scale(0.92);
-            opacity: 0.95;
-          }
-          85% {
-            transform: translateY(18px) translateX(8px) rotate(-15deg) scale(0.96);
-            opacity: 0.98;
-          }
-          95% {
-            transform: translateY(6px) translateX(2px) rotate(-17deg) scale(0.99);
-            opacity: 0.99;
-          }
-          100% {
-            transform: translateY(0) translateX(0) rotate(-18deg) scale(1);
-            opacity: 1;
-          }
-        }
-
-        /* Animation tay phải XÒE để nhìn trộm - hướng vào trong, che một phần mắt */
-        @keyframes handPeekPeek {
-          /* 0-1.25s: Tay phải XÒE RA một chút nhưng vẫn hướng vào trong */
-          0% {
-            transform: translateX(20px) translateY(0) rotate(-20deg) scale(1);
-            opacity: 0.6;
-          }
-          10% {
-            transform: translateX(22px) translateY(-2px) rotate(-22deg) scale(1);
-            opacity: 0.58;
-          }
-          20% {
-            transform: translateX(20px) translateY(0) rotate(-20deg) scale(1);
-            opacity: 0.6;
-          }
-          30% {
-            transform: translateX(18px) translateY(2px) rotate(-18deg) scale(1);
-            opacity: 0.62;
-          }
-          40% {
-            transform: translateX(20px) translateY(0) rotate(-20deg) scale(1);
-            opacity: 0.6;
-          }
-          49% {
-            transform: translateX(22px) translateY(-2px) rotate(-22deg) scale(1);
-            opacity: 0.58;
-          }
-          /* 1.25s: Tay hạ xuống về vị trí cánh tay */
-          50% {
-            transform: translateX(25px) translateY(75px) rotate(30deg) scale(0.8);
-            opacity: 0.4;
-          }
-          51% {
-            transform: translateX(25px) translateY(75px) rotate(30deg) scale(0.8);
-            opacity: 0.4;
-          }
-          /* 1.25-1.56s: Tay ở vị trí cánh tay */
-          62.5% {
-            transform: translateX(25px) translateY(75px) rotate(30deg) scale(0.8);
-            opacity: 0.4;
-          }
-          /* 1.56-2.5s: Tay từ từ đưa lên lại từ thân - hướng vào trong */
-          63% {
-            transform: translateX(25px) translateY(75px) rotate(30deg) scale(0.8);
-            opacity: 0.4;
-          }
-          70% {
-            transform: translateX(23px) translateY(38px) rotate(-5deg) scale(0.92);
-            opacity: 0.5;
-          }
-          80% {
-            transform: translateX(21px) translateY(18px) rotate(-18deg) scale(0.96);
-            opacity: 0.58;
-          }
-          90% {
-            transform: translateX(20px) translateY(6px) rotate(-19deg) scale(0.99);
-            opacity: 0.59;
-          }
-          100% {
-            transform: translateX(20px) translateY(0) rotate(-20deg) scale(1);
-            opacity: 0.6;
-          }
-        }
-
       `}</style>
       
       <div 
@@ -966,43 +464,12 @@ const AnimatedMascot: React.FC<AnimatedMascotProps> = ({
             <div className="robot-eye left"></div>
             <div className="robot-eye right"></div>
           </div>
-          
-          {/* Covering Hands - TAY ĐƯA LÊN CHE MẮT */}
-          {coveringEyes && handCoverMode !== 'none' && (
-            <div 
-              className="robot-covering-hands" 
-              key={`hands-${handCoverMode}`}
-              style={{
-                display: 'block',
-                visibility: 'visible',
-                opacity: 1
-              }}
-            >
-              <div className="covering-hand left"></div>
-              {handCoverMode === 'two' && (
-                <div className="covering-hand right"></div>
-              )}
-              {handCoverMode === 'one' && (
-                <div className="covering-hand right peek-right"></div>
-              )}
-            </div>
-          )}
         </div>
         
         {/* Body - Plump rounded egg shape */}
         <div className="robot-body">
           {/* D-shape chest panel */}
           <div className="robot-chest-panel"></div>
-        </div>
-        
-        {/* Regular Arms (only show when not covering eyes) */}
-        <div className="robot-arms">
-          <div className="robot-arm left">
-            <div className="robot-hand"></div>
-          </div>
-          <div className="robot-arm right">
-            <div className="robot-hand"></div>
-          </div>
         </div>
 
         {/* Legs - Dark blue boots */}

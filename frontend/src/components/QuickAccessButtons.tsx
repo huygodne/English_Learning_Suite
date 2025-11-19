@@ -108,13 +108,13 @@ const QuickAccessButtons: React.FC = () => {
       to: '/chatbot',
       gradient: 'from-cyan-500 via-blue-500 to-indigo-500',
       isChatbot: true
-    },
-    {
-      icon: '🌐',
-      label: 'Dịch nhanh',
-      description: 'Dịch tức thì',
-      to: '/translate',
-      gradient: 'from-emerald-500 via-teal-500 to-cyan-500'
+  },
+  {
+    icon: '📚',
+    label: 'Thư viện',
+    description: 'Tài liệu & bài đọc',
+    to: '/library',
+    gradient: 'from-emerald-500 via-teal-500 to-cyan-500'
     }
   ];
 

@@ -1,17 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { lessonService } from '../services/api';
-import { LessonSummary } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { lessonService, userProgressService } from '../services/api';
+import { LessonSummary, UserLessonProgress } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
 import LessonList from '../components/LessonList';
+import { useAuth } from '../contexts/AuthContext';
 
 const LessonsPage: React.FC = () => {
   const [allLessons, setAllLessons] = useState<LessonSummary[]>([]);
   const [displayedCount, setDisplayedCount] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [progress, setProgress] = useState<UserLessonProgress[]>([]);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const displayedLessons = allLessons.slice(0, displayedCount);
   const hasMore = allLessons.length > displayedCount;
+  
+  const activityParam = searchParams.get('activity');
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -27,9 +36,46 @@ const LessonsPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchLessons();
   }, []);
+
+  // Redirect to first lesson with activity param if activity is specified
+  useEffect(() => {
+    if (activityParam && allLessons.length > 0 && !loading) {
+      const firstLesson = allLessons[0];
+      const validActivities = ['flashcard', 'blast', 'blocks'];
+      if (validActivities.includes(activityParam)) {
+        navigate(`/lessons/${firstLesson.id}?activity=${activityParam}`, { replace: true });
+      }
+    }
+  }, [activityParam, allLessons, loading, navigate]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setProgress([]);
+      return;
+    }
+    const fetchProgress = async () => {
+      setProgressLoading(true);
+      try {
+        const data = await userProgressService.getLessonProgress(user.id);
+        setProgress(data);
+      } catch (err) {
+        console.error('Không thể tải tiến độ bài học của bạn', err);
+      } finally {
+        setProgressLoading(false);
+      }
+    };
+    fetchProgress();
+  }, [user?.id]);
+
+  const progressByLesson = useMemo(() => {
+    const map: Record<number, UserLessonProgress> = {};
+    progress.forEach((item) => {
+      map[item.lessonId] = item;
+    });
+    return map;
+  }, [progress]);
 
   if (loading) {
     return (
@@ -66,7 +112,7 @@ const LessonsPage: React.FC = () => {
           </div>
         )}
 
-        <LessonList lessons={displayedLessons} />
+        <LessonList lessons={displayedLessons} progressByLesson={progressByLesson} loadingProgress={progressLoading} />
 
         {hasMore && (
           <div className="text-center mt-12 animate-fade-in">
