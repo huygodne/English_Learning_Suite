@@ -18,8 +18,9 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
   loading = false
 }) => {
   const maxValue = 100;
-  const center = 120;
-  const radius = 90;
+  const svgSize = 280;
+  const center = svgSize / 2;
+  const radius = 100;
   const gridLevels = [20, 40, 60, 80, 100];
 
   const skills = [
@@ -78,7 +79,7 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
         </div>
       ) : (
         <div className="relative">
-          <svg viewBox="0 0 240 240" className="w-full max-w-full">
+          <svg viewBox={`0 0 ${svgSize} ${svgSize}`} className="w-full max-w-full overflow-visible">
             <circle cx={center} cy={center} r={radius} fill="none" stroke="#e2e8f0" strokeDasharray="4 4" />
             {gridPolygons.map((grid) => (
               <polygon
@@ -114,7 +115,7 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
             })}
             {skills.map((skill, index) => {
               const angle = index * angleStep - Math.PI / 2;
-              const labelRadius = radius + 24;
+              const labelRadius = radius + 28;
               const x = center + Math.cos(angle) * labelRadius;
               const y = center + Math.sin(angle) * labelRadius;
               return (

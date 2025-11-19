@@ -10,12 +10,18 @@ import RewardPopup, { RewardType } from '../components/RewardPopup';
 
 const formatDuration = (seconds: number) => {
   if (!seconds || seconds <= 0) return '0 phút';
+
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    const adjustedMinutes = minutes + Math.round(remainingSeconds / 60);
+    return `${hours}h ${adjustedMinutes}m`;
   }
-  return `${minutes} phút`;
+
+  const totalMinutes = Math.floor(seconds / 60);
+  return totalMinutes > 0 ? `${totalMinutes} phút` : '1 phút';
 };
 
 const ProfilePage: React.FC = () => {

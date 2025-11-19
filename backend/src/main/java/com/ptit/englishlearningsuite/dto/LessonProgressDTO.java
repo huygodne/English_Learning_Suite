@@ -1,5 +1,6 @@
 package com.ptit.englishlearningsuite.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 public class LessonProgressDTO {
     private Long lessonId;
     private int score; // Điểm đạt được ở phần quiz từ vựng
+    @JsonProperty("isCompleted")
     private boolean isCompleted;
     private Integer timeSpentSeconds;
     private LocalDateTime completedAt;

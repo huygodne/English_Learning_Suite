@@ -13,7 +13,7 @@ const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClose }) =>
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-80 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col">
+      <div className="fixed top-0 left-0 w-80 h-full bg-white shadow-2xl z-[75] transform transition-transform duration-300 ease-in-out flex flex-col">
         <div className="flex-shrink-0 p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Menu</h2>
@@ -43,19 +43,6 @@ const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClose }) =>
                     <div>
                       <div className="font-semibold text-gray-900">Thư viện</div>
                       <div className="text-sm text-gray-600">Tài liệu và tài nguyên học tập</div>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/translate"
-                  onClick={onClose}
-                  className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors duration-300"
-                >
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">🌐</span>
-                    <div>
-                      <div className="font-semibold text-gray-900">Dịch thuật</div>
-                      <div className="text-sm text-gray-600">Dịch văn bản nhanh chóng</div>
                     </div>
                   </div>
                 </Link>
@@ -163,7 +150,7 @@ const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClose }) =>
         </div>
       </div>
 
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose}></div>
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-[74]" onClick={onClose}></div>
     </>
   );
 };

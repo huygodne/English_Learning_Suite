@@ -19,3 +19,9 @@ public interface VocabularyProgressRepository extends JpaRepository<VocabularyPr
 
 
 
+
+
+
+
+
+

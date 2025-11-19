@@ -20,7 +20,8 @@ import {
   TranslationResponse,
   UserProgressSummary,
   MediaAsset,
-  AdminDashboard
+  AdminDashboard,
+  AdminAccountPayload
 } from '../types';
 
 // Cấu hình axios base URL
@@ -171,7 +172,7 @@ export const pronunciationService = {
 };
 
 export const progressService = {
-  completeLesson: async (payload: { lessonId: number; score: number; isCompleted: boolean; timeSpentSeconds?: number }): Promise<void> => {
+  completeLesson: async (payload: { lessonId: number; score: number; isCompleted: boolean; timeSpentSeconds?: number; completedAt?: string }): Promise<void> => {
     await apiClient.post('/progress/lessons/complete', payload);
   },
 };
@@ -186,6 +187,20 @@ export const adminService = {
   getDashboard: async (): Promise<AdminDashboard> => {
     const response = await apiClient.get('/admin/dashboard');
     return response.data;
+  },
+
+  createUser: async (payload: AdminAccountPayload): Promise<AccountDTO> => {
+    const response = await apiClient.post('/admin/users', payload);
+    return response.data;
+  },
+
+  updateUser: async (id: number, payload: Partial<AdminAccountPayload>): Promise<AccountDTO> => {
+    const response = await apiClient.put(`/admin/users/${id}`, payload);
+    return response.data;
+  },
+
+  deleteUser: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/users/${id}`);
   },
 };
 
