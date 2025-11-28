@@ -1,11 +1,13 @@
 package com.ptit.englishlearningsuite.controller;
 
 import com.ptit.englishlearningsuite.dto.TestDetailDTO;
+import com.ptit.englishlearningsuite.dto.TestRequestDTO;
 import com.ptit.englishlearningsuite.dto.TestSubmissionDTO;
 import com.ptit.englishlearningsuite.dto.TestSummaryDTO;
 import com.ptit.englishlearningsuite.service.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -45,5 +47,24 @@ public class TestController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error processing submission: " + e.getMessage());
         }
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createTest(@RequestBody TestRequestDTO request) {
+        return ResponseEntity.ok(testService.createTest(request));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateTest(@PathVariable Long id, @RequestBody TestRequestDTO request) {
+        return ResponseEntity.ok(testService.updateTest(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteTest(@PathVariable Long id) {
+        testService.deleteTest(id);
+        return ResponseEntity.ok("Deleted Test ID: " + id);
     }
 }

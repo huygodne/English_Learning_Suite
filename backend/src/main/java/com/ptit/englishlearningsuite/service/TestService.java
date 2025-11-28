@@ -12,14 +12,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.ptit.englishlearningsuite.dto.TestDetailDTO;
 import com.ptit.englishlearningsuite.dto.QuestionDTO;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TestService {
@@ -179,5 +177,105 @@ public class TestService {
         dto.setName(test.getName());
         dto.setLevel(test.getLevel());
         return dto;
+    }
+
+    @Transactional
+    public Test createTest(TestRequestDTO req) {
+        Test test = new Test();
+        test.setName(req.getName());
+        test.setLevel(req.getLevel());
+        test.setAudioUrl(req.getAudioUrl());
+
+        Test savedTest = testRepository.save(test);
+
+        if (req.getQuestions() != null) {
+            for (TestRequestDTO.QuestionRequestDTO qDto : req.getQuestions()) {
+                Question q = new Question();
+                q.setTest(savedTest); // Gắn cha
+                q.setQuestionText(qDto.getQuestionText());
+                q.setQuestionType(qDto.getQuestionType());
+                q.setImageUrl(qDto.getImageUrl());
+
+                // Khởi tạo Set nếu chưa có (để tránh NullPointerException)
+                if (q.getAnswerOptions() == null) {
+                    q.setAnswerOptions(new HashSet<>());
+                }
+
+                // [QUAN TRỌNG] Lưu danh sách đáp án
+                if (qDto.getAnswerOptions() != null) {
+                    for (AnswerOptionDTO aDto : qDto.getAnswerOptions()) {
+                        AnswerOption a = new AnswerOption();
+                        a.setQuestion(q); // Gắn câu hỏi cha
+                        a.setOptionText(aDto.getOptionText());
+                        // Trường này lấy từ JSON (nhờ @JsonProperty(access = WRITE_ONLY))
+                        a.setCorrect(aDto.isCorrect());
+
+                        // Thêm vào danh sách đáp án của câu hỏi
+                        q.getAnswerOptions().add(a);
+                    }
+                }
+
+                // Lưu câu hỏi (Cascade sẽ tự lưu luôn AnswerOption nếu Entity Question cấu hình đúng)
+                questionRepository.save(q);
+            }
+        }
+        return savedTest;
+    }
+
+    // --- [UPDATE] SỬA BÀI KIỂM TRA (FULL LOGIC) ---
+    @Transactional
+    public Test updateTest(Long id, TestRequestDTO req) {
+        // 1. Tìm bài test cũ
+        Test test = testRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Test not found with id: " + id));
+
+        // 2. Cập nhật thông tin chung
+        test.setName(req.getName());
+        test.setLevel(req.getLevel());
+        if (req.getAudioUrl() != null && !req.getAudioUrl().isEmpty()) {
+            test.setAudioUrl(req.getAudioUrl());
+        }
+
+        // 3. Cập nhật DANH SÁCH CÂU HỎI (Questions)
+        if (req.getQuestions() != null) {
+            // Xóa hết câu hỏi cũ (orphanRemoval sẽ xóa trong DB)
+            test.getQuestions().clear();
+
+            for (TestRequestDTO.QuestionRequestDTO qDto : req.getQuestions()) {
+                Question q = new Question();
+                q.setTest(test); // Gán cha
+                q.setQuestionText(qDto.getQuestionText());
+                q.setQuestionType(qDto.getQuestionType());
+                q.setImageUrl(qDto.getImageUrl());
+
+                // Xử lý ĐÁP ÁN (Answer Options) của câu hỏi
+                // Lưu ý: Entity Question cần có @OneToMany cascade ALL tới AnswerOption
+                if (qDto.getAnswerOptions() != null) {
+                    // Nếu list answerOptions trong Question chưa khởi tạo thì tạo mới
+                    // if (q.getAnswerOptions() == null) q.setAnswerOptions(new java.util.HashSet<>());
+
+                    for (AnswerOptionDTO aDto : qDto.getAnswerOptions()) {
+                        AnswerOption a = new AnswerOption();
+                        a.setQuestion(q); // Gắn cha (Question)
+                        a.setOptionText(aDto.getOptionText());
+                        // Giả sử trong AnswerOptionDTO có trường isCorrect (boolean)
+                        // Nếu DTO bạn chưa có thì nhớ thêm vào DTO nhé!
+                        a.setCorrect(aDto.isCorrect());
+
+                        q.getAnswerOptions().add(a);
+                    }
+                }
+
+                test.getQuestions().add(q);
+            }
+        }
+
+        return testRepository.save(test);
+    }
+
+    // --- [DELETE] XÓA BÀI TEST ---
+    public void deleteTest(Long id) {
+        // Cascade sẽ xóa luôn Questions và Answers
+        testRepository.deleteById(id);
     }
 }

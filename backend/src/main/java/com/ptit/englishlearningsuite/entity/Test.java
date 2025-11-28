@@ -24,6 +24,6 @@ public class Test {
     private int level;
     private String audioUrl;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions;
 }
