@@ -21,7 +21,11 @@ import {
   UserProgressSummary,
   MediaAsset,
   AdminDashboard,
-  AdminAccountPayload
+  AdminAccountPayload,
+  LessonRequestDTO,
+  TestRequestDTO,
+  StatisticsDTO,
+  DetailedStatisticsDTO
 } from '../types';
 
 // Cấu hình axios base URL
@@ -104,6 +108,20 @@ export const lessonService = {
     const response = await apiClient.get(`/lessons/${id}`);
     return response.data;
   },
+
+  createLesson: async (lesson: LessonRequestDTO): Promise<LessonDetail> => {
+    const response = await apiClient.post('/lessons', lesson);
+    return response.data;
+  },
+
+  updateLesson: async (id: number, lesson: LessonRequestDTO): Promise<LessonDetail> => {
+    const response = await apiClient.put(`/lessons/${id}`, lesson);
+    return response.data;
+  },
+
+  deleteLesson: async (id: number): Promise<void> => {
+    await apiClient.delete(`/lessons/${id}`);
+  },
 };
 
 // Test Services
@@ -121,6 +139,20 @@ export const testService = {
   submitTest: async (submission: TestSubmission & { timeSpentSeconds?: number }): Promise<{ score: number }> => {
     const response = await apiClient.post('/tests/submit', submission);
     return response.data;
+  },
+
+  createTest: async (test: TestRequestDTO): Promise<TestDetail> => {
+    const response = await apiClient.post('/tests', test);
+    return response.data;
+  },
+
+  updateTest: async (id: number, test: TestRequestDTO): Promise<TestDetail> => {
+    const response = await apiClient.put(`/tests/${id}`, test);
+    return response.data;
+  },
+
+  deleteTest: async (id: number): Promise<void> => {
+    await apiClient.delete(`/tests/${id}`);
   },
 };
 
@@ -201,6 +233,16 @@ export const adminService = {
 
   deleteUser: async (id: number): Promise<void> => {
     await apiClient.delete(`/admin/users/${id}`);
+  },
+
+  getStatistics: async (): Promise<StatisticsDTO> => {
+    const response = await apiClient.get('/admin/statistics');
+    return response.data;
+  },
+
+  getDetailedStatistics: async (): Promise<DetailedStatisticsDTO> => {
+    const response = await apiClient.get('/admin/statistics/detailed');
+    return response.data;
   },
 };
 

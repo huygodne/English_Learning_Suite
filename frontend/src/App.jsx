@@ -13,18 +13,21 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import LessonDetailPage from './pages/LessonDetailPage';
 import TestDetailPage from './pages/TestDetailPage';
-import PronunciationPage from './pages/PronunciationPage';
-import ChatbotPage from './pages/ChatbotPage';
 import LibraryPage from './pages/LibraryPage';
+import { useAuth } from './contexts/AuthContext';
 
 const AppContent = () => {
   const location = useLocation();
   const hideFloatingChatbot = ['/login', '/register'].includes(location.pathname);
+  const { isAuthenticated, isAdmin } = useAuth();
 
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={isAuthenticated && isAdmin ? <AdminPage /> : <HomePage />}
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/lessons" element={<LessonsPage />} />
@@ -47,35 +50,10 @@ const AppContent = () => {
           } 
         />
         <Route 
-          path="/chatbot" 
-          element={
-            <ProtectedRoute>
-              <ChatbotPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/translate" element={<Navigate to="/lessons" replace />} />
-        <Route 
-          path="/pronunciation" 
-          element={
-            <ProtectedRoute>
-              <PronunciationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route 
           path="/profile" 
           element={
             <ProtectedRoute>
               <ProfilePage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <AdminPage />
             </ProtectedRoute>
           } 
         />

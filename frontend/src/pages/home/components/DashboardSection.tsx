@@ -3,12 +3,9 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import TodayGoalCard from '../../../components/TodayGoalCard';
 import QuickAccessButtons from '../../../components/QuickAccessButtons';
-import SkillRadarChart from '../../../components/SkillRadarChart';
-import LevelProgressCard from '../../../components/LevelProgressCard';
-import EnhancedLeaderboard from '../../../components/EnhancedLeaderboard';
-import EnhancedTipsPanel from '../../../components/EnhancedTipsPanel';
 import DashboardLessonsList from '../../../components/DashboardLessonsList';
 import DashboardTestsList from '../../../components/DashboardTestsList';
+import EnhancedLeaderboard from '../../../components/EnhancedLeaderboard';
 import { LessonSummary, TestSummary } from '../../../types';
 
 type DashboardSectionProps = {
@@ -27,130 +24,131 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
   lessonsLoading,
   testsLoading,
   onNavigateToLessons
-}) => (
-  <motion.section
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.5 }}
-    className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-  >
-    <div className="mb-8">
-      <h2 className="text-3xl font-bold text-slate-900 mb-2">Chào mừng trở lại, {userName}!</h2>
-      <p className="text-slate-600">Tiếp tục hành trình học tập của bạn ngay hôm nay</p>
-    </div>
+}) => {
+  const nextLesson = lessons[0];
 
-    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1.5fr_1.5fr] gap-6">
-      <motion.div
-        className="space-y-6"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <TodayGoalCard
-          srsTasks={{
-            vocabularyToReview: 12,
-            newLessons: 3
-          }}
-          onStartReview={onNavigateToLessons}
-        />
-        <QuickAccessButtons />
-        <Link
-          to="/library"
-          className="block rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 text-white p-5 shadow-lg hover:shadow-xl transition-shadow duration-300"
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5 }}
+      className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+    >
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-slate-900 mb-2">
+          Chào mừng trở lại, {userName}!
+        </h2>
+        <p className="text-slate-600">
+          Hôm nay bạn cần làm gì? Bắt đầu từ những mục tiêu quan trọng nhất bên dưới.
+        </p>
+      </div>
+
+      {/* Main layout: 70/30 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Left column: action-focused */}
+        <motion.div
+          className="space-y-6 lg:col-span-2"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-white/70">Thư viện</p>
-              <h3 className="text-2xl font-bold mt-1">Khám phá tài liệu</h3>
-              <p className="text-sm text-white/80 mt-1">
-                Truy cập nhanh giáo trình, bài đọc và tài nguyên thực hành.
+          {/* Continue learning hero */}
+          <div className="rounded-3xl p-6 bg-white/90 border border-slate-200 shadow-[0_12px_40px_rgba(15,23,42,0.06)] flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-1">
+                Tiếp tục học
               </p>
-            </div>
-            <div className="flex items-center gap-3 text-lg font-semibold">
-              Mở ngay
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20">
-                →
-              </span>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                {nextLesson ? nextLesson.name : 'Bắt đầu bài học đầu tiên của bạn'}
+              </h3>
+              <p className="text-slate-600 text-sm mb-4">
+                Hoàn thành bài học hôm nay để duy trì tiến độ và giữ vững phong độ học tập.
+              </p>
+              <Link
+                to={nextLesson ? `/lessons/${nextLesson.id}` : '/lessons'}
+                className="inline-flex items-center px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold shadow-md hover:bg-primary-700 transition-colors"
+              >
+                Học ngay
+                <span className="ml-2 text-lg">→</span>
+              </Link>
             </div>
           </div>
-        </Link>
-      </motion.div>
 
+          <TodayGoalCard
+            srsTasks={{
+              vocabularyToReview: 12,
+              newLessons: 3
+            }}
+            onStartReview={onNavigateToLessons}
+          />
+
+          <QuickAccessButtons />
+        </motion.div>
+
+        {/* Right column: weekly goals, leaderboard, etc. */}
+        <motion.div
+          className="space-y-6"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <EnhancedLeaderboard />
+        </motion.div>
+      </div>
+
+      {/* Recent Activity Section */}
       <motion.div
-        className="space-y-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <SkillRadarChart
-          data={{
-            grammar: 75,
-            vocabulary: 82,
-            listening: 68,
-            speaking: 65
-          }}
-          loading={false}
-        />
-
-        <LevelProgressCard currentLevel={5} currentXP={1250} xpToNextLevel={2000} onLevelUp={() => {}} />
-      </motion.div>
-
-      <motion.div
-        className="space-y-6"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <EnhancedLeaderboard />
-        <EnhancedTipsPanel />
-      </motion.div>
-    </div>
+        <motion.div
+          className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <span className="text-2xl">📚</span>
+              Bài học gần đây
+            </h3>
+            <Link
+              to="/lessons"
+              className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+            >
+              Xem tất cả →
+            </Link>
+          </div>
+          <DashboardLessonsList lessons={lessons} loading={lessonsLoading} maxItems={5} />
+        </motion.div>
 
-    <motion.div
-      className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6"
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.4 }}
-    >
-      <motion.div
-        className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <span className="text-2xl">📚</span>
-            Bài học gần đây
-          </h3>
-          <Link to="/lessons" className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-            Xem tất cả →
-          </Link>
-        </div>
-        <DashboardLessonsList lessons={lessons} loading={lessonsLoading} maxItems={5} />
+        <motion.div
+          className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <span className="text-2xl">📝</span>
+              Bài kiểm tra
+            </h3>
+            <Link
+              to="/tests"
+              className="text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
+            >
+              Xem tất cả →
+            </Link>
+          </div>
+          <DashboardTestsList tests={tests} loading={testsLoading} maxItems={5} />
+        </motion.div>
       </motion.div>
-
-      <motion.div
-        className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <span className="text-2xl">📝</span>
-            Bài kiểm tra
-          </h3>
-          <Link to="/tests" className="text-sm font-semibold text-red-600 hover:text-red-700 transition-colors">
-            Xem tất cả →
-          </Link>
-        </div>
-        <DashboardTestsList tests={tests} loading={testsLoading} maxItems={5} />
-      </motion.div>
-    </motion.div>
-  </motion.section>
-);
+    </motion.section>
+  );
+};
 
 export default DashboardSection;
 

@@ -7,6 +7,8 @@ import { LessonSummary, UserLessonProgress, UserTestProgress, UserProgressSummar
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
 import RewardPopup, { RewardType } from '../components/RewardPopup';
+import Breadcrumb from '../components/Breadcrumb';
+import SkillRadarChart from '../components/SkillRadarChart';
 
 const formatDuration = (seconds: number) => {
   if (!seconds || seconds <= 0) return '0 phút';
@@ -89,6 +91,18 @@ const ProfilePage: React.FC = () => {
     ? ((testProgress[testProgress.length - 1]?.score || 0) - (testProgress[0]?.score || 0)) / testProgress.length
     : 0;
 
+  const skillData = useMemo(() => {
+    const grammar = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+    const vocabulary = completedLessons * 4; // xấp xỉ số lượng từ / vốn từ
+    const listening = lessonTimeSpentSeconds / 60; // mỗi phút ~1%
+
+    return {
+      grammar: Math.min(100, Math.round(grammar)),
+      vocabulary: Math.min(100, Math.round(vocabulary)),
+      listening: Math.min(100, Math.round(listening))
+    };
+  }, [completedLessons, totalLessons, lessonTimeSpentSeconds]);
+
   const mergedLessons = useMemo(() => {
     if (allLessons.length === 0) {
       return lessonProgress.map((progress, index) => ({
@@ -152,7 +166,7 @@ const ProfilePage: React.FC = () => {
 
   // Achievements
   const achievements = useMemo(() => {
-    const ach = [];
+    const ach: Array<{ id: number; name: string; icon: string; description: string; unlocked: boolean }> = [];
     if (completedLessons >= 10) ach.push({ id: 1, name: 'Học viên Chăm chỉ', icon: '📚', description: 'Hoàn thành 10 bài học', unlocked: true });
     if (completedLessons >= 25) ach.push({ id: 2, name: 'Học viên Xuất sắc', icon: '🌟', description: 'Hoàn thành 25 bài học', unlocked: true });
     if (testProgress.length >= 5) ach.push({ id: 3, name: 'Kiểm tra viên', icon: '📝', description: 'Hoàn thành 5 bài kiểm tra', unlocked: true });
@@ -195,6 +209,11 @@ const ProfilePage: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <ScenicBackground variant="lake" className="opacity-90" />
       <SiteHeader active="profile" className="relative z-10" />
+
+      {/* Breadcrumb */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 relative z-10">
+        <Breadcrumb />
+      </div>
 
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -319,7 +338,7 @@ const ProfilePage: React.FC = () => {
         {/* Stats Cards - Enhanced */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8">
           <motion.div
-            className="bg-gradient-to-br from-blue-200 to-blue-300 rounded-2xl p-6 text-gray-800 shadow-xl relative overflow-hidden border border-blue-200"
+            className="bg-white rounded-2xl p-6 text-gray-800 shadow-md relative overflow-hidden border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -335,7 +354,7 @@ const ProfilePage: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl p-6 text-gray-800 shadow-xl relative overflow-hidden border border-purple-200"
+            className="bg-white rounded-2xl p-6 text-gray-800 shadow-md relative overflow-hidden border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -350,7 +369,7 @@ const ProfilePage: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="bg-gradient-to-br from-green-200 to-emerald-200 rounded-2xl p-6 text-gray-800 shadow-xl relative overflow-hidden border border-green-200"
+            className="bg-white rounded-2xl p-6 text-gray-800 shadow-md relative overflow-hidden border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -367,7 +386,7 @@ const ProfilePage: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="bg-gradient-to-br from-orange-200 to-rose-200 rounded-2xl p-6 text-gray-800 shadow-xl relative overflow-hidden border border-orange-200"
+            className="bg-white rounded-2xl p-6 text-gray-800 shadow-md relative overflow-hidden border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -382,7 +401,7 @@ const ProfilePage: React.FC = () => {
           </motion.div>
 
           <motion.div
-            className="bg-gradient-to-br from-teal-200 to-emerald-200 rounded-2xl p-6 text-gray-800 shadow-xl relative overflow-hidden border border-teal-200"
+            className="bg-white rounded-2xl p-6 text-gray-800 shadow-md relative overflow-hidden border border-gray-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
@@ -433,141 +452,125 @@ const ProfilePage: React.FC = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              {/* Detailed Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <span>📈</span>
-                    Thống kê chi tiết
-                  </h3>
-                  <div className="space-y-3">
-                    <motion.div 
-                      className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <span className="text-gray-700 font-medium flex items-center gap-2">
-                        <span className="text-lg">💯</span>
-                        Điểm hoàn hảo (100 điểm)
-                      </span>
-                      <span className="text-green-600 font-bold text-xl">{perfectScores}</span>
-                    </motion.div>
-                    <motion.div 
-                      className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <span className="text-gray-700 font-medium flex items-center gap-2">
-                        <span className="text-lg">⭐</span>
-                        Điểm xuất sắc (≥90 điểm)
-                      </span>
-                      <span className="text-blue-600 font-bold text-xl">{excellentScores}</span>
-                    </motion.div>
-                    <motion.div 
-                      className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <span className="text-gray-700 font-medium flex items-center gap-2">
-                        <span className="text-lg">👍</span>
-                        Điểm tốt (≥80 điểm)
-                      </span>
-                      <span className="text-purple-600 font-bold text-xl">{goodScores}</span>
-                    </motion.div>
-                    <motion.div 
-                      className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <span className="text-gray-700 font-medium flex items-center gap-2">
-                        <span className="text-lg">🔥</span>
-                        Chuỗi dài nhất
-                      </span>
-                      <span className="text-orange-600 font-bold text-xl">{longestStreak} ngày</span>
-                    </motion.div>
-                    {improvementRate > 0 && (
+              {/* Detailed Statistics & Skill chart */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <SkillRadarChart data={skillData} />
+                </div>
+
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <span>📈</span>
+                      Thống kê nổi bật
+                    </h3>
+                    <div className="space-y-3">
                       <motion.div 
-                        className="flex justify-between items-center p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-100 hover:shadow-md transition-all"
+                        className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:shadow-md transition-all"
                         whileHover={{ scale: 1.02 }}
                       >
                         <span className="text-gray-700 font-medium flex items-center gap-2">
-                          <span className="text-lg">📈</span>
-                          Tốc độ cải thiện
+                          <span className="text-lg">💯</span>
+                          Điểm hoàn hảo
                         </span>
-                        <span className="text-orange-600 font-bold text-xl">+{improvementRate.toFixed(1)}%/bài</span>
+                        <span className="text-green-600 font-bold text-xl">{perfectScores}</span>
                       </motion.div>
-                    )}
+                      <motion.div 
+                        className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 hover:shadow-md transition-all"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <span className="text-gray-700 font-medium flex items-center gap-2">
+                          <span className="text-lg">⭐</span>
+                          Điểm xuất sắc (≥90)
+                        </span>
+                        <span className="text-blue-600 font-bold text-xl">{excellentScores}</span>
+                      </motion.div>
+                      <motion.div 
+                        className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100 hover:shadow-md transition-all"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <span className="text-gray-700 font-medium flex items-center gap-2">
+                          <span className="text-lg">🔥</span>
+                          Chuỗi dài nhất
+                        </span>
+                        <span className="text-orange-600 font-bold text-xl">{longestStreak} ngày</span>
+                      </motion.div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <span>🎯</span>
-                    Mục tiêu tuần này
-                  </h3>
-                  <div className="space-y-3">
-                    <motion.div 
-                      className="p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-primary-700 flex items-center gap-2">
-                          <span>📚</span>
-                          Hoàn thành 3 bài học
-                        </span>
-                        <span className="text-xs text-primary-600 font-bold">{Math.min(completedLessons, 3)}/3</span>
-                      </div>
-                      <div className="w-full bg-primary-200 rounded-full h-3 overflow-hidden">
-                        <motion.div 
-                          className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full relative overflow-hidden"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min((completedLessons / 3) * 100, 100)}%` }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                    <motion.div 
-                      className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-green-700 flex items-center gap-2">
-                          <span>📝</span>
-                          Đạt ≥85% ở 2 bài kiểm tra
-                        </span>
-                        <span className="text-xs text-green-600 font-bold">{testProgress.filter(t => t.score >= 85).length}/2</span>
-                      </div>
-                      <div className="w-full bg-green-200 rounded-full h-3 overflow-hidden">
-                        <motion.div 
-                          className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full relative overflow-hidden"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min((testProgress.filter(t => t.score >= 85).length / 2) * 100, 100)}%` }}
-                          transition={{ duration: 0.8, delay: 0.3 }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                    <motion.div 
-                      className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 hover:shadow-md transition-all"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-purple-700 flex items-center gap-2">
-                          <span>🔥</span>
-                          Giữ streak 7 ngày
-                        </span>
-                        <span className="text-xs text-purple-600 font-bold">{Math.min(streakDays, 7)}/7</span>
-                      </div>
-                      <div className="w-full bg-purple-200 rounded-full h-3 overflow-hidden">
-                        <motion.div 
-                          className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full relative overflow-hidden"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min((streakDays / 7) * 100, 100)}%` }}
-                          transition={{ duration: 0.8, delay: 0.4 }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <span>🎯</span>
+                      Mục tiêu tuần này
+                    </h3>
+                    <div className="space-y-3">
+                      <motion.div 
+                        className="p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-all"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold text-primary-700 flex items-center gap-2">
+                            <span>📚</span>
+                            Hoàn thành 3 bài học
+                          </span>
+                          <span className="text-xs text-primary-600 font-bold">{Math.min(completedLessons, 3)}/3</span>
+                        </div>
+                        <div className="w-full bg-primary-200 rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full relative overflow-hidden"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min((completedLessons / 3) * 100, 100)}%` }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                      <motion.div 
+                        className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:shadow-md transition-all"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                            <span>📝</span>
+                            Đạt ≥85% ở 2 bài kiểm tra
+                          </span>
+                          <span className="text-xs text-green-600 font-bold">{testProgress.filter(t => t.score >= 85).length}/2</span>
+                        </div>
+                        <div className="w-full bg-green-200 rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full relative overflow-hidden"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min((testProgress.filter(t => t.score >= 85).length / 2) * 100, 100)}%` }}
+                            transition={{ duration: 0.8, delay: 0.3 }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                      <motion.div 
+                        className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 hover:shadow-md transition-all"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold text-purple-700 flex items-center gap-2">
+                            <span>🔥</span>
+                            Giữ streak 7 ngày
+                          </span>
+                          <span className="text-xs text-purple-600 font-bold">{Math.min(streakDays, 7)}/7</span>
+                        </div>
+                        <div className="w-full bg-purple-200 rounded-full h-3 overflow-hidden">
+                          <motion.div 
+                            className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full relative overflow-hidden"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min((streakDays / 7) * 100, 100)}%` }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
+                          </motion.div>
+                        </div>
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
               </div>

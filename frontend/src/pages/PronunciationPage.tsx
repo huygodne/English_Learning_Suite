@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SiteHeader from '../components/SiteHeader';
 import ScenicBackground from '../components/ScenicBackground';
+import Breadcrumb from '../components/Breadcrumb';
 import { pronunciationService } from '../services/api';
 import { PronunciationSample } from '../types';
 
@@ -42,6 +43,10 @@ const PronunciationPage: React.FC = () => {
       <SiteHeader active="pronunciation" />
 
       <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb />
+        </div>
         <div className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-xl border border-white/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

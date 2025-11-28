@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string): Promise<User> => {
     try {
       const response = await authService.login({ username, password });
       
@@ -59,6 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           localStorage.setItem('user', JSON.stringify(userData));
           setUser(userData);
+          return userData;
         } else {
           throw new Error('Failed to get user information');
         }
@@ -76,8 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (account: Account) => {
     try {
-      const response = await authService.register(account);
-      
+      await authService.register(account);
       // Sau khi đăng ký thành công, tự động đăng nhập
       await login(account.username, account.password!);
     } catch (error) {

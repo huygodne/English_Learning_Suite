@@ -95,13 +95,6 @@ const QuickAccessButtons: React.FC = () => {
 
   const buttons: (Omit<QuickAccessButtonProps, 'delay' | 'onChatbotClick'> & { isChatbot?: boolean })[] = [
     {
-      icon: '🎤',
-      label: 'Luyện Phát âm',
-      description: 'Cải thiện phát âm',
-      to: '/pronunciation',
-      gradient: 'from-purple-500 via-pink-500 to-rose-500'
-    },
-    {
       icon: '🤖',
       label: 'Chatbot AI',
       description: 'Trò chuyện thông minh',
@@ -112,7 +105,7 @@ const QuickAccessButtons: React.FC = () => {
   {
     icon: '📚',
     label: 'Thư viện',
-    description: 'Tài liệu & bài đọc',
+      description: 'Tài liệu & bài đọc (từ vựng, ngữ pháp)',
     to: '/library',
     gradient: 'from-emerald-500 via-teal-500 to-cyan-500'
     }

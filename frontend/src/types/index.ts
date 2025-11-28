@@ -229,7 +229,7 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   register: (account: Account) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -250,4 +250,145 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   botReply: string;
+}
+
+// Request DTOs for Admin
+export interface VocabularyRequest {
+  wordEnglish: string;
+  phoneticSpelling: string;
+  vietnameseMeaning: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  exampleSentenceEnglish?: string;
+  exampleSentenceVietnamese?: string;
+}
+
+export interface GrammarRequest {
+  explanationEnglish: string;
+  explanationVietnamese: string;
+}
+
+export interface SentenceRequest {
+  characterName: string;
+  textEnglish: string;
+  textVietnamese: string;
+}
+
+export interface ConversationRequest {
+  title: string;
+  audioUrl?: string;
+  sentences: SentenceRequest[];
+}
+
+export interface LessonRequestDTO {
+  name: string;
+  lessonNumber: number;
+  level: number;
+  audioUrl?: string;
+  vocabularies: VocabularyRequest[];
+  grammars: GrammarRequest[];
+  conversations: ConversationRequest[];
+}
+
+export interface AnswerOptionRequest {
+  optionText: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionRequest {
+  questionText: string;
+  questionType: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_IN_BLANK' | 'ARRANGE_SENTENCE';
+  imageUrl?: string;
+  answerOptions: AnswerOptionRequest[];
+}
+
+export interface TestRequestDTO {
+  name: string;
+  level: number;
+  audioUrl?: string;
+  questions: QuestionRequest[];
+}
+
+// Statistics Types
+export interface StatisticsDTO {
+  totalUsers: number;
+  activeUsers: number;
+  totalLessons: number;
+  totalTests: number;
+  totalMediaAssets: number;
+  totalLessonCompletions: number;
+  averageLessonScore: number;
+  totalLessonTimeSpent: number;
+  lessonCompletionsByLevel: Record<number, number>;
+  totalTestCompletions: number;
+  averageTestScore: number;
+  totalTestTimeSpent: number;
+  testCompletionsByLevel: Record<number, number>;
+  topLessons: LessonStatisticsDTO[];
+  topTests: TestStatisticsDTO[];
+  topUsers: UserStatisticsDTO[];
+}
+
+export interface LessonStatisticsDTO {
+  lessonId: number;
+  lessonName: string;
+  lessonNumber: number;
+  level: number;
+  completionCount: number;
+  averageScore: number;
+}
+
+export interface TestStatisticsDTO {
+  testId: number;
+  testName: string;
+  level: number;
+  completionCount: number;
+  averageScore: number;
+}
+
+export interface UserStatisticsDTO {
+  userId: number;
+  username: string;
+  fullName: string;
+  completedLessons: number;
+  completedTests: number;
+  averageTestScore: number;
+}
+
+// Detailed Statistics Types
+export interface DetailedStatisticsDTO {
+  userGrowth: TimeSeriesData[];
+  lessonCompletionsOverTime: TimeSeriesData[];
+  testCompletionsOverTime: TimeSeriesData[];
+  dailyActiveUsers: TimeSeriesData[];
+  averageStudyTimePerDay: TimeSeriesData[];
+  lessonCompletionsByLevel: Record<number, number>;
+  testCompletionsByLevel: Record<number, number>;
+  popularLessons: PopularItemDTO[];
+  popularTests: PopularItemDTO[];
+  engagementMetrics: EngagementMetricsDTO;
+  studyFrequencyDistribution: Record<string, number>;
+}
+
+export interface TimeSeriesData {
+  date: string;
+  value: number;
+  label?: string;
+}
+
+export interface PopularItemDTO {
+  id: number;
+  name: string;
+  level: number;
+  completionCount: number;
+  averageScore: number;
+  totalTimeSpent: number;
+}
+
+export interface EngagementMetricsDTO {
+  averageStudyHoursPerDay: number;
+  averageStudyDaysPerWeek: number;
+  totalActiveDays: number;
+  retentionRate: number;
+  peakConcurrentUsers: number;
 }

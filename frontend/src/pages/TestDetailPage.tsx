@@ -5,6 +5,7 @@ import { testService } from '../services/api';
 import { TestDetail, AnswerSubmission, TestSubmission } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
+import Breadcrumb from '../components/Breadcrumb';
 
 const TEST_DURATION_SECONDS = 20 * 60;
 const ALLOWED_QUESTION_TYPES = ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'];
@@ -271,6 +272,30 @@ const TestDetailPage: React.FC = () => {
       {/* Header */}
       <SiteHeader active="tests" />
 
+      {/* Breadcrumb */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="flex items-center justify-between">
+          <Breadcrumb
+            items={[
+              { label: 'Trang chủ', path: '/' },
+              { label: 'Bài kiểm tra', path: '/tests' },
+              { label: test ? test.name : 'Chi tiết bài kiểm tra' },
+            ]}
+          />
+          {!showResult && (
+            <Link
+              to="/tests"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Quay lại danh sách
+            </Link>
+          )}
+        </div>
+      </div>
+
       {/* Character Illustration - Floating */}
       <div className="absolute top-32 right-8 z-10 hidden lg:block">
         <div className="relative animate-soft-float">
@@ -501,7 +526,7 @@ const TestDetailPage: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={submitTest}
+              onClick={() => submitTest()}
               disabled={submitting || answeredCount !== totalQuestions}
               className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg ${
                 submitting || answeredCount !== totalQuestions

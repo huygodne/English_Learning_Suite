@@ -7,6 +7,7 @@ import FlipCard from '../components/FlipCard';
 import ScenicBackground from '../components/ScenicBackground';
 import LessonGamesPanel from '../components/games/LessonGamesPanel';
 import SiteHeader from '../components/SiteHeader';
+import Breadcrumb from '../components/Breadcrumb';
 
 const LessonDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +15,7 @@ const LessonDetailPage: React.FC = () => {
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation'>('vocabulary');
+  const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation' | 'practice'>('vocabulary');
   const [studyTime, setStudyTime] = useState(0);
   const [currentVocabIndex, setCurrentVocabIndex] = useState(0);
   const [savingProgress, setSavingProgress] = useState(false);
@@ -28,7 +29,6 @@ const LessonDetailPage: React.FC = () => {
   const hasSavedRef = useRef(false);
   
   const activityParam = searchParams.get('activity');
-  const gamesPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,12 +37,10 @@ const LessonDetailPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-scroll to games panel when activity param is present and lesson is loaded
+  // Auto-switch to practice tab when activity param is present
   useEffect(() => {
-    if (activityParam && lesson && gamesPanelRef.current) {
-      setTimeout(() => {
-        gamesPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 500);
+    if (activityParam && lesson && ['flashcard', 'blast'].includes(activityParam)) {
+      setActiveTab('practice');
     }
   }, [activityParam, lesson]);
 
@@ -278,6 +276,27 @@ const LessonDetailPage: React.FC = () => {
       )}
       {/* Header - Use SiteHeader component for consistency */}
       <SiteHeader active="lessons" />
+      {/* Breadcrumb */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="flex items-center justify-between">
+          <Breadcrumb
+            items={[
+              { label: 'Trang chủ', path: '/' },
+              { label: 'Bài học', path: '/lessons' },
+              { label: lesson ? lesson.name : 'Chi tiết bài học' },
+            ]}
+          />
+          <Link
+            to="/lessons"
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:border-primary-200 hover:text-primary-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại danh sách
+          </Link>
+        </div>
+      </div>
       {/* Action buttons bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="hidden md:flex items-center gap-3 justify-end py-4">
@@ -390,6 +409,18 @@ const LessonDetailPage: React.FC = () => {
                   >
                     Hội thoại ({lesson.conversations.length})
                   </button>
+                  {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 && (
+                    <button
+                      onClick={() => setActiveTab('practice')}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === 'practice'
+                          ? 'border-primary-500 text-primary-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Luyện tập 🎮
+                    </button>
+                  )}
                 </nav>
               </div>
             </div>
@@ -641,15 +672,21 @@ const LessonDetailPage: React.FC = () => {
                   )}
                 </div>
               )}
+
+              {activeTab === 'practice' && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Luyện tập với mini games</h3>
+                  {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 ? (
+                    <LessonGamesPanel 
+                      vocabularies={lesson.vocabularies} 
+                      initialGame={activityParam && ['flashcard', 'blast'].includes(activityParam) ? activityParam as 'flashcard' | 'blast' : undefined}
+                    />
+                  ) : (
+                    <p className="text-gray-600 text-center py-8">Chưa có từ vựng để luyện tập.</p>
+                  )}
+                </div>
+              )}
             </div>
-            {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 && (
-              <div ref={gamesPanelRef}>
-                <LessonGamesPanel 
-                  vocabularies={lesson.vocabularies} 
-                  initialGame={activityParam && ['flashcard', 'blast'].includes(activityParam) ? activityParam as 'flashcard' | 'blast' : undefined}
-                />
-              </div>
-            )}
           </div>
 
           <div className="space-y-6 xl:sticky xl:top-32">

@@ -3,8 +3,11 @@ package com.ptit.englishlearningsuite.controller;
 import com.ptit.englishlearningsuite.dto.AccountDTO;
 import com.ptit.englishlearningsuite.dto.AdminAccountRequest;
 import com.ptit.englishlearningsuite.dto.AdminDashboardDTO;
+import com.ptit.englishlearningsuite.dto.DetailedStatisticsDTO;
+import com.ptit.englishlearningsuite.dto.StatisticsDTO;
 import com.ptit.englishlearningsuite.service.AccountService;
 import com.ptit.englishlearningsuite.service.AdminDashboardService;
+import com.ptit.englishlearningsuite.service.StatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +29,9 @@ public class AdminController {
 
     @Autowired
     private AdminDashboardService adminDashboardService;
+
+    @Autowired
+    private StatisticsService statisticsService;
 
     @GetMapping("/users")
     public List<AccountDTO> getAllUsers() {
@@ -50,5 +56,15 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     public void deleteUser(@PathVariable Long id) {
         accountService.deleteAccountByAdmin(id);
+    }
+
+    @GetMapping("/statistics")
+    public StatisticsDTO getStatistics() {
+        return statisticsService.getStatistics();
+    }
+
+    @GetMapping("/statistics/detailed")
+    public DetailedStatisticsDTO getDetailedStatistics() {
+        return statisticsService.getDetailedStatistics();
     }
 }

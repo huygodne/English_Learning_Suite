@@ -10,6 +10,7 @@ const FloatingChatbot: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(contextIsOpen);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -178,6 +179,7 @@ const FloatingChatbot: React.FC = () => {
     setIsOpen(contextIsOpen);
     if (!contextIsOpen) {
       setIsMinimized(false);
+      setIsMaximized(false);
     }
   }, [contextIsOpen]);
 
@@ -247,15 +249,20 @@ const FloatingChatbot: React.FC = () => {
               opacity: 1, 
               scale: isMinimized ? 0.3 : 1, 
               y: isMinimized ? 200 : 0,
-              height: isMinimized ? 'auto' : '600px',
-              width: isMinimized ? 'auto' : '400px'
+              height: isMinimized ? 'auto' : isMaximized ? 'calc(100vh - 2rem)' : '600px',
+              width: isMinimized ? 'auto' : isMaximized ? 'calc(100vw - 2rem)' : '400px',
+              x: isMaximized ? 0 : undefined,
+              bottom: isMaximized ? '1rem' : undefined,
+              right: isMaximized ? '1rem' : undefined,
+              left: isMaximized ? '1rem' : undefined,
+              top: isMaximized ? '1rem' : undefined
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.3, type: 'spring' }}
-            className={`fixed bottom-6 right-6 z-[70] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${
-              isMinimized ? 'w-16 h-16' : 'w-[400px] h-[600px]'
+            className={`fixed ${isMaximized ? 'inset-4' : 'bottom-6 right-6'} z-[70] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${
+              isMinimized ? 'w-16 h-16' : isMaximized ? 'w-auto h-auto' : 'w-[400px] h-[600px]'
             }`}
-            style={{ maxHeight: 'calc(100vh - 3rem)' }}
+            style={isMaximized ? { maxHeight: 'calc(100vh - 2rem)', maxWidth: 'calc(100vw - 2rem)' } : { maxHeight: 'calc(100vh - 3rem)' }}
           >
             {!isMinimized ? (
               <>
@@ -271,6 +278,19 @@ const FloatingChatbot: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsMaximized(!isMaximized)}
+                      className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+                      title={isMaximized ? "Thu nhỏ" : "Mở rộng"}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {isMaximized ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        )}
+                      </svg>
+                    </button>
                     <button
                       onClick={() => setIsMinimized(true)}
                       className="p-2 rounded-lg hover:bg-white/20 transition-colors"

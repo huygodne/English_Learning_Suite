@@ -2,6 +2,7 @@ package com.ptit.englishlearningsuite.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -34,4 +35,14 @@ public class Account {
 
     @Column(nullable = false) // Đảm bảo role không được null
     private String role;
+    
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

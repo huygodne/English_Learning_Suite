@@ -4,8 +4,11 @@ import com.ptit.englishlearningsuite.entity.Account;
 import com.ptit.englishlearningsuite.entity.Lesson;
 import com.ptit.englishlearningsuite.entity.LessonProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +17,7 @@ public interface LessonProgressRepository extends JpaRepository<LessonProgress, 
     Optional<LessonProgress> findByAccountAndLesson(Account account, Lesson lesson);
     List<LessonProgress> findAllByAccount(Account account);
     List<LessonProgress> findAllByAccountOrderByCompletedAtAsc(Account account);
+    
+    @Query("SELECT lp FROM LessonProgress lp WHERE lp.completedAt >= :startDate AND lp.completedAt < :endDate AND lp.isCompleted = true")
+    List<LessonProgress> findCompletedByCompletedAtBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

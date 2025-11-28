@@ -83,7 +83,7 @@ const Login: React.FC = () => {
       setMascotMood('happy');
       triggerWave();
       setTimeout(() => {
-        navigate(from, { replace: true });
+        navigate(from || '/', { replace: true });
       }, 1000);
     } catch (err: any) {
       setError(err.response?.data || 'Đăng nhập thất bại');

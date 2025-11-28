@@ -5,7 +5,6 @@ interface SkillData {
   grammar: number;
   vocabulary: number;
   listening: number;
-  speaking: number;
 }
 
 interface SkillRadarChartProps {
@@ -14,7 +13,7 @@ interface SkillRadarChartProps {
 }
 
 const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
-  data = { grammar: 75, vocabulary: 82, listening: 68, speaking: 65 },
+  data = { grammar: 75, vocabulary: 82, listening: 68 },
   loading = false
 }) => {
   const maxValue = 100;
@@ -26,8 +25,7 @@ const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
   const skills = [
     { name: 'Ngữ pháp', value: data.grammar, color: '#8b5cf6' },
     { name: 'Từ vựng', value: data.vocabulary, color: '#3b82f6' },
-    { name: 'Nghe', value: data.listening, color: '#10b981' },
-    { name: 'Nói', value: data.speaking, color: '#f59e0b' }
+    { name: 'Nghe', value: data.listening, color: '#10b981' }
   ];
 
   const angleStep = (Math.PI * 2) / skills.length;

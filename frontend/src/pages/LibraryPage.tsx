@@ -4,6 +4,7 @@ import { lessonService } from '../services/api';
 import { LessonSummary, LessonDetail, Vocabulary, Grammar } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
+import Breadcrumb from '../components/Breadcrumb';
 
 interface LibraryItem {
   id: number;
@@ -151,6 +152,10 @@ const LibraryPage: React.FC = () => {
       <SiteHeader active="library" />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb />
+        </div>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
