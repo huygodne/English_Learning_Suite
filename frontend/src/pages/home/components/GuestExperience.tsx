@@ -466,12 +466,6 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
             >
               Đăng ký miễn phí
             </Link>
-            <Link
-              to="/lessons"
-              className="inline-flex items-center justify-center px-10 py-4 text-lg font-semibold text-primary-600 border border-primary-200 rounded-2xl bg-white/70 backdrop-blur hover:bg-white transition-all duration-300"
-            >
-              Xem trước bài học
-            </Link>
           </div>
         </div>
       </section>

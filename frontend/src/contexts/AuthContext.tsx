@@ -88,6 +88,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Xóa trạng thái popup thưởng theo session khi đăng xuất
+    sessionStorage.clear();
     setToken(null);
     setUser(null);
   };

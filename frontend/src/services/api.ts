@@ -24,7 +24,7 @@ import {
   AdminAccountPayload,
   LessonRequestDTO,
   TestRequestDTO,
-  StatisticsDTO,
+      StatisticsDTO,
   DetailedStatisticsDTO
 } from '../types';
 
@@ -242,6 +242,13 @@ export const adminService = {
 
   getDetailedStatistics: async (): Promise<DetailedStatisticsDTO> => {
     const response = await apiClient.get('/admin/statistics/detailed');
+    return response.data;
+  },
+};
+
+export const leaderboardService = {
+  getTopUsersByXp: async (): Promise<UserStatisticsDTO[]> => {
+    const response = await apiClient.get('/leaderboard/xp');
     return response.data;
   },
 };

@@ -459,33 +459,33 @@ const LessonDetailPage: React.FC = () => {
                                       />
                                     </div>
                                   )}
-                                  <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 mb-2">
-                                      Từ vựng
-                                    </p>
-                                    <h4 className="text-2xl font-bold leading-tight">{vocab.wordEnglish}</h4>
-                                    <p className="text-white/80 italic mt-1">{vocab.phoneticSpelling}</p>
-                                    <p className="text-xs text-white/70 mt-2">
-                                      Mức độ nhớ: <span className="font-semibold">{masteryLevel}/5</span>
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <button
-                                      type="button"
-                                      className="inline-flex items-center gap-2 text-sm font-semibold text-white/90 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl transition-colors duration-300"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        handleVocabularyAudio(vocab.wordEnglish, vocab.audioUrl);
-                                      }}
-                                    >
-                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                      </svg>
-                                      {audioButtonLabel}
-                                    </button>
-                                    <span className="text-xs uppercase tracking-[0.35em] text-white/60">
-                                      Click để lật
-                                    </span>
+                                  <div className="flex flex-col justify-between h-full">
+                                    <div>
+                                      <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70 mb-2">
+                                        Từ vựng
+                                      </p>
+                                      <h4 className="text-2xl font-bold leading-tight">{vocab.wordEnglish}</h4>
+                                      <p className="text-white/80 italic mt-1">{vocab.phoneticSpelling}</p>
+                                      <p className="text-xs text-white/70 mt-2">
+                                        Mức độ nhớ: <span className="font-semibold">{masteryLevel}/5</span>
+                                      </p>
+                                    </div>
+
+                                    <div className="mt-4 flex items-center justify-center">
+                                      <button
+                                        type="button"
+                                        className="inline-flex items-center gap-2 text-xs font-semibold text-white/90 bg-white/15 hover:bg-white/25 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/20 transition-colors duration-300"
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          handleVocabularyAudio(vocab.wordEnglish, vocab.audioUrl);
+                                        }}
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                        </svg>
+                                        {audioButtonLabel}
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               }

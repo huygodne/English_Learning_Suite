@@ -61,6 +61,7 @@ public class StatisticsDTO {
         private long completedLessons;
         private long completedTests;
         private double averageTestScore;
+        private long xp; // XP ước tính từ hoạt động học tập
     }
 }
 

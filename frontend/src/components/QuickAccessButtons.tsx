@@ -33,7 +33,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
 
   const content = (
     <motion.div
-      className={`relative rounded-2xl p-5 bg-gradient-to-br ${gradient} border border-white/20 shadow-lg overflow-hidden group cursor-pointer`}
+      className={`relative rounded-2xl px-4 py-5 bg-gradient-to-br ${gradient} border border-white/20 shadow-md overflow-hidden group cursor-pointer h-full flex items-center`}
       whileHover={{ scale: 1.05, y: -4 }}
       whileTap={{ scale: 0.95 }}
       onClick={isChatbot ? handleClick : undefined}
@@ -51,24 +51,24 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
         }}
       />
 
-      <div className="relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl">
+      <div className="relative z-10 flex items-center justify-between w-full gap-4">
+        <div className="flex flex-col items-start gap-3">
+          <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl">
             {icon}
           </div>
-          <div className="flex-1">
-            <h4 className="text-lg font-bold text-white mb-1">{label}</h4>
-            <p className="text-sm text-white/80">{description}</p>
+          <div>
+            <h4 className="text-base font-semibold text-white mb-0.5">{label}</h4>
+            <p className="text-xs text-white/80 leading-snug">{description}</p>
           </div>
-          <motion.div
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </motion.div>
         </div>
+        <motion.div
+          animate={{ x: [0, 5, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -113,18 +113,20 @@ const QuickAccessButtons: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
         <span className="text-xl">⚡</span>
         Lối đi Nhanh
       </h3>
-      {buttons.map((button, index) => (
-        <QuickAccessButton
-          key={button.to}
-          {...button}
-          delay={index * 0.1}
-          onChatbotClick={button.isChatbot ? openChatbot : undefined}
-        />
-      ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {buttons.map((button, index) => (
+          <QuickAccessButton
+            key={button.to}
+            {...button}
+            delay={index * 0.1}
+            onChatbotClick={button.isChatbot ? openChatbot : undefined}
+          />
+        ))}
+      </div>
     </div>
   );
 };

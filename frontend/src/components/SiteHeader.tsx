@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuickPanel } from '../contexts/QuickPanelContext';
 import UniversalSearchBar from './UniversalSearchBar';
 
 type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library';
@@ -21,43 +22,59 @@ const navItems: Array<{ key: NavKey; label: string; to: string }> = [
 const SiteHeader: React.FC<SiteHeaderProps> = ({ active, className = '' }) => {
   const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toggle: toggleQuickPanel } = useQuickPanel();
 
   return (
     <header className={`relative z-[30] bg-white/75 backdrop-blur-xl border-b border-white/60 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)] ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-6 py-6">
-          <Link to="/" className="flex items-center gap-3 flex-shrink-0">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-semibold text-lg">
-              EL
-            </span>
-            <span className="text-2xl font-bold text-slate-800">English Learning Suite</span>
-          </Link>
-
-          {/* Center area: menu + search bar */}
-          <div className="hidden md:flex flex-1 items-center justify-center gap-8 min-w-0">
-            <nav className="flex items-center gap-4">
-              {navItems.map((item) => {
-                const isActive = active === item.key;
-                return (
-                  <Link
-                    key={item.key}
-                    to={item.to}
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 ${
-                      isActive
-                        ? 'text-primary-600 bg-primary-50'
-                        : 'text-slate-600 hover:text-primary-600 hover:bg-primary-50'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="flex-1 max-w-md">
-              <UniversalSearchBar />
-            </div>
+          <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <button
+                onClick={toggleQuickPanel}
+                className="p-2 rounded-xl border border-transparent hover:border-primary-100 hover:bg-primary-50/60 text-primary-600 transition-all duration-300"
+                aria-label="Mở bảng nhanh"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h6" />
+                </svg>
+              </button>
+            )}
+            <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-semibold text-lg">
+                EL
+              </span>
+              <span className="text-2xl font-bold text-slate-800">English Learning Suite</span>
+            </Link>
           </div>
+
+          {/* Menu + search bar are available only after login */}
+          {isAuthenticated && (
+            <div className="hidden md:flex flex-1 items-center justify-center gap-8 min-w-0">
+              <nav className="flex items-center gap-4">
+                {navItems.map((item) => {
+                  const isActive = active === item.key;
+                  return (
+                    <Link
+                      key={item.key}
+                      to={item.to}
+                      className={`px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 ${
+                        isActive
+                          ? 'text-primary-600 bg-primary-50'
+                          : 'text-slate-600 hover:text-primary-600 hover:bg-primary-50'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="flex-1 max-w-md">
+                <UniversalSearchBar />
+              </div>
+            </div>
+          )}
 
           <div className="hidden md:flex items-center gap-4 flex-shrink-0">
             {isAuthenticated ? (
@@ -79,23 +96,25 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ active, className = '' }) => {
             )}
           </div>
 
-          <button
-            className="md:hidden p-2 rounded-xl border border-transparent text-slate-700 hover:text-primary-600 hover:border-primary-200 transition-all duration-300"
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          {isAuthenticated && (
+            <button
+              className="md:hidden p-2 rounded-xl border border-transparent text-slate-700 hover:text-primary-600 hover:border-primary-200 transition-all duration-300"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
-      {mobileMenuOpen && (
+      {isAuthenticated && mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white shadow-lg">
           <div className="px-4 py-6 space-y-4">
             {navItems.map((item) => {

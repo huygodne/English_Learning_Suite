@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { leaderboardService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { UserStatisticsDTO } from '../types';
 
 interface LeaderboardEntry {
   id: number;
@@ -16,21 +19,106 @@ interface EnhancedLeaderboardProps {
 }
 
 const EnhancedLeaderboard: React.FC<EnhancedLeaderboardProps> = ({
-  entries = [
-    { id: 1, name: 'Bạn', xp: 4280, rank: 1, avatar: '🧑‍🎓', highlight: true },
-    { id: 2, name: 'Minh Anh', xp: 3990, rank: 2, avatar: '🦉' },
-    { id: 3, name: 'Lan Chi', xp: 3625, rank: 3, avatar: '🌟' },
-    { id: 4, name: 'Hoàng Dũng', xp: 3310, rank: 4, avatar: '🚀' },
-    { id: 5, name: 'Quỳnh Mai', xp: 2980, rank: 5, avatar: '🎧' }
-  ],
+  entries: propEntries,
   title = 'Bảng Xếp Hạng'
 }) => {
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<LeaderboardEntry[] | null>(propEntries || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (propEntries && propEntries.length > 0) {
+      setEntries(propEntries);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data: UserStatisticsDTO[] = await leaderboardService.getTopUsersByXp();
+        if (!isMounted) return;
+
+        const mapped: LeaderboardEntry[] = data
+          .sort((a, b) => b.xp - a.xp)
+          .slice(0, 5)
+          .map((u, index) => ({
+            id: u.userId,
+            name: u.fullName || u.username,
+            xp: u.xp,
+            rank: index + 1,
+            highlight: user?.id === u.userId
+          }));
+
+        setEntries(mapped);
+      } catch (err) {
+        console.error('Không thể tải bảng xếp hạng', err);
+        if (isMounted) setError('Không thể tải bảng xếp hạng');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [propEntries, user?.id]);
   const getRankIcon = (rank: number) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
     if (rank === 3) return '🥉';
     return `#${rank}`;
   };
+
+  if (loading && !entries) {
+    return (
+      <motion.div
+        className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="text-xl">🏆</span>
+            {title}
+          </h3>
+          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+            Tuần này
+          </span>
+        </div>
+        <p className="text-sm text-slate-500">Đang tải bảng xếp hạng...</p>
+      </motion.div>
+    );
+  }
+
+  if (error && !entries) {
+    return (
+      <motion.div
+        className="rounded-3xl p-6 bg-white border border-slate-200 shadow-lg"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="text-xl">🏆</span>
+            {title}
+          </h3>
+        </div>
+        <p className="text-sm text-red-500">{error}</p>
+      </motion.div>
+    );
+  }
+
+  if (!entries || entries.length === 0) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -51,7 +139,7 @@ const EnhancedLeaderboard: React.FC<EnhancedLeaderboardProps> = ({
 
       <p className="text-sm text-slate-500 mb-4">Top 5 người dùng có XP cao nhất</p>
 
-      <div className="space-y-3 max-h-80 overflow-y-auto">
+      <div className="space-y-3">
         {entries.map((entry, index) => (
           <motion.div
             key={entry.id}

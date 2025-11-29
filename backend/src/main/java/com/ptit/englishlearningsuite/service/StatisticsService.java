@@ -190,13 +190,13 @@ public class StatisticsService {
                     dto.setUserId(account.getId());
                     dto.setUsername(account.getUsername());
                     dto.setFullName(account.getFullName());
-                    
+
                     long completedLessonsCount = userLessonMap.getOrDefault(account, Collections.emptyList()).size();
                     dto.setCompletedLessons(completedLessonsCount);
-                    
+
                     List<TestProgress> userTests = userTestMap.getOrDefault(account, Collections.emptyList());
                     dto.setCompletedTests(userTests.size());
-                    
+
                     if (!userTests.isEmpty()) {
                         double avgScore = userTests.stream()
                                 .mapToInt(TestProgress::getScore)
@@ -206,7 +206,11 @@ public class StatisticsService {
                     } else {
                         dto.setAverageTestScore(0.0);
                     }
-                    
+
+                    // Công thức XP đơn giản: mỗi bài học hoàn thành = 10 XP, mỗi bài kiểm tra = 20 XP
+                    long xp = completedLessonsCount * 10L + userTests.size() * 20L;
+                    dto.setXp(xp);
+
                     return dto;
                 })
                 .sorted((a, b) -> {

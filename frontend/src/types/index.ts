@@ -353,6 +353,7 @@ export interface UserStatisticsDTO {
   completedLessons: number;
   completedTests: number;
   averageTestScore: number;
+  xp: number;
 }
 
 // Detailed Statistics Types

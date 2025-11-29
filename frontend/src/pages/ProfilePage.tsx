@@ -132,7 +132,11 @@ const ProfilePage: React.FC = () => {
 
     const rewards: Array<{ type: RewardType; amount?: number; badgeName?: string; message?: string }> = [];
 
-    if (completedLessons > 0) {
+    // Chỉ hiển thị popup XP một lần cho mỗi lần đăng nhập
+    const xpSeenKey = user?.id ? `xpRewardSeen_${user.id}` : null;
+    const hasSeenXPReward = xpSeenKey ? sessionStorage.getItem(xpSeenKey) === 'true' : false;
+
+    if (completedLessons > 0 && !hasSeenXPReward) {
       rewards.push({
         type: 'xp',
         amount: completedLessons * 15,
@@ -155,7 +159,7 @@ const ProfilePage: React.FC = () => {
     }
 
     setPendingRewards(rewards);
-  }, [completedLessons, averageTestScore, bestScore, lessonProgress.length, testProgress.length]);
+  }, [completedLessons, averageTestScore, bestScore, lessonProgress.length, testProgress.length, user?.id]);
 
   useEffect(() => {
     if (activeReward || pendingRewards.length === 0) return;
@@ -248,7 +252,13 @@ const ProfilePage: React.FC = () => {
           amount={activeReward?.amount}
           badgeName={activeReward?.badgeName}
           message={activeReward?.message}
-          onClose={() => setActiveReward(null)}
+          onClose={() => {
+            if (activeReward?.type === 'xp' && user?.id) {
+              const xpSeenKey = `xpRewardSeen_${user.id}`;
+              sessionStorage.setItem(xpSeenKey, 'true');
+            }
+            setActiveReward(null);
+          }}
         />
 
         {/* Profile Header - Enhanced */}

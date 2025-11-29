@@ -3,17 +3,18 @@ import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ScenicBackground from '../components/ScenicBackground';
 import { useAuth } from '../contexts/AuthContext';
-import { lessonService, testService } from '../services/api';
-import { LessonSummary, TestSummary } from '../types';
+import { useQuickPanel } from '../contexts/QuickPanelContext';
+import { lessonService, testService, userProgressService } from '../services/api';
+import { LessonSummary, TestSummary, UserLessonProgress, UserTestProgress, UserProgressSummary } from '../types';
 import HomeHeader from './home/components/HomeHeader';
 import DashboardSection from './home/components/DashboardSection';
 import GuestExperience from './home/components/GuestExperience';
 import SiteFooter from './home/components/SiteFooter';
-import HamburgerDrawer from './home/components/HamburgerDrawer';
 
 const HomePage: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const { toggle: toggleQuickPanel } = useQuickPanel();
 
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
@@ -23,7 +24,6 @@ const HomePage: React.FC = () => {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hamburgerMenuOpen, setHamburgerMenuOpen] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -31,6 +31,10 @@ const HomePage: React.FC = () => {
   const [tests, setTests] = useState<TestSummary[]>([]);
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [testsLoading, setTestsLoading] = useState(false);
+  const [summary, setSummary] = useState<UserProgressSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [lessonProgress, setLessonProgress] = useState<UserLessonProgress[]>([]);
+  const [testProgress, setTestProgress] = useState<UserTestProgress[]>([]);
 
   useEffect(() => {
     const observerOptions = {
@@ -78,32 +82,47 @@ const HomePage: React.FC = () => {
   }, [lastScrollY]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !user?.id) return;
 
     const fetchDashboardData = async () => {
       setLessonsLoading(true);
       setTestsLoading(true);
+      setSummaryLoading(true);
 
       try {
-        const [lessonsData, testsData] = await Promise.all([
+        const [lessonsData, testsData, summaryData, lessonProgressData, testProgressData] = await Promise.all([
           lessonService.getAllLessons().catch(() => []),
-          testService.getAllTests().catch(() => [])
+          testService.getAllTests().catch(() => []),
+          userProgressService.getSummary(user.id).catch(() => null),
+          userProgressService.getLessonProgress(user.id).catch(() => []),
+          userProgressService.getTestProgress(user.id).catch(() => [])
         ]);
 
         setLessons([...lessonsData].sort((a, b) => a.level - b.level));
         setTests([...testsData].sort((a, b) => a.level - b.level));
+        if (summaryData) {
+          setSummary(summaryData);
+        } else {
+          setSummary(null);
+        }
+        setLessonProgress(lessonProgressData ?? []);
+        setTestProgress(testProgressData ?? []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setLessons([]);
         setTests([]);
+        setSummary(null);
+        setLessonProgress([]);
+        setTestProgress([]);
       } finally {
         setLessonsLoading(false);
         setTestsLoading(false);
+        setSummaryLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const sectionRefs = {
     heroRef,
@@ -124,7 +143,7 @@ const HomePage: React.FC = () => {
         onLogout={logout}
         mobileMenuOpen={mobileMenuOpen}
         onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
-        onToggleHamburgerMenu={() => setHamburgerMenuOpen((prev) => !prev)}
+        onToggleHamburgerMenu={toggleQuickPanel}
       />
 
       <AnimatePresence>
@@ -135,6 +154,10 @@ const HomePage: React.FC = () => {
             tests={tests}
             lessonsLoading={lessonsLoading}
             testsLoading={testsLoading}
+            summary={summary ?? undefined}
+            summaryLoading={summaryLoading}
+            lessonProgress={lessonProgress}
+            testProgress={testProgress}
             onNavigateToLessons={() => navigate('/lessons')}
           />
         )}
@@ -148,8 +171,6 @@ const HomePage: React.FC = () => {
       />
 
       <SiteFooter />
-
-      <HamburgerDrawer isOpen={hamburgerMenuOpen} onClose={() => setHamburgerMenuOpen(false)} />
 
       <div className="scroll-indicator">
         <div className="scroll-arrow" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>

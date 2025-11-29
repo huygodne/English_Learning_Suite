@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ChatbotProvider } from './contexts/ChatbotContext';
+import { QuickPanelProvider, useQuickPanel } from './contexts/QuickPanelContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import FloatingChatbot from './components/FloatingChatbot';
 import HomePage from './pages/HomePage';
@@ -14,12 +15,16 @@ import AdminPage from './pages/AdminPage';
 import LessonDetailPage from './pages/LessonDetailPage';
 import TestDetailPage from './pages/TestDetailPage';
 import LibraryPage from './pages/LibraryPage';
-import { useAuth } from './contexts/AuthContext';
+import HamburgerDrawer from './pages/home/components/HamburgerDrawer';
 
 const AppContent = () => {
   const location = useLocation();
   const hideFloatingChatbot = ['/login', '/register'].includes(location.pathname);
   const { isAuthenticated, isAdmin } = useAuth();
+  const { isOpen: quickPanelOpen, close: closeQuickPanel } = useQuickPanel();
+
+  const hideQuickPanelRoutes = ['/login', '/register'];
+  const showQuickPanel = isAuthenticated && !hideQuickPanelRoutes.includes(location.pathname);
 
   return (
     <div className="App">
@@ -60,6 +65,9 @@ const AppContent = () => {
       </Routes>
       {/* Floating Chatbot - hiển thị khi không ở trang ngoài */}
       {!hideFloatingChatbot && <FloatingChatbot />}
+      {showQuickPanel && (
+        <HamburgerDrawer isOpen={quickPanelOpen} onClose={closeQuickPanel} />
+      )}
     </div>
   );
 };
@@ -68,9 +76,11 @@ function App() {
   return (
     <AuthProvider>
       <ChatbotProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <QuickPanelProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </QuickPanelProvider>
       </ChatbotProvider>
     </AuthProvider>
   );

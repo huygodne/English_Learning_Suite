@@ -41,44 +41,46 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
         </div>
 
         {/* Center area: menu + search bar */}
-        <div className="hidden md:flex flex-1 items-center justify-center gap-8 min-w-0">
-          <nav className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-primary-600 bg-primary-50"
-            >
-              Trang chủ
-            </Link>
-            <Link
-              to="/lessons"
-              className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
-            >
-              Bài học
-            </Link>
-            <Link
-              to="/tests"
-              className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
-            >
-              Kiểm tra
-            </Link>
-            <Link
-              to="/library"
-              className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
-            >
-              Thư viện
-            </Link>
-            <Link
-              to="/profile"
-              className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
-            >
-              Hồ sơ
-            </Link>
-          </nav>
+        {isAuthenticated && (
+          <div className="hidden md:flex flex-1 items-center justify-center gap-8 min-w-0">
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-primary-600 bg-primary-50"
+              >
+                Trang chủ
+              </Link>
+              <Link
+                to="/lessons"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
+              >
+                Bài học
+              </Link>
+              <Link
+                to="/tests"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
+              >
+                Kiểm tra
+              </Link>
+              <Link
+                to="/library"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
+              >
+                Thư viện
+              </Link>
+              <Link
+                to="/profile"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
+              >
+                Hồ sơ
+              </Link>
+            </nav>
 
-          <div className="flex-1 max-w-md">
-            <UniversalSearchBar />
+            <div className="flex-1 max-w-md">
+              <UniversalSearchBar />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="hidden md:flex items-center gap-4 flex-shrink-0">
           {isAuthenticated ? (
@@ -100,23 +102,25 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           )}
         </div>
 
-        <button
-          className="md:hidden p-2 rounded-xl border border-transparent text-slate-700 hover:text-primary-600 hover:border-primary-200 transition-all duration-300"
-          onClick={onToggleMobileMenu}
-          aria-label="Toggle navigation menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {mobileMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
+        {isAuthenticated && (
+          <button
+            className="md:hidden p-2 rounded-xl border border-transparent text-slate-700 hover:text-primary-600 hover:border-primary-200 transition-all duration-300"
+            onClick={onToggleMobileMenu}
+            aria-label="Toggle navigation menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        )}
       </div>
     </div>
 
-    {mobileMenuOpen && (
+    {isAuthenticated && mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
         <div className="px-4 py-6 space-y-4">
           <Link to="/" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
