@@ -15,6 +15,7 @@ import AdminPage from './pages/AdminPage';
 import LessonDetailPage from './pages/LessonDetailPage';
 import TestDetailPage from './pages/TestDetailPage';
 import LibraryPage from './pages/LibraryPage';
+import RecommendedLessons from './pages/RecommendedLessons';
 import HamburgerDrawer from './pages/home/components/HamburgerDrawer';
 
 const AppContent = () => {
@@ -62,6 +63,7 @@ const AppContent = () => {
             </ProtectedRoute>
           } 
         />
+        <Route path="/recommendations" element={<RecommendedLessons />} />
       </Routes>
       {/* Floating Chatbot - hiển thị khi không ở trang ngoài */}
       {!hideFloatingChatbot && <FloatingChatbot />}

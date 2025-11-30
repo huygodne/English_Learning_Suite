@@ -6,8 +6,12 @@ import QuickTranslate from '../components/QuickTranslate';
 import FlipCard from '../components/FlipCard';
 import ScenicBackground from '../components/ScenicBackground';
 import LessonGamesPanel from '../components/games/LessonGamesPanel';
+import InteractiveQuestion from '../components/InteractiveQuestion';
+import GrammarCard from '../components/GrammarCard';
+import ConversationChat from '../components/ConversationChat';
 import SiteHeader from '../components/SiteHeader';
 import Breadcrumb from '../components/Breadcrumb';
+import { playAudio } from '../utils/audioUtils';
 
 const LessonDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +19,7 @@ const LessonDetailPage: React.FC = () => {
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation' | 'practice'>('vocabulary');
+  const [activeTab, setActiveTab] = useState<'vocabulary' | 'grammar' | 'conversation' | 'game'>('vocabulary');
   const [studyTime, setStudyTime] = useState(0);
   const [currentVocabIndex, setCurrentVocabIndex] = useState(0);
   const [savingProgress, setSavingProgress] = useState(false);
@@ -37,10 +41,10 @@ const LessonDetailPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-switch to practice tab when activity param is present
+  // Auto-switch to game tab when activity param is present
   useEffect(() => {
     if (activityParam && lesson && ['flashcard', 'blast'].includes(activityParam)) {
-      setActiveTab('practice');
+      setActiveTab('game');
     }
   }, [activityParam, lesson]);
 
@@ -182,13 +186,6 @@ const LessonDetailPage: React.FC = () => {
       }
     };
   }, [lesson]);
-
-  const playAudio = (audioUrl: string) => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.play().catch(console.error);
-    }
-  };
 
   const speakWord = (word: string) => {
     if (!word) return;
@@ -411,14 +408,14 @@ const LessonDetailPage: React.FC = () => {
                   </button>
                   {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 && (
                     <button
-                      onClick={() => setActiveTab('practice')}
+                      onClick={() => setActiveTab('game')}
                       className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === 'practice'
+                        activeTab === 'game'
                           ? 'border-primary-500 text-primary-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      Luyện tập 🎮
+                      Game 🎮
                     </button>
                   )}
                 </nav>
@@ -611,19 +608,33 @@ const LessonDetailPage: React.FC = () => {
               )}
 
               {activeTab === 'grammar' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">Ngữ pháp</h3>
+                  
                   {lesson.grammars.length > 0 ? (
-                    lesson.grammars.map((grammar) => (
-                      <div key={grammar.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                        <div className="space-y-3">
-                          <h4 className="text-lg font-semibold text-gray-900">Giải thích tiếng Anh:</h4>
-                          <p className="text-gray-800">{grammar.explanationEnglish}</p>
-                          <h4 className="text-lg font-semibold text-gray-900">Giải thích tiếng Việt:</h4>
-                          <p className="text-gray-800">{grammar.explanationVietnamese}</p>
-                        </div>
-                      </div>
-                    ))
+                    <div className="space-y-6">
+                      {lesson.grammars.map((grammar, index) => {
+                        // Find related practice question by matching index exactly
+                        // Filter valid question types first, then get question at the same index
+                        const validQuestions = lesson.practiceQuestions?.filter(q => 
+                          q.questionType === 'MULTIPLE_CHOICE' || 
+                          q.questionType === 'FILL_IN_BLANK' || 
+                          q.questionType === 'TRUE_FALSE'
+                        ) || [];
+                        
+                        // Get question at the same index as grammar (no fallback to index 0)
+                        const relatedQuestion = validQuestions[index] || null;
+
+                        return (
+                          <GrammarCard
+                            key={grammar.id}
+                            grammar={grammar}
+                            practiceQuestions={relatedQuestion ? [relatedQuestion] : undefined}
+                            lessonId={lesson.id}
+                          />
+                        );
+                      })}
+                    </div>
                   ) : (
                     <p className="text-gray-600 text-center py-8">Chưa có nội dung ngữ pháp nào trong bài học này.</p>
                   )}
@@ -631,58 +642,52 @@ const LessonDetailPage: React.FC = () => {
               )}
 
               {activeTab === 'conversation' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">Hội thoại</h3>
+                  
                   {lesson.conversations.length > 0 ? (
-                    lesson.conversations.map((conversation) => (
-                      <div key={conversation.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-lg font-semibold text-gray-900">{conversation.title}</h4>
-                          {conversation.audioUrl && (
-                            <button
-                              onClick={() => playAudio(conversation.audioUrl!)}
-                              className="btn-primary flex items-center space-x-2"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                              </svg>
-                              <span>Phát âm</span>
-                            </button>
-                          )}
-                        </div>
-                        <div className="space-y-3">
-                          {conversation.sentences.map((sentence) => (
-                            <div key={sentence.id} className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-start space-x-3">
-                                <span className="font-semibold text-primary-600 min-w-0 flex-shrink-0">
-                                  {sentence.characterName}:
-                                </span>
-                                <div className="flex-1">
-                                  <p className="text-gray-900 mb-1">{sentence.textEnglish}</p>
-                                  <p className="text-gray-600 text-sm">{sentence.textVietnamese}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))
+                    <div className="space-y-6">
+                      {lesson.conversations.map((conversation, index) => {
+                        // Find related practice question by matching index exactly
+                        // Filter valid question types first, then get question at the same index
+                        const validQuestions = lesson.practiceQuestions?.filter(q => 
+                          q.questionType === 'FILL_IN_BLANK' || 
+                          q.questionType === 'MULTIPLE_CHOICE' || 
+                          q.questionType === 'TRUE_FALSE'
+                        ) || [];
+                        
+                        // Get question at the same index as conversation (no fallback to index 0)
+                        const relatedQuestion = validQuestions[index] || null;
+
+                        return (
+                          <ConversationChat
+                            key={conversation.id}
+                            conversation={conversation}
+                            practiceQuestions={relatedQuestion ? [relatedQuestion] : undefined}
+                            lessonId={lesson.id}
+                          />
+                        );
+                      })}
+                    </div>
                   ) : (
                     <p className="text-gray-600 text-center py-8">Chưa có hội thoại nào trong bài học này.</p>
                   )}
                 </div>
               )}
 
-              {activeTab === 'practice' && (
+
+              {activeTab === 'game' && (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Luyện tập với mini games</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Mini Games với từ vựng</h3>
                   {lesson && lesson.vocabularies && lesson.vocabularies.length > 0 ? (
                     <LessonGamesPanel 
                       vocabularies={lesson.vocabularies} 
                       initialGame={activityParam && ['flashcard', 'blast'].includes(activityParam) ? activityParam as 'flashcard' | 'blast' : undefined}
                     />
                   ) : (
-                    <p className="text-gray-600 text-center py-8">Chưa có từ vựng để luyện tập.</p>
+                    <div className="text-center py-12">
+                      <p className="text-gray-600">Chưa có từ vựng để chơi game.</p>
+                    </div>
                   )}
                 </div>
               )}

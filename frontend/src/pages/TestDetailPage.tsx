@@ -6,6 +6,7 @@ import { TestDetail, AnswerSubmission, TestSubmission } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
 import Breadcrumb from '../components/Breadcrumb';
+import { playAudio } from '../utils/audioUtils';
 
 const TEST_DURATION_SECONDS = 20 * 60;
 const ALLOWED_QUESTION_TYPES = ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'];
@@ -173,12 +174,6 @@ const TestDetailPage: React.FC = () => {
     }
   };
 
-  const playAudio = (audioUrl: string) => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.play().catch(console.error);
-    }
-  };
 
   if (loading) {
     return (

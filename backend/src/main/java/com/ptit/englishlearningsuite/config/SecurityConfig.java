@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/recommendations/**").permitAll() // Cho phép truy cập công khai recommendations
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/media/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

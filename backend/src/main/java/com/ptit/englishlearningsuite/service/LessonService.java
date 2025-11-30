@@ -4,6 +4,8 @@ import com.ptit.englishlearningsuite.dto.*;
 import com.ptit.englishlearningsuite.entity.*;
 import com.ptit.englishlearningsuite.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,18 @@ public class LessonService {
 
     @Autowired
     private GrammarRepository grammarRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private AnswerOptionRepository answerOptionRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private RecommendationService recommendationService;
 
     public List<LessonSummaryDTO> getAllLessons() {
         return lessonRepository.findAll().stream()
@@ -83,6 +97,15 @@ public class LessonService {
             dto.setConversations(Collections.emptySet());
         }
 
+        // Add practice questions with shuffled answer options
+        if (lesson.getPracticeQuestions() != null) {
+            dto.setPracticeQuestions(lesson.getPracticeQuestions().stream()
+                    .map(this::convertToPracticeQuestionDto)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setPracticeQuestions(Collections.emptyList());
+        }
+
         return dto;
     }
 
@@ -123,6 +146,48 @@ public class LessonService {
         dto.setCharacterName(sentence.getCharacterName());
         dto.setTextEnglish(sentence.getTextEnglish());
         dto.setTextVietnamese(sentence.getTextVietnamese());
+        return dto;
+    }
+
+    /**
+     * Convert Question entity to PracticeQuestionDTO with shuffled answer options
+     * Shuffling is done for multiple-choice questions to prevent memorization
+     * Note: isCorrect is NOT included in the response to prevent cheating
+     */
+    private PracticeQuestionDTO convertToPracticeQuestionDto(Question question) {
+        PracticeQuestionDTO dto = new PracticeQuestionDTO();
+        dto.setId(question.getId());
+        dto.setQuestionText(question.getQuestionText());
+        dto.setQuestionType(question.getQuestionType());
+        dto.setImageUrl(question.getImageUrl());
+
+        // Convert answer options to OptionDTO (without isCorrect) and shuffle them
+        if (question.getAnswerOptions() != null) {
+            List<OptionDTO> options = question.getAnswerOptions().stream()
+                    .map(this::convertToOptionDto)
+                    .collect(Collectors.toList());
+
+            // Shuffle answer options for multiple-choice questions
+            if ("MULTIPLE_CHOICE".equalsIgnoreCase(question.getQuestionType())) {
+                Collections.shuffle(options);
+            }
+
+            dto.setOptions(options);
+        } else {
+            dto.setOptions(Collections.emptyList());
+        }
+
+        return dto;
+    }
+
+    /**
+     * Convert AnswerOption to OptionDTO (without isCorrect field)
+     */
+    private OptionDTO convertToOptionDto(AnswerOption option) {
+        OptionDTO dto = new OptionDTO();
+        dto.setId(option.getId());
+        dto.setOptionText(option.getOptionText());
+        // Note: isCorrect is intentionally NOT included to prevent cheating
         return dto;
     }
 
@@ -281,5 +346,160 @@ public class LessonService {
 
     public void deleteLesson(Long id) {
         lessonRepository.deleteById(id);
+    }
+
+    /**
+     * Submit practice question answer and process Elo update
+     * 
+     * @param lessonId ID of the lesson
+     * @param submission Practice submission DTO containing questionId and selectedOptionId
+     * @return Practice submission response with feedback and updated Elo
+     */
+    @Transactional
+    public PracticeSubmissionResponseDTO submitPractice(Long lessonId, PracticeSubmissionDTO submission) {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        String username = authentication.getName();
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        // Get question and verify lesson exists
+        Question question = questionRepository.findById(submission.getQuestionId())
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + submission.getQuestionId()));
+        
+        // Verify lesson exists
+        if (!lessonRepository.existsById(lessonId)) {
+            throw new RuntimeException("Lesson not found with id: " + lessonId);
+        }
+
+        // Verify question belongs to this lesson
+        if (question.getLesson() == null || !question.getLesson().getId().equals(lessonId)) {
+            throw new RuntimeException("Question does not belong to this lesson");
+        }
+
+        // Find correct answer
+        AnswerOption correctAnswer = null;
+        if (question.getAnswerOptions() != null) {
+            correctAnswer = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::isCorrect)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Check if answer is correct
+        boolean isCorrect = false;
+        if (submission.getSelectedOptionId() != null && correctAnswer != null) {
+            isCorrect = correctAnswer.getId().equals(submission.getSelectedOptionId());
+        } else if (submission.getTextAnswer() != null && correctAnswer != null) {
+            // For text-based questions, compare text (case-insensitive, trimmed)
+            isCorrect = submission.getTextAnswer().trim().equalsIgnoreCase(correctAnswer.getOptionText().trim());
+        }
+
+        // Save old Elo for calculating change
+        int oldElo = account.getEloRating() != null ? account.getEloRating() : 1000;
+
+        // IMMEDIATELY call processLessonResult to update Elo and Difficulty
+        // Treat each question as a mini-lesson: pass if correct, fail if incorrect
+        recommendationService.processLessonResult(account.getId(), lessonId, isCorrect);
+
+        // Get updated account to retrieve new Elo
+        account = accountRepository.findById(account.getId())
+                .orElseThrow(() -> new RuntimeException("Account not found after update"));
+        int newElo = account.getEloRating() != null ? account.getEloRating() : 1000;
+        int eloChange = newElo - oldElo;
+
+        // Build response
+        PracticeSubmissionResponseDTO response = new PracticeSubmissionResponseDTO();
+        response.setCorrect(isCorrect);
+        if (correctAnswer != null) {
+            response.setCorrectAnswerId(correctAnswer.getId());
+            response.setCorrectAnswerText(correctAnswer.getOptionText());
+        }
+        response.setExplanation(question.getExplanation());
+        response.setNewElo(newElo);
+        response.setEloChange(eloChange);
+
+        return response;
+    }
+
+    /**
+     * Submit answer for a practice question and process Elo update
+     * Simplified version using AnswerSubmissionDTO
+     * 
+     * @param lessonId ID of the lesson
+     * @param submission Answer submission DTO containing questionId and selectedOptionId
+     * @return Answer submission response with feedback and updated Elo
+     */
+    @Transactional
+    public AnswerSubmissionResponseDTO submitAnswer(Long lessonId, AnswerSubmissionDTO submission) {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        String username = authentication.getName();
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        // Get question and verify lesson exists
+        Question question = questionRepository.findById(submission.getQuestionId())
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + submission.getQuestionId()));
+        
+        // Verify lesson exists
+        if (!lessonRepository.existsById(lessonId)) {
+            throw new RuntimeException("Lesson not found with id: " + lessonId);
+        }
+
+        // Verify question belongs to this lesson
+        if (question.getLesson() == null || !question.getLesson().getId().equals(lessonId)) {
+            throw new RuntimeException("Question does not belong to this lesson");
+        }
+
+        // Find correct answer
+        AnswerOption correctAnswer = null;
+        if (question.getAnswerOptions() != null) {
+            correctAnswer = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::isCorrect)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Check if answer is correct
+        boolean isCorrect = false;
+        if (submission.getSelectedOptionId() != null && correctAnswer != null) {
+            // For multiple choice or true/false questions
+            isCorrect = correctAnswer.getId().equals(submission.getSelectedOptionId());
+        } else if (submission.getTextAnswer() != null && correctAnswer != null) {
+            // For fill-in-blank questions, compare text (case-insensitive, trimmed)
+            isCorrect = submission.getTextAnswer().trim().equalsIgnoreCase(correctAnswer.getOptionText().trim());
+        }
+
+        // Save old Elo for calculating change
+        int oldElo = account.getEloRating() != null ? account.getEloRating() : 1000;
+
+        // IMMEDIATELY call processLessonResult to update Elo and Difficulty
+        // Treat each question as a mini-lesson: pass if correct, fail if incorrect
+        recommendationService.processLessonResult(account.getId(), lessonId, isCorrect);
+
+        // Get updated account to retrieve new Elo
+        account = accountRepository.findById(account.getId())
+                .orElseThrow(() -> new RuntimeException("Account not found after update"));
+        int newElo = account.getEloRating() != null ? account.getEloRating() : 1000;
+        int eloChange = newElo - oldElo;
+
+        // Build response
+        AnswerSubmissionResponseDTO response = new AnswerSubmissionResponseDTO();
+        response.setCorrect(isCorrect);
+        response.setNewElo(newElo);
+        response.setEloChange(eloChange);
+        response.setExplanation(question.getExplanation() != null ? question.getExplanation() : "");
+        if (correctAnswer != null) {
+            response.setCorrectAnswer(correctAnswer.getOptionText());
+        }
+
+        return response;
     }
 }

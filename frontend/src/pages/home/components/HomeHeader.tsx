@@ -69,6 +69,12 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
                 Thư viện
               </Link>
               <Link
+                to="/recommendations"
+                className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
+              >
+                AI Gợi ý
+              </Link>
+              <Link
                 to="/profile"
                 className="px-4 py-2 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-300 text-slate-600 hover:text-primary-600 hover:bg-primary-50"
               >
@@ -134,6 +140,9 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           </Link>
           <Link to="/library" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
             Thư viện
+          </Link>
+          <Link to="/recommendations" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
+            AI Gợi ý
           </Link>
           <Link to="/profile" className="block text-gray-700 hover:text-primary-600 py-2 text-base font-medium">
             Hồ sơ

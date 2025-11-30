@@ -41,6 +41,35 @@ export interface LessonDetail {
   vocabularies: Vocabulary[];
   grammars: Grammar[];
   conversations: Conversation[];
+  practiceQuestions?: PracticeQuestion[];
+}
+
+export interface PracticeQuestion {
+  id: number;
+  questionText: string;
+  questionType: string;
+  imageUrl?: string;
+  explanation?: string;
+  options: Option[];
+}
+
+export interface Option {
+  id: number;
+  optionText: string;
+}
+
+export interface AnswerSubmissionRequest {
+  questionId: number;
+  selectedOptionId?: number; // For multiple choice and true/false
+  textAnswer?: string; // For fill-in-blank
+}
+
+export interface AnswerSubmissionResponse {
+  correct: boolean;
+  newElo: number;
+  eloChange: number; // Change in Elo rating (can be positive or negative)
+  explanation: string;
+  correctAnswer?: string; // Correct answer text for display
 }
 
 // Types cho Vocabulary
@@ -159,16 +188,6 @@ export interface UserProgressSummary {
   testTimeSpentSeconds: number;
   lastLessonCompletedAt?: string;
   lastTestCompletedAt?: string;
-}
-
-export interface PronunciationSample {
-  id: number;
-  category: string;
-  term: string;
-  ipa: string;
-  description: string;
-  imageUrl?: string;
-  audioUrl?: string;
 }
 
 export interface TranslationResponse {
@@ -392,4 +411,29 @@ export interface EngagementMetricsDTO {
   totalActiveDays: number;
   retentionRate: number;
   peakConcurrentUsers: number;
+}
+
+// Types cho Hybrid Recommendation System
+export interface UserStats {
+  id: number;
+  username: string;
+  fullName: string;
+  eloRating: number;
+  grammarProficiency: number;
+  vocabProficiency: number;
+  listeningProficiency: number;
+}
+
+export interface RecommendedLesson extends LessonSummary {
+  difficultyRating?: number;
+  grammarWeight?: number;
+  vocabWeight?: number;
+  listeningWeight?: number;
+  similarity?: number; // Cosine similarity score (0-1)
+}
+
+export interface SimulateLessonResultRequest {
+  userId: number;
+  lessonId: number;
+  isPassed: boolean;
 }

@@ -31,7 +31,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className = '' }) => {
         tests: 'Bài kiểm tra',
         profile: 'Hồ sơ',
         library: 'Thư viện',
-        pronunciation: 'Phát âm',
         admin: 'Quản trị',
         login: 'Đăng nhập',
         register: 'Đăng ký',

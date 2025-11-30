@@ -13,7 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(exclude = {"test", "answerOptions"})
+@EqualsAndHashCode(exclude = {"test", "lesson", "answerOptions"})
 public class Question {
 
     @Id
@@ -21,12 +21,17 @@ public class Question {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "test_id", nullable = false)
+    @JoinColumn(name = "test_id", nullable = true)
     private Test test;
+
+    @ManyToOne
+    @JoinColumn(name = "lesson_id", nullable = true)
+    private Lesson lesson;
 
     private String questionText;
     private String questionType;
     private String imageUrl;
+    private String explanation;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     private Set<AnswerOption> answerOptions;

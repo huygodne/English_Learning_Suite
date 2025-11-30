@@ -144,18 +144,24 @@ const ProfilePage: React.FC = () => {
       });
     }
 
-    if (bestScore >= 95) {
-      rewards.push({
-        type: 'badge',
-        badgeName: 'Huy hiệu Siêu Sao 🎖️',
-        message: 'Bạn đạt điểm gần như tuyệt đối! Hãy duy trì phong độ này.'
-      });
-    } else if (averageTestScore >= 85) {
-      rewards.push({
-        type: 'badge',
-        badgeName: 'Huy hiệu Chăm chỉ 💪',
-        message: 'Điểm số của bạn rất ấn tượng, tiếp tục luyện tập nhé!'
-      });
+    // Chỉ hiển thị popup badge một lần cho mỗi lần đăng nhập
+    const badgeSeenKey = user?.id ? `badgeRewardSeen_${user.id}` : null;
+    const hasSeenBadgeReward = badgeSeenKey ? sessionStorage.getItem(badgeSeenKey) === 'true' : false;
+
+    if (!hasSeenBadgeReward) {
+      if (bestScore >= 95) {
+        rewards.push({
+          type: 'badge',
+          badgeName: 'Huy hiệu Siêu Sao 🎖️',
+          message: 'Bạn đạt điểm gần như tuyệt đối! Hãy duy trì phong độ này.'
+        });
+      } else if (averageTestScore >= 85) {
+        rewards.push({
+          type: 'badge',
+          badgeName: 'Huy hiệu Chăm chỉ 💪',
+          message: 'Điểm số của bạn rất ấn tượng, tiếp tục luyện tập nhé!'
+        });
+      }
     }
 
     setPendingRewards(rewards);
@@ -253,9 +259,14 @@ const ProfilePage: React.FC = () => {
           badgeName={activeReward?.badgeName}
           message={activeReward?.message}
           onClose={() => {
-            if (activeReward?.type === 'xp' && user?.id) {
-              const xpSeenKey = `xpRewardSeen_${user.id}`;
-              sessionStorage.setItem(xpSeenKey, 'true');
+            if (user?.id) {
+              if (activeReward?.type === 'xp') {
+                const xpSeenKey = `xpRewardSeen_${user.id}`;
+                sessionStorage.setItem(xpSeenKey, 'true');
+              } else if (activeReward?.type === 'badge') {
+                const badgeSeenKey = `badgeRewardSeen_${user.id}`;
+                sessionStorage.setItem(badgeSeenKey, 'true');
+              }
             }
             setActiveReward(null);
           }}

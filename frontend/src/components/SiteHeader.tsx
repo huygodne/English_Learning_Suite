@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useQuickPanel } from '../contexts/QuickPanelContext';
 import UniversalSearchBar from './UniversalSearchBar';
 
-type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library';
+type NavKey = 'home' | 'lessons' | 'tests' | 'profile' | 'library' | 'recommendations';
 
 interface SiteHeaderProps {
   active?: NavKey;
@@ -16,6 +16,7 @@ const navItems: Array<{ key: NavKey; label: string; to: string }> = [
   { key: 'lessons', label: 'Bài học', to: '/lessons' },
   { key: 'tests', label: 'Kiểm tra', to: '/tests' },
   { key: 'library', label: 'Thư viện', to: '/library' },
+  { key: 'recommendations', label: 'AI Gợi ý', to: '/recommendations' },
   { key: 'profile', label: 'Hồ sơ', to: '/profile' }
 ];
 

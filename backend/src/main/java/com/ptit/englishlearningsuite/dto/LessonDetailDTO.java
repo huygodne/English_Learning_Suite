@@ -2,6 +2,7 @@ package com.ptit.englishlearningsuite.dto;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -15,4 +16,5 @@ public class LessonDetailDTO {
     private Set<VocabularyDTO> vocabularies;
     private Set<GrammarDTO> grammars;
     private Set<ConversationDTO> conversations;
+    private List<PracticeQuestionDTO> practiceQuestions;
 }

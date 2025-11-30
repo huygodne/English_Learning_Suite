@@ -24,14 +24,3 @@ public class PronunciationController {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-

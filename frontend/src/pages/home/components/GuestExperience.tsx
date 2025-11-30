@@ -106,7 +106,7 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Cộng đồng năng động</p>
-                  <p className="text-base font-medium text-slate-600">12.500+ học viên luyện tập mỗi ngày</p>
+                  <p className="text-base font-semibold text-slate-500"> học viên luyện tập mỗi ngày</p>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
                   <div>
                     <h3 className="text-2xl font-semibold mb-3">Giáo trình đa dạng</h3>
                     <p className="text-base leading-relaxed text-white/85">
-                      500+ bài học được viết bởi chuyên gia, từ phát âm, luyện nghe đến tiếng Anh giao tiếp chuyên sâu, sắp xếp theo lộ trình rõ ràng.
+                      các bài học, từ phát âm, luyện nghe cơ bản đến tiếng Anh giao tiếp chuyên sâu, sắp xếp theo lộ trình rõ ràng.
                     </p>
                   </div>
                   <div className="flex items-center gap-4 pt-4 border-t border-white/30">
@@ -214,13 +214,13 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
                   <div>
                     <h3 className="text-2xl font-semibold text-slate-900 mb-3">AI Coach đồng hành</h3>
                     <p className="text-base leading-relaxed text-slate-600">
-                      Chấm bài viết tự động, gợi ý sửa lỗi phát âm và đề xuất chủ đề hội thoại phù hợp với mục tiêu của bạn trong từng buổi học.
+                      Chấm điểm tự động, đề xuất chủ đề hội thoại phù hợp với mục tiêu của bạn trong từng buổi học.
                     </p>
                   </div>
                   <ul className="relative space-y-3 text-sm text-slate-500">
                     <li className="flex items-center gap-3">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary-100 text-secondary-600">✓</span>
-                      Chấm điểm phát âm thời gian thực
+                      Giải đáp thắc mắc mọi lúc
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary-100 text-secondary-600">✓</span>
@@ -241,7 +241,7 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
                   <div>
                     <h3 className="text-2xl font-semibold text-slate-900 mb-3">Bảng điều khiển trực quan</h3>
                     <p className="text-base leading-relaxed text-slate-600">
-                      Theo dõi tiến độ từng kỹ năng với biểu đồ sinh động, nhận thông báo nhắc học và lộ trình điều chỉnh dựa trên dữ liệu thực tế.
+                      Theo dõi tiến độ từng kỹ năng với biểu đồ sinh động, lộ trình điều chỉnh dựa trên dữ liệu thực tế.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -276,10 +276,10 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 animate-slide-in-up" style={{ animationDelay: '0.25s' }}>
             {[
-              { label: 'Học viên tích cực', value: '12K+', accent: 'from-emerald-400 to-emerald-500' },
-              { label: 'Bài học chuyên sâu', value: '620+', accent: 'from-sky-400 to-indigo-400' },
+              { label: 'Học viên tích cực', value: '200+', accent: 'from-emerald-400 to-emerald-500' },
+              { label: 'Bài học chuyên sâu', value: '100+', accent: 'from-sky-400 to-indigo-400' },
               { label: 'Tỉ lệ hài lòng', value: '96%', accent: 'from-amber-400 to-orange-400' },
-              { label: 'Phiên hỗ trợ/tháng', value: '2.4K', accent: 'from-fuchsia-400 to-pink-400' }
+              { label: 'Phiên hỗ trợ/tháng', value: '1K+', accent: 'from-fuchsia-400 to-pink-400' }
             ].map((stat, idx) => (
               <div key={stat.label} className="relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-br from-white/40 to-white/5">
                 <div className="relative rounded-3xl bg-white/10 backdrop-blur-xl p-8 h-full flex flex-col justify-between">
@@ -390,7 +390,7 @@ const GuestExperience: React.FC<GuestExperienceProps> = ({
                   ))}
                 </div>
                 <p className="text-lg leading-relaxed">
-                  “Sau 3 tháng học với English Learning Suite, điểm IELTS Speaking của tôi tăng từ 6.0 lên 7.0. Các bài luyện phát âm với AI giúp tôi tự tin hơn rất nhiều khi giao tiếp.”
+                  “Sau 3 tháng học với English Learning Suite, điểm IELTS của tôi tăng từ 5.5 lên 7.0. Các bài luyện tập mà AI đề xuất giúp tôi dễ học hơn rất nhiều.”
                 </p>
                 <div className="inline-flex items-center gap-3 text-sm text-white/80">
                   <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/20 backdrop-blur">🔥</span>

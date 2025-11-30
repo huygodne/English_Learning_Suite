@@ -15,7 +15,6 @@ import {
   ChatRequest,
   ChatResponse,
   VocabularyProgress,
-  PronunciationSample,
   TranslationPayload,
   TranslationResponse,
   UserProgressSummary,
@@ -24,8 +23,14 @@ import {
   AdminAccountPayload,
   LessonRequestDTO,
   TestRequestDTO,
-      StatisticsDTO,
-  DetailedStatisticsDTO
+  StatisticsDTO,
+  DetailedStatisticsDTO,
+  UserStatisticsDTO,
+  UserStats,
+  RecommendedLesson,
+  SimulateLessonResultRequest,
+  AnswerSubmissionRequest,
+  AnswerSubmissionResponse
 } from '../types';
 
 // Cấu hình axios base URL
@@ -68,10 +73,22 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       // 401: Unauthorized - token không hợp lệ hoặc hết hạn
       // 403: Forbidden - không có quyền truy cập (thường do chưa đăng nhập)
+      
+      // Không redirect nếu đang gọi recommendations API (cho phép truy cập công khai)
+      const isRecommendationsAPI = error.config?.url?.includes('/recommendations');
+      if (isRecommendationsAPI) {
+        // Chỉ log lỗi, không redirect và không xóa token
+        console.warn('Recommendations API error (public access allowed):', error.response?.data);
+        return Promise.reject(error);
+      }
+      
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Chỉ redirect nếu không phải đang ở trang login/register
-      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+      // Chỉ redirect nếu không phải đang ở trang login/register/recommendations
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && 
+          !currentPath.includes('/register') && 
+          !currentPath.includes('/recommendations')) {
         window.location.href = '/login';
       }
     }
@@ -121,6 +138,11 @@ export const lessonService = {
 
   deleteLesson: async (id: number): Promise<void> => {
     await apiClient.delete(`/lessons/${id}`);
+  },
+
+  submitAnswer: async (lessonId: number, submission: AnswerSubmissionRequest): Promise<AnswerSubmissionResponse> => {
+    const response = await apiClient.post(`/lessons/${lessonId}/submit-answer`, submission);
+    return response.data;
   },
 };
 
@@ -194,14 +216,6 @@ export const vocabularyProgressService = {
   },
 };
 
-export const pronunciationService = {
-  listSamples: async (category?: string): Promise<PronunciationSample[]> => {
-    const response = await apiClient.get('/pronunciations', {
-      params: category ? { category } : {},
-    });
-    return response.data;
-  },
-};
 
 export const progressService = {
   completeLesson: async (payload: { lessonId: number; score: number; isCompleted: boolean; timeSpentSeconds?: number; completedAt?: string }): Promise<void> => {
@@ -285,6 +299,26 @@ export const chatbotService = {
 
   getChatHistory: async (): Promise<ChatMessage[]> => {
     const response = await apiClient.get('/chatbot/history');
+    return response.data;
+  },
+};
+
+// Recommendation System Services
+export const recommendationService = {
+  getRecommendedLessons: async (userId?: number): Promise<RecommendedLesson[]> => {
+    const config = userId ? { params: { userId } } : undefined;
+    const response = await apiClient.get('/recommendations', config);
+    return response.data;
+  },
+
+  simulateLessonResult: async (request: SimulateLessonResultRequest): Promise<string> => {
+    const response = await apiClient.post('/recommendations/simulate', request);
+    return response.data;
+  },
+
+  getUserStats: async (userId?: number): Promise<UserStats> => {
+    const config = userId ? { params: { userId } } : undefined;
+    const response = await apiClient.get('/recommendations/user-stats', config);
     return response.data;
   },
 };
