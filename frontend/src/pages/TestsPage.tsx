@@ -373,15 +373,17 @@ const TestsPage: React.FC = () => {
                     {(() => { const i=Math.max(test.name.lastIndexOf(':'), test.name.lastIndexOf('-')); return i>=0 ? test.name.slice(i+1).trim() : test.name; })()}
                   </h3>
                   
-                  {/* Score display if completed */}
-                  {isCompleted && testProgress && (
-                    <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-green-700">Điểm số:</span>
-                        <span className="text-lg font-bold text-green-600">{Math.min(testProgress.score, 100)}</span>
+                  {/* Score display - always reserve space to keep button position fixed */}
+                  <div className="mb-4 min-h-[3.5rem] flex items-center">
+                    {isCompleted && testProgress ? (
+                      <div className="w-full p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-green-700">Điểm số:</span>
+                          <span className="text-lg font-bold text-green-600">{Math.min(testProgress.score, 100)}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null}
+                  </div>
                   
                   <div className="flex items-center text-sm text-gray-500 mb-6">
                     <svg className="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
