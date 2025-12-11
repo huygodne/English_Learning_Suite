@@ -150,14 +150,14 @@ const UniversalSearchBar: React.FC<UniversalSearchBarProps> = ({ className = '' 
           )}
         </form>
 
-        {/* Search Results Dropdown */}
+        {/* Search Results Dropdown - Phóng to để dễ chọn hơn */}
         {isFocused && searchQuery && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 max-h-96 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 max-h-[500px] overflow-y-auto w-full min-w-[400px]">
             {hasResults ? (
-              <div className="p-2">
+              <div className="p-3">
                 {searchResults.lessons.length > 0 && (
                   <div>
-                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase">Bài học</div>
+                    <div className="px-4 py-3 text-sm font-bold text-slate-600 uppercase tracking-wide border-b border-slate-200 mb-2">Bài học</div>
                     {searchResults.lessons.map((lesson) => (
                       <button
                         key={lesson.id}
@@ -166,17 +166,17 @@ const UniversalSearchBar: React.FC<UniversalSearchBarProps> = ({ className = '' 
                           setSearchQuery('');
                           setIsFocused(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors"
+                        className="w-full text-left px-4 py-4 rounded-lg hover:bg-primary-50 transition-colors border-b border-slate-100 last:border-b-0 active:bg-primary-100"
                       >
-                        <div className="font-medium text-slate-900">{lesson.name}</div>
-                        <div className="text-xs text-slate-500">Cấp độ {lesson.level}</div>
+                        <div className="font-semibold text-base text-slate-900 mb-1">{lesson.name}</div>
+                        <div className="text-sm text-slate-500">Cấp độ {lesson.level}</div>
                       </button>
                     ))}
                   </div>
                 )}
                 {searchResults.tests.length > 0 && (
-                  <div className="mt-2">
-                    <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase">Bài kiểm tra</div>
+                  <div className={searchResults.lessons.length > 0 ? "mt-4 pt-4 border-t border-slate-200" : ""}>
+                    <div className="px-4 py-3 text-sm font-bold text-slate-600 uppercase tracking-wide border-b border-slate-200 mb-2">Bài kiểm tra</div>
                     {searchResults.tests.map((test) => (
                       <button
                         key={test.id}
@@ -185,25 +185,25 @@ const UniversalSearchBar: React.FC<UniversalSearchBarProps> = ({ className = '' 
                           setSearchQuery('');
                           setIsFocused(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors"
+                        className="w-full text-left px-4 py-4 rounded-lg hover:bg-primary-50 transition-colors border-b border-slate-100 last:border-b-0 active:bg-primary-100"
                       >
-                        <div className="font-medium text-slate-900">{test.name}</div>
-                        <div className="text-xs text-slate-500">Cấp độ {test.level}</div>
+                        <div className="font-semibold text-base text-slate-900 mb-1">{test.name}</div>
+                        <div className="text-sm text-slate-500">Cấp độ {test.level}</div>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="p-4 text-center">
-                <p className="text-sm text-slate-600 mb-3">Không tìm thấy kết quả</p>
+              <div className="p-6 text-center">
+                <p className="text-base text-slate-600 mb-4">Không tìm thấy kết quả</p>
                 <button
                   onClick={() => {
                     setTranslationText(searchQuery);
                     setShowTranslateModal(true);
                     setIsFocused(false);
                   }}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-base font-medium"
                 >
                   Dịch "{searchQuery}"
                 </button>

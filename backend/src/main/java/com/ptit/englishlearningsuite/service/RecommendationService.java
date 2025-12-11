@@ -35,6 +35,9 @@ public class RecommendationService {
     @Autowired
     private LessonRepository lessonRepository;
 
+    @Autowired
+    private com.ptit.englishlearningsuite.repository.LessonProgressRepository lessonProgressRepository;
+
     /**
      * Lấy danh sách bài học được gợi ý cho user (chỉ trả về Lesson entities)
      * 
@@ -56,6 +59,17 @@ public class RecommendationService {
                     // Chỉ lấy bài học đang active
                     return lesson.getIsActive() != null && lesson.getIsActive();
                 })
+                .collect(Collectors.toList());
+
+        // Bước 3: Lọc bỏ các bài học đã có tiến độ (đã học hoặc đang học)
+        // Chỉ đề xuất những bài học chưa học (chưa có bất kỳ tiến độ nào)
+        Set<Long> learnedLessonIds = lessonProgressRepository.findAllByAccount(account).stream()
+                .map(progress -> progress.getLesson().getId())
+                .collect(Collectors.toSet());
+
+        // Loại bỏ các bài học đã có tiến độ (chỉ giữ lại bài học chưa học)
+        allActiveLessons = allActiveLessons.stream()
+                .filter(lesson -> !learnedLessonIds.contains(lesson.getId()))
                 .collect(Collectors.toList());
 
         // GIAI ĐOẠN 1: ADAPTIVE FILTERING (Lọc theo độ khó)
@@ -135,6 +149,17 @@ public class RecommendationService {
                     // Chỉ lấy bài học đang active
                     return lesson.getIsActive() != null && lesson.getIsActive();
                 })
+                .collect(Collectors.toList());
+
+        // Bước 3: Lọc bỏ các bài học đã có tiến độ (đã học hoặc đang học)
+        // Chỉ đề xuất những bài học chưa học (chưa có bất kỳ tiến độ nào)
+        Set<Long> learnedLessonIds = lessonProgressRepository.findAllByAccount(account).stream()
+                .map(progress -> progress.getLesson().getId())
+                .collect(Collectors.toSet());
+
+        // Loại bỏ các bài học đã có tiến độ (chỉ giữ lại bài học chưa học)
+        allActiveLessons = allActiveLessons.stream()
+                .filter(lesson -> !learnedLessonIds.contains(lesson.getId()))
                 .collect(Collectors.toList());
 
         // GIAI ĐOẠN 1: ADAPTIVE FILTERING (Lọc theo độ khó)

@@ -5,11 +5,13 @@ import { LessonSummary, UserLessonProgress } from '../types';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
 import LessonList from '../components/LessonList';
+import Pagination from '../components/Pagination';
 import { useAuth } from '../contexts/AuthContext';
 
 const LessonsPage: React.FC = () => {
   const [allLessons, setAllLessons] = useState<LessonSummary[]>([]);
-  const [displayedCount, setDisplayedCount] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [progress, setProgress] = useState<UserLessonProgress[]>([]);
@@ -17,8 +19,20 @@ const LessonsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const displayedLessons = allLessons.slice(0, displayedCount);
-  const hasMore = allLessons.length > displayedCount;
+  
+  // Tính toán các bài học hiển thị dựa trên trang hiện tại
+  const totalPages = Math.ceil(allLessons.length / itemsPerPage);
+  
+  // Sử dụng useMemo để đảm bảo tính toán lại khi currentPage hoặc allLessons thay đổi
+  const displayedLessons = useMemo(() => {
+    if (!allLessons || allLessons.length === 0) {
+      return [];
+    }
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const result = allLessons.slice(startIndex, endIndex);
+    return result;
+  }, [allLessons, currentPage, itemsPerPage]);
   
   const activityParam = searchParams.get('activity');
 
@@ -29,6 +43,8 @@ const LessonsPage: React.FC = () => {
         // Sort theo level (dễ -> khó)
         const sorted = [...data].sort((a, b) => a.level - b.level);
         setAllLessons(sorted);
+        // Reset về trang 1 khi tải lại danh sách
+        setCurrentPage(1);
       } catch (err: any) {
         console.error('Error fetching lessons:', err);
         setError('Không thể tải danh sách bài học: ' + (err.message || 'Unknown error'));
@@ -38,6 +54,11 @@ const LessonsPage: React.FC = () => {
     };
     fetchLessons();
   }, []);
+
+  // Cuộn lên đầu trang khi chuyển trang
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   // Redirect to first lesson with activity param if activity is specified
   useEffect(() => {
@@ -114,15 +135,17 @@ const LessonsPage: React.FC = () => {
 
         <LessonList lessons={displayedLessons} progressByLesson={progressByLesson} loadingProgress={progressLoading} />
 
-        {hasMore && (
-          <div className="text-center mt-12 animate-fade-in">
-            <button
-              onClick={() => setDisplayedCount(prev => prev + 10)}
-              className="btn-primary transform transition-all duration-300 hover:scale-110 animate-bounce-gentle"
-            >
-              Xem thêm ({allLessons.length - displayedCount} bài nữa)
-            </button>
-          </div>
+        {/* Phân trang */}
+        {allLessons.length > 0 && totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+            }}
+            itemsPerPage={itemsPerPage}
+            totalItems={allLessons.length}
+          />
         )}
 
         {allLessons.length === 0 && !error && (

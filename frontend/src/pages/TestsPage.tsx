@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { testService, userProgressService } from '../services/api';
@@ -6,17 +6,24 @@ import { TestSummary, UserTestProgress } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import ScenicBackground from '../components/ScenicBackground';
 import SiteHeader from '../components/SiteHeader';
+import Pagination from '../components/Pagination';
 
 const TestsPage: React.FC = () => {
   const { user } = useAuth();
   const [allTests, setAllTests] = useState<TestSummary[]>([]);
   const [completedTests, setCompletedTests] = useState<UserTestProgress[]>([]);
-  const [displayedCount, setDisplayedCount] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9; // 3 cột x 3 hàng = 9 bài/trang
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   
-  const displayedTests = allTests.slice(0, displayedCount);
-  const hasMore = allTests.length > displayedCount;
+  // Tính toán phân trang
+  const totalPages = Math.ceil(allTests.length / itemsPerPage);
+  const displayedTests = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return allTests.slice(startIndex, endIndex);
+  }, [allTests, currentPage, itemsPerPage]);
   
   // Get completed test IDs
   const completedTestIds = new Set(completedTests.map(t => t.testId));
@@ -35,6 +42,8 @@ const TestsPage: React.FC = () => {
           .sort((a, b) => a.level - b.level);
         setAllTests(processed);
         setCompletedTests(progressData);
+        // Reset về trang 1 khi tải lại danh sách
+        setCurrentPage(1);
       } catch (err: any) {
         setError('Không thể tải danh sách bài kiểm tra');
       } finally {
@@ -44,6 +53,11 @@ const TestsPage: React.FC = () => {
 
     fetchData();
   }, [user?.id]);
+
+  // Cuộn lên đầu trang khi chuyển trang
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   if (loading) {
     return (
@@ -291,7 +305,7 @@ const TestsPage: React.FC = () => {
             return (
               <motion.div 
                 key={test.id} 
-                className="bg-white rounded-3xl shadow-xl border-2 border-gray-100 hover:border-purple-300 transition-all duration-500 overflow-hidden group relative"
+                className="bg-white rounded-3xl shadow-xl border-2 border-gray-100 hover:border-purple-300 transition-all duration-500 overflow-hidden group relative flex flex-col h-full"
                 initial={{ opacity: 0, y: 50, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ 
@@ -341,13 +355,13 @@ const TestsPage: React.FC = () => {
                   
                   <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {/* Number Badge with animation */}
+                      {/* Number Badge with animation - removed to avoid confusion */}
                       <motion.div 
                         className="w-12 h-12 bg-white/50 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-800 font-bold text-lg shadow-lg border-2 border-white/50 relative overflow-hidden"
                         whileHover={{ scale: 1.1, rotate: 5 }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
-                        <span className="relative z-10">{index + 1}</span>
+                        <span className="relative z-10">📋</span>
                       </motion.div>
                       <div>
                         <span className="bg-white/50 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1 rounded-full border border-white/50 block mb-1">
@@ -368,13 +382,13 @@ const TestsPage: React.FC = () => {
                 </div>
                 
                 {/* Card Body */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-400 transition-colors line-clamp-2">
+                <div className="p-6 flex flex-col flex-grow">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-400 transition-colors line-clamp-2 min-h-[3.5rem]">
                     {(() => { const i=Math.max(test.name.lastIndexOf(':'), test.name.lastIndexOf('-')); return i>=0 ? test.name.slice(i+1).trim() : test.name; })()}
                   </h3>
                   
                   {/* Score display - always reserve space to keep button position fixed */}
-                  <div className="mb-4 min-h-[3.5rem] flex items-center">
+                  <div className="mb-4 min-h-[3.5rem] flex items-center flex-shrink-0">
                     {isCompleted && testProgress ? (
                       <div className="w-full p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
                         <div className="flex items-center justify-between">
@@ -382,10 +396,10 @@ const TestsPage: React.FC = () => {
                           <span className="text-lg font-bold text-green-600">{Math.min(testProgress.score, 100)}</span>
                         </div>
                       </div>
-                    ) : null}
+                    ) : <div className="w-full"></div>}
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-500 mb-6">
+                  <div className="flex items-center text-sm text-gray-500 mb-6 flex-shrink-0">
                     <svg className="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -394,7 +408,7 @@ const TestsPage: React.FC = () => {
                   
                   <Link
                     to={`/tests/${test.id}`}
-                    className="block w-full bg-gradient-to-r from-purple-300 via-pink-300 to-rose-300 text-gray-800 font-bold py-4 px-6 rounded-xl text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden group/btn border border-purple-200"
+                    className="block w-full bg-gradient-to-r from-purple-300 via-pink-300 to-rose-300 text-gray-800 font-bold py-4 px-6 rounded-xl text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden group/btn border border-purple-200 mt-auto flex-shrink-0"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       {isCompleted ? 'Làm lại' : 'Bắt đầu kiểm tra'}
@@ -409,25 +423,33 @@ const TestsPage: React.FC = () => {
               </motion.div>
             );
           })}
+          {/* Fill empty spaces để tránh bài lòi ra - chỉ trên màn hình lớn với 3 cột */}
+          {(() => {
+            const remainder = displayedTests.length % 3;
+            if (remainder === 0) return null;
+            const emptyCount = 3 - remainder;
+            return Array.from({ length: emptyCount }).map((_, idx) => (
+              <div 
+                key={`spacer-${idx}`} 
+                className="hidden lg:block"
+                aria-hidden="true"
+                style={{ minHeight: '1px' }}
+              />
+            ));
+          })()}
         </div>
 
-        {/* Load More Button with Gradient */}
-        {hasMore && (
-          <div className="text-center mt-12 animate-fade-in">
-            <button
-              onClick={() => setDisplayedCount(prev => prev + 10)}
-              className="bg-gradient-to-r from-purple-300 via-pink-300 to-rose-300 text-gray-800 font-bold py-4 px-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:scale-110 hover:shadow-purple-300/50 relative overflow-hidden group border border-purple-200"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <span>Xem thêm ({allTests.length - displayedCount} bài nữa)</span>
-                <svg className="w-5 h-5 transform group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            </button>
-          </div>
+        {/* Phân trang - đồng bộ style với trang bài học */}
+        {allTests.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+            }}
+            itemsPerPage={itemsPerPage}
+            totalItems={allTests.length}
+          />
         )}
 
         {allTests.length === 0 && !error && (

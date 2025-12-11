@@ -32,7 +32,16 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
   testProgress = [],
   onNavigateToLessons
 }) => {
-  const nextLesson = lessons[0];
+  // Tìm bài học tiếp theo chưa hoàn thành
+  const completedLessonIds = React.useMemo(() => {
+    return new Set(lessonProgress.filter(p => p.isCompleted).map(p => p.lessonId));
+  }, [lessonProgress]);
+
+  const nextLesson = React.useMemo(() => {
+    // Tìm bài học đầu tiên chưa hoàn thành
+    return lessons.find(lesson => !completedLessonIds.has(lesson.id)) || null;
+  }, [lessons, completedLessonIds]);
+
   const [activeTab, setActiveTab] = React.useState<'lessons' | 'tests'>('lessons');
 
   // Tính toán dữ liệu từ summary (thay cho mock cứng)
@@ -135,31 +144,36 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           {/* Hero: tiếp tục học */}
-          <div className="rounded-3xl p-6 bg-gradient-to-br from-primary-500/10 via-primary-50 to-secondary-50 border border-primary-100 shadow-lg flex flex-col md:flex-row md:items-center gap-5">
-            <div className="flex-1 space-y-2">
-              <p className="text-xs font-semibold text-primary-600 uppercase tracking-[0.3em]">
-                Tiếp tục học
-              </p>
-              <h3 className="text-2xl font-bold text-slate-900">
-                {nextLesson ? nextLesson.name : 'Bắt đầu bài học đầu tiên của bạn'}
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Hoàn thành bài học hôm nay để duy trì chuỗi ngày học và mở khóa thêm nhiều nội dung thú vị.
-              </p>
+          {nextLesson ? (
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-primary-500/10 via-primary-50 to-secondary-50 border border-primary-100 shadow-lg flex flex-col md:flex-row md:items-center gap-5">
+              <div className="flex-1 space-y-2">
+                <p className="text-xs font-semibold text-primary-600 uppercase tracking-[0.3em]">
+                  Tiếp tục học
+                </p>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {nextLesson.lessonNumber ? `Bài ${nextLesson.lessonNumber}: ` : ''}{nextLesson.name}
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Hoàn thành bài học hôm nay để duy trì chuỗi ngày học và mở khóa thêm nhiều nội dung thú vị.
+                </p>
 
-              <Link
-                to={nextLesson ? `/lessons/${nextLesson.id}` : '/lessons'}
-                className="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors w-full sm:w-auto"
-              >
-                Học ngay
-                <span className="ml-2 text-lg">→</span>
-              </Link>
-            </div>
-            {nextLesson && (
+                <Link
+                  to={`/lessons/${nextLesson.id}`}
+                  className="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors w-full sm:w-auto"
+                >
+                  Học ngay
+                  <span className="ml-2 text-lg">→</span>
+                </Link>
+              </div>
               <div className="min-w-[200px] self-stretch rounded-2xl bg-white/80 border border-primary-100 px-5 py-5 flex flex-col justify-center text-sm text-primary-700 shadow-sm">
                 <span className="text-xs uppercase tracking-widest text-primary-400 mb-1">
                   Bài tiếp theo
                 </span>
+                {nextLesson.lessonNumber && (
+                  <span className="text-lg font-bold text-primary-600 mb-1">
+                    Bài {nextLesson.lessonNumber}
+                  </span>
+                )}
                 <span className="text-base font-semibold text-slate-900 mb-1">
                   Cấp độ {nextLesson.level}
                 </span>
@@ -172,8 +186,63 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
                   </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          ) : lessons.length > 0 ? (
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-emerald-500/10 via-emerald-50 to-green-50 border border-emerald-100 shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <span className="text-3xl">🎉</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-[0.3em] mb-1">
+                    Chúc mừng!
+                  </p>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                    Bạn đã hoàn thành tất cả bài học
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                    Hãy tiếp tục ôn tập hoặc khám phá các bài kiểm tra để củng cố kiến thức của bạn.
+                  </p>
+                  <div className="flex gap-3">
+                    <Link
+                      to="/lessons"
+                      className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow hover:bg-emerald-700 transition-colors"
+                    >
+                      Xem lại bài học
+                      <span className="ml-2 text-lg">→</span>
+                    </Link>
+                    <Link
+                      to="/tests"
+                      className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-white text-emerald-600 text-sm font-semibold border border-emerald-200 hover:bg-emerald-50 transition-colors"
+                    >
+                      Làm bài kiểm tra
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-primary-500/10 via-primary-50 to-secondary-50 border border-primary-100 shadow-lg">
+              <div className="flex-1 space-y-2">
+                <p className="text-xs font-semibold text-primary-600 uppercase tracking-[0.3em]">
+                  Bắt đầu học
+                </p>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  Bắt đầu bài học đầu tiên của bạn
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Khám phá các bài học mới và bắt đầu hành trình học tiếng Anh của bạn ngay hôm nay.
+                </p>
+                <Link
+                  to="/lessons"
+                  className="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700 transition-colors w-full sm:w-auto"
+                >
+                  Xem danh sách bài học
+                  <span className="ml-2 text-lg">→</span>
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Review section: chỉ một ô mục tiêu hôm nay dẫn tới bài học */}
           <div className="grid grid-cols-1 gap-5">

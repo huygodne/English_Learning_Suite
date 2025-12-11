@@ -30,6 +30,29 @@ const RecommendedLessons: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Refresh data when page becomes visible (user returns to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user?.id) {
+        fetchData();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user?.id) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user?.id]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -654,7 +677,7 @@ const RecommendedLessons: React.FC = () => {
 
                     <div className="p-6">
                       <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
-                        {lesson.name}
+                        Bài {lesson.lessonNumber}: {lesson.name}
                       </h3>
                       <div className="flex items-center gap-2 mb-4">
                         <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">

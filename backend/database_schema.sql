@@ -1,1766 +1,2111 @@
--- =================================================================
--- FIXED SCRIPT: REALISTIC DATA SEEDING (SAFE IDs)
--- Tác vụ: Xóa sạch dữ liệu cũ và nạp dữ liệu với logic ID an toàn tuyệt đối
--- =================================================================
-
-USE `englishwebsite`;
-
--- 1. DỌN DẸP DỮ LIỆU CŨ (CLEANUP)
+-- ============================================================
+-- BƯỚC 1: LÀM SẠCH DỮ LIỆU CŨ (Giữ lại User, xóa nội dung học)
+-- ============================================================
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE `lesson_progress`;
-TRUNCATE TABLE `test_progress`;
-TRUNCATE TABLE `vocabulary_progress`;
-TRUNCATE TABLE `vocabulary_game_stats`;
-TRUNCATE TABLE `game_sessions`;
-TRUNCATE TABLE `answer_options`;
-TRUNCATE TABLE `questions`;
-TRUNCATE TABLE `sentences`;
-TRUNCATE TABLE `conversations`;
-TRUNCATE TABLE `grammars`;
-TRUNCATE TABLE `vocabularies`;
-TRUNCATE TABLE `tests`;
-TRUNCATE TABLE `lessons`;
+TRUNCATE TABLE answer_options; -- Xóa tạm để tránh lỗi liên kết cũ
+TRUNCATE TABLE questions;
+TRUNCATE TABLE tests;
+TRUNCATE TABLE sentences;
+TRUNCATE TABLE conversations;
+TRUNCATE TABLE grammars;
+TRUNCATE TABLE vocabularies;
+TRUNCATE TABLE lessons;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- =================================================================
--- 2. BẮT ĐẦU NẠP DỮ LIỆU (DATA INSERTION)
--- =================================================================
-
--- -----------------------------------------------------------------
--- LEVEL 1: EASY (LESSON 1-4)
--- -----------------------------------------------------------------
-
--- === LESSON 1: GREETINGS ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (1, 1, 1, 'Greetings & Introductions', 'Học cách chào hỏi, giới thiệu tên tuổi và quốc tịch.', 850, 0.3, 0.5, 0.2);
-
--- Từ vựng L1
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(1, 'Hello', 'Xin chào', 'interjection', 1),
-(1, 'Goodbye', 'Tạm biệt', 'interjection', 1),
-(1, 'Name', 'Tên', 'noun', 1),
-(1, 'Nice', 'Tốt/Đẹp', 'adjective', 1),
-(1, 'Meet', 'Gặp gỡ', 'verb', 1),
-(1, 'Morning', 'Buổi sáng', 'noun', 1),
-(1, 'Afternoon', 'Buổi chiều', 'noun', 1),
-(1, 'Evening', 'Buổi tối', 'noun', 1),
-(1, 'Friend', 'Bạn bè', 'noun', 1),
-(1, 'Thanks', 'Cảm ơn', 'interjection', 1);
-
--- Ngữ pháp L1 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(1, 'Verb To Be (Am/Is/Are)', 'I am, You are, He/She is.', 'Động từ tobe dùng để giới thiệu bản thân.', 'I am a student.'),
-(1, 'Possessive Adjectives', 'My, Your, His, Her.', 'Tính từ sở hữu.', 'My name is John.'),
-(1, 'Greetings', 'Hello, Hi, Good morning, Good afternoon, Good evening.', 'Các cách chào hỏi theo thời gian trong ngày.', 'Good morning, teacher!'),
-(1, 'Introducing Yourself', 'I am... / My name is...', 'Cách giới thiệu bản thân.', 'My name is Anna. I am from Vietnam.'),
-(1, 'Asking Names', 'What is your name? / What is his/her name?', 'Cách hỏi tên người khác.', 'What is your name? My name is Tom.');
-
--- [FIXED] Câu hỏi Ngữ pháp L1 (Mỗi câu hỏi và mỗi đáp án là một INSERT riêng biệt)
--- Câu 1: "Choose correct form: She ___ a teacher."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'Choose correct form: She ___ a teacher.', 'MULTIPLE_CHOICE', 10);
-SET @q1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_id, 'is', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_id, 'are', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_id, 'am', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_id, 'be', FALSE);
-
--- Câu 2: "Choose correct word: ___ name is Lisa."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'Choose correct word: ___ name is Lisa.', 'MULTIPLE_CHOICE', 10);
-SET @q2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_id, 'My', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_id, 'I', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_id, 'Me', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_id, 'You', FALSE);
-
--- Câu 3: Grammar question for "Greetings"
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'Which greeting is used in the morning?', 'MULTIPLE_CHOICE', 10);
-SET @q1_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g3_id, 'Good morning', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g3_id, 'Good evening', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g3_id, 'Good night', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g3_id, 'Good afternoon', FALSE);
-
--- Câu 4: Grammar question for "Introducing Yourself"
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'Complete: ___ name is Peter.', 'MULTIPLE_CHOICE', 10);
-SET @q1_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g4_id, 'My', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g4_id, 'Me', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g4_id, 'I', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g4_id, 'Mine', FALSE);
-
--- Câu 5: Grammar question for "Asking Names"
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What is the correct way to ask someone''s name?', 'MULTIPLE_CHOICE', 10);
-SET @q1_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g5_id, 'What is your name?', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g5_id, 'What your name?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g5_id, 'What name is you?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_g5_id, 'Your name what?', FALSE);
-
-
--- Hội thoại L1 (5 conversations)
--- Conversation 1: First Meeting
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (1, 1, 'First Meeting', 'Gặp gỡ lần đầu');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(1, 'Tom', 'Hello, I am Tom.', 'Chào, tôi là Tom.', 1),
-(1, 'Jerry', 'Hi Tom, nice to meet you.', 'Chào Tom, rất vui được gặp bạn.', 2);
-
--- Conversation 2: Morning Greeting
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (2, 1, 'Morning Greeting', 'Chào buổi sáng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(2, 'Teacher', 'Good morning, class!', 'Chào buổi sáng, cả lớp!', 1),
-(2, 'Students', 'Good morning, teacher!', 'Chào buổi sáng, thầy/cô!', 2);
-
--- Conversation 3: Asking Name
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (3, 1, 'Asking Name', 'Hỏi tên');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(3, 'A', 'What is your name?', 'Tên bạn là gì?', 1),
-(3, 'B', 'My name is Lisa.', 'Tên tôi là Lisa.', 2);
-
--- Conversation 4: Saying Goodbye
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (4, 1, 'Saying Goodbye', 'Chào tạm biệt');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(4, 'Friend1', 'Goodbye, see you tomorrow!', 'Tạm biệt, hẹn gặp ngày mai!', 1),
-(4, 'Friend2', 'Goodbye, have a nice day!', 'Tạm biệt, chúc một ngày tốt lành!', 2);
-
--- Conversation 5: Meeting a Friend
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (5, 1, 'Meeting a Friend', 'Gặp bạn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(5, 'Anna', 'Hi, nice to meet you!', 'Xin chào, rất vui được gặp bạn!', 1),
-(5, 'Bob', 'Nice to meet you too!', 'Tôi cũng rất vui được gặp bạn!', 2);
-
--- Câu hỏi Hội thoại L1 (5 questions)
--- Question 1: "What did Jerry say?"
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What did Jerry say?', 'MULTIPLE_CHOICE', 10);
-SET @q1_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c1_id, 'Nice to meet you', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c1_id, 'Goodbye', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c1_id, 'Who are you?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c1_id, 'Im sad', FALSE);
-
--- Question 2: Conversation 2
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What do students say in the morning?', 'MULTIPLE_CHOICE', 10);
-SET @q1_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c2_id, 'Good morning, teacher!', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c2_id, 'Good evening, teacher!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c2_id, 'Good night, teacher!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c2_id, 'Good afternoon, teacher!', FALSE);
-
--- Question 3: Conversation 3
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What is Lisa''s response?', 'MULTIPLE_CHOICE', 10);
-SET @q1_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c3_id, 'My name is Lisa.', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c3_id, 'I name is Lisa.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c3_id, 'Me name is Lisa.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c3_id, 'Name is Lisa.', FALSE);
-
--- Question 4: Conversation 4
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What does Friend2 say?', 'MULTIPLE_CHOICE', 10);
-SET @q1_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c4_id, 'Goodbye, have a nice day!', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c4_id, 'Hello, have a nice day!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c4_id, 'Hi, have a nice day!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c4_id, 'Thanks, have a nice day!', FALSE);
-
--- Question 5: Conversation 5
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (1, NULL, 'What does Bob reply?', 'MULTIPLE_CHOICE', 10);
-SET @q1_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c5_id, 'Nice to meet you too!', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c5_id, 'Nice to meet you!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c5_id, 'Nice meet you!', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q1_c5_id, 'Nice to you!', FALSE);
-
-
--- === LESSON 2: FAMILY ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (2, 2, 1, 'My Family', 'Từ vựng về gia đình và mô tả người thân.', 900, 0.2, 0.7, 0.1);
-
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(2, 'Father', 'Bố', 'noun', 1), (2, 'Mother', 'Mẹ', 'noun', 1), (2, 'Brother', 'Anh em trai', 'noun', 1), (2, 'Sister', 'Chị em gái', 'noun', 1),
-(2, 'Grandmother', 'Bà', 'noun', 1), (2, 'Grandfather', 'Ông', 'noun', 1), (2, 'Parents', 'Bố mẹ', 'noun', 1), (2, 'Uncle', 'Chú/Bác', 'noun', 1),
-(2, 'Aunt', 'Cô/Dì', 'noun', 1), (2, 'Cousin', 'Anh chị em họ', 'noun', 1);
-
--- Ngữ pháp L2 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(2, 'Have/Has got', 'I have got a brother. She has got a sister.', 'Cấu trúc diễn tả sở hữu.', 'He has got two uncles.'),
-(2, 'Family Members', 'Father, Mother, Brother, Sister, etc.', 'Các thành viên trong gia đình.', 'My father is a doctor.'),
-(2, 'Possessive ''s', 'Tom''s father, Mary''s mother', 'Sở hữu cách với dấu nháy đơn.', 'This is John''s sister.'),
-(2, 'This/That', 'This is my brother. That is my sister.', 'Cách chỉ người/vật gần/xa.', 'This is my family photo.'),
-(2, 'Who questions', 'Who is this? Who is that?', 'Câu hỏi về người.', 'Who is that man?');
-
--- Câu hỏi Ngữ pháp L2 (5 questions)
--- Question 1: "My mother ___ a sister."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'My mother ___ a sister.', 'MULTIPLE_CHOICE', 10);
-SET @q2_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g1_id, 'has got', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g1_id, 'have got', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g1_id, 'is', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g1_id, 'are', FALSE);
-
--- Question 2: Family Members
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'What is the word for "Bố" in English?', 'MULTIPLE_CHOICE', 10);
-SET @q2_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g2_id, 'Father', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g2_id, 'Mother', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g2_id, 'Brother', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g2_id, 'Sister', FALSE);
-
--- Question 3: Possessive 's
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'Complete: This is ___ father.', 'MULTIPLE_CHOICE', 10);
-SET @q2_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g3_id, 'Tom''s', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g3_id, 'Toms', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g3_id, 'Tom', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g3_id, 'Toms''', FALSE);
-
--- Question 4: This/That
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'Complete: ___ is my grandmother.', 'MULTIPLE_CHOICE', 10);
-SET @q2_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g4_id, 'This', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g4_id, 'These', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g4_id, 'Those', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g4_id, 'They', FALSE);
-
--- Question 5: Who questions
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'What is the correct question?', 'MULTIPLE_CHOICE', 10);
-SET @q2_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g5_id, 'Who is this?', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g5_id, 'What is this?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g5_id, 'Where is this?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_g5_id, 'When is this?', FALSE);
-
--- Hội thoại L2 (5 conversations)
--- Conversation 1: Family Photo
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (6, 2, 'Family Photo', 'Xem ảnh gia đình');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(6, 'A', 'Who is this?', 'Đây là ai?', 1),
-(6, 'B', 'This is my mother.', 'Đây là mẹ tôi.', 2);
-
--- Conversation 2: Introducing Family
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (7, 2, 'Introducing Family', 'Giới thiệu gia đình');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(7, 'A', 'This is my family.', 'Đây là gia đình tôi.', 1),
-(7, 'B', 'How many people are in your family?', 'Gia đình bạn có bao nhiêu người?', 2),
-(7, 'A', 'We have five people.', 'Chúng tôi có năm người.', 3);
-
--- Conversation 3: Talking about Parents
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (8, 2, 'Talking about Parents', 'Nói về bố mẹ');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(8, 'A', 'Who is that?', 'Đó là ai?', 1),
-(8, 'B', 'That is my father.', 'Đó là bố tôi.', 2);
-
--- Conversation 4: Siblings
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (9, 2, 'Siblings', 'Anh chị em');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(9, 'A', 'Do you have any brothers?', 'Bạn có anh em trai không?', 1),
-(9, 'B', 'Yes, I have one brother.', 'Có, tôi có một anh trai.', 2);
-
--- Conversation 5: Grandparents
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (10, 2, 'Grandparents', 'Ông bà');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(10, 'A', 'This is my grandmother.', 'Đây là bà tôi.', 1),
-(10, 'B', 'She looks very kind.', 'Bà ấy trông rất hiền.', 2);
-
--- Câu hỏi Hội thoại L2 (5 questions)
--- Question 1: Conversation 1
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'What is the answer to "Who is this?"', 'MULTIPLE_CHOICE', 10);
-SET @q2_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c1_id, 'This is my mother.', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c1_id, 'This is my father.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c1_id, 'This is my brother.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c1_id, 'This is my sister.', FALSE);
-
--- Question 2: Conversation 2
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'How many people are in the family?', 'MULTIPLE_CHOICE', 10);
-SET @q2_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c2_id, 'Five', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c2_id, 'Four', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c2_id, 'Three', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c2_id, 'Six', FALSE);
-
--- Question 3: Conversation 3
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'Who is that?', 'MULTIPLE_CHOICE', 10);
-SET @q2_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c3_id, 'That is my father.', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c3_id, 'That is my mother.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c3_id, 'That is my brother.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c3_id, 'That is my sister.', FALSE);
-
--- Question 4: Conversation 4
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'How many brothers does B have?', 'MULTIPLE_CHOICE', 10);
-SET @q2_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c4_id, 'One', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c4_id, 'Two', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c4_id, 'Three', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c4_id, 'None', FALSE);
-
--- Question 5: Conversation 5
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (2, NULL, 'What does B say about the grandmother?', 'MULTIPLE_CHOICE', 10);
-SET @q2_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c5_id, 'She looks very kind.', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c5_id, 'She looks very old.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c5_id, 'She looks very young.', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q2_c5_id, 'She looks very tall.', FALSE);
-
--- === LESSON 3: DAILY ROUTINE ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (3, 3, 1, 'Daily Routine', 'Hoạt động hàng ngày', 950, 0.3, 0.5, 0.2);
-
--- Từ vựng L3 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(3, 'Wake up', 'Thức dậy', 'verb', 1), (3, 'Brush', 'Đánh răng', 'verb', 1), (3, 'Breakfast', 'Bữa sáng', 'noun', 1), (3, 'School', 'Trường học', 'noun', 1),
-(3, 'Lunch', 'Bữa trưa', 'noun', 1), (3, 'Homework', 'Bài tập về nhà', 'noun', 1), (3, 'Dinner', 'Bữa tối', 'noun', 1), (3, 'Sleep', 'Ngủ', 'verb', 1),
-(3, 'Shower', 'Tắm', 'verb', 1), (3, 'Exercise', 'Tập thể dục', 'verb', 1);
-
--- Ngữ pháp L3 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(3, 'Present Simple', 'I wake up at 7 AM. She goes to school.', 'Thì hiện tại đơn diễn tả thói quen.', 'I brush my teeth every morning.'),
-(3, 'Daily Activities', 'Wake up, brush teeth, have breakfast, go to school.', 'Các hoạt động hàng ngày.', 'I have breakfast at 8 AM.'),
-(3, 'Time Expressions', 'At 7 AM, in the morning, in the afternoon, in the evening.', 'Các cách diễn đạt thời gian.', 'I go to school in the morning.'),
-(3, 'Frequency Adverbs', 'Always, usually, often, sometimes, never.', 'Trạng từ tần suất.', 'I always brush my teeth.'),
-(3, 'Routine Questions', 'What time do you wake up? When do you have breakfast?', 'Câu hỏi về thói quen.', 'What time do you go to bed?');
-
--- Câu hỏi Ngữ pháp L3 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'I ___ up at 7 AM every day.', 'MULTIPLE_CHOICE', 10);
-SET @q3_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g1_id, 'wake', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g1_id, 'wakes', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g1_id, 'waking', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g1_id, 'woke', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'She ___ to school in the morning.', 'MULTIPLE_CHOICE', 10);
-SET @q3_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g2_id, 'goes', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g2_id, 'go', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g2_id, 'going', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g2_id, 'went', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'What time do you have breakfast?', 'MULTIPLE_CHOICE', 10);
-SET @q3_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g3_id, 'At 8 AM', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g3_id, 'In 8 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g3_id, 'On 8 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g3_id, 'For 8 AM', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'I ___ brush my teeth in the morning.', 'MULTIPLE_CHOICE', 10);
-SET @q3_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g4_id, 'always', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g4_id, 'alwaysly', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g4_id, 'all time', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g4_id, 'everytime', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'When do you do your homework?', 'MULTIPLE_CHOICE', 10);
-SET @q3_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g5_id, 'In the evening', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g5_id, 'At the evening', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g5_id, 'On the evening', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_g5_id, 'For the evening', FALSE);
-
--- Hội thoại L3 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (11, 3, 'Morning Routine', 'Thói quen buổi sáng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(11, 'A', 'What time do you wake up?', 'Bạn thức dậy lúc mấy giờ?', 1),
-(11, 'B', 'I wake up at 7 AM.', 'Tôi thức dậy lúc 7 giờ sáng.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (12, 3, 'Breakfast Time', 'Giờ ăn sáng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(12, 'A', 'Do you have breakfast?', 'Bạn có ăn sáng không?', 1),
-(12, 'B', 'Yes, I always have breakfast at 8 AM.', 'Có, tôi luôn ăn sáng lúc 8 giờ.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (13, 3, 'School Day', 'Ngày đi học');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(13, 'A', 'When do you go to school?', 'Bạn đi học khi nào?', 1),
-(13, 'B', 'I go to school in the morning.', 'Tôi đi học vào buổi sáng.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (14, 3, 'Evening Activities', 'Hoạt động buổi tối');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(14, 'A', 'What do you do in the evening?', 'Bạn làm gì vào buổi tối?', 1),
-(14, 'B', 'I do my homework and have dinner.', 'Tôi làm bài tập và ăn tối.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (15, 3, 'Bedtime', 'Giờ đi ngủ');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(15, 'A', 'What time do you go to bed?', 'Bạn đi ngủ lúc mấy giờ?', 1),
-(15, 'B', 'I go to bed at 10 PM.', 'Tôi đi ngủ lúc 10 giờ tối.', 2);
-
--- Câu hỏi Hội thoại L3 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'What time does B wake up?', 'MULTIPLE_CHOICE', 10);
-SET @q3_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c1_id, '7 AM', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c1_id, '8 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c1_id, '6 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c1_id, '9 AM', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'When does B have breakfast?', 'MULTIPLE_CHOICE', 10);
-SET @q3_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c2_id, 'At 8 AM', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c2_id, 'At 7 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c2_id, 'At 9 AM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c2_id, 'At 10 AM', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'When does B go to school?', 'MULTIPLE_CHOICE', 10);
-SET @q3_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c3_id, 'In the morning', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c3_id, 'In the afternoon', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c3_id, 'In the evening', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c3_id, 'At night', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'What does B do in the evening?', 'MULTIPLE_CHOICE', 10);
-SET @q3_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c4_id, 'Do homework and have dinner', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c4_id, 'Watch TV', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c4_id, 'Play games', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c4_id, 'Go to school', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (3, NULL, 'What time does B go to bed?', 'MULTIPLE_CHOICE', 10);
-SET @q3_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c5_id, '10 PM', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c5_id, '9 PM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c5_id, '11 PM', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q3_c5_id, '12 PM', FALSE);
-
--- === LESSON 4: COLORS & CLOTHES ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (4, 4, 1, 'Colors & Clothes', 'Màu sắc và quần áo', 1000, 0.2, 0.6, 0.2);
-
--- Từ vựng L4 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(4, 'Red', 'Đỏ', 'adjective', 1), (4, 'Blue', 'Xanh dương', 'adjective', 1), (4, 'Green', 'Xanh lá', 'adjective', 1), (4, 'Yellow', 'Vàng', 'adjective', 1),
-(4, 'Shirt', 'Áo sơ mi', 'noun', 1), (4, 'Pants', 'Quần dài', 'noun', 1), (4, 'Dress', 'Váy', 'noun', 1), (4, 'Shoes', 'Giày', 'noun', 1),
-(4, 'Hat', 'Mũ', 'noun', 1), (4, 'Socks', 'Tất', 'noun', 1);
-
--- Ngữ pháp L4 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(4, 'Colors', 'Red, blue, green, yellow, black, white.', 'Các màu sắc cơ bản.', 'I like red.'),
-(4, 'Clothing Items', 'Shirt, pants, dress, shoes, hat.', 'Các loại quần áo.', 'I wear a blue shirt.'),
-(4, 'What color?', 'What color is your shirt? It is blue.', 'Câu hỏi về màu sắc.', 'What color are your shoes?'),
-(4, 'Wear/Put on', 'I wear a red dress. She puts on her shoes.', 'Cách diễn đạt mặc quần áo.', 'I wear blue pants.'),
-(4, 'This/That with colors', 'This red shirt, that blue dress.', 'Kết hợp màu sắc với this/that.', 'I like this green hat.');
-
--- Câu hỏi Ngữ pháp L4 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What color is the sky?', 'MULTIPLE_CHOICE', 10);
-SET @q4_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g1_id, 'Blue', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g1_id, 'Red', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g1_id, 'Green', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g1_id, 'Yellow', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'I ___ a red shirt.', 'MULTIPLE_CHOICE', 10);
-SET @q4_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g2_id, 'wear', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g2_id, 'wears', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g2_id, 'wearing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g2_id, 'wore', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What color ___ your dress?', 'MULTIPLE_CHOICE', 10);
-SET @q4_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g3_id, 'is', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g3_id, 'are', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g3_id, 'am', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g3_id, 'be', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'She ___ on her shoes.', 'MULTIPLE_CHOICE', 10);
-SET @q4_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g4_id, 'puts', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g4_id, 'put', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g4_id, 'putting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g4_id, 'putted', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'I like ___ blue hat.', 'MULTIPLE_CHOICE', 10);
-SET @q4_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g5_id, 'this', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g5_id, 'these', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g5_id, 'that', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_g5_id, 'those', FALSE);
-
--- Hội thoại L4 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (16, 4, 'Talking about Colors', 'Nói về màu sắc');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(16, 'A', 'What color is your shirt?', 'Áo sơ mi của bạn màu gì?', 1),
-(16, 'B', 'It is blue.', 'Nó màu xanh dương.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (17, 4, 'Buying Clothes', 'Mua quần áo');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(17, 'A', 'I like this red dress.', 'Tôi thích chiếc váy đỏ này.', 1),
-(17, 'B', 'It looks nice on you.', 'Nó trông đẹp trên bạn.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (18, 4, 'Describing Clothes', 'Mô tả quần áo');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(18, 'A', 'What are you wearing?', 'Bạn đang mặc gì?', 1),
-(18, 'B', 'I am wearing a green shirt and blue pants.', 'Tôi đang mặc áo xanh lá và quần xanh dương.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (19, 4, 'Favorite Color', 'Màu yêu thích');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(19, 'A', 'What is your favorite color?', 'Màu yêu thích của bạn là gì?', 1),
-(19, 'B', 'My favorite color is yellow.', 'Màu yêu thích của tôi là vàng.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (20, 4, 'Getting Dressed', 'Mặc quần áo');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(20, 'A', 'Put on your shoes.', 'Đi giày vào.', 1),
-(20, 'B', 'OK, I am putting on my shoes now.', 'Được, tôi đang đi giày.', 2);
-
--- Câu hỏi Hội thoại L4 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What color is B''s shirt?', 'MULTIPLE_CHOICE', 10);
-SET @q4_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c1_id, 'Blue', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c1_id, 'Red', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c1_id, 'Green', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c1_id, 'Yellow', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What does A like?', 'MULTIPLE_CHOICE', 10);
-SET @q4_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c2_id, 'A red dress', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c2_id, 'A blue shirt', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c2_id, 'A green hat', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c2_id, 'Yellow shoes', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What is B wearing?', 'MULTIPLE_CHOICE', 10);
-SET @q4_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c3_id, 'A green shirt and blue pants', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c3_id, 'A red dress', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c3_id, 'Blue shoes', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c3_id, 'A yellow hat', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What is B''s favorite color?', 'MULTIPLE_CHOICE', 10);
-SET @q4_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c4_id, 'Yellow', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c4_id, 'Red', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c4_id, 'Blue', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c4_id, 'Green', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (4, NULL, 'What is B doing?', 'MULTIPLE_CHOICE', 10);
-SET @q4_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c5_id, 'Putting on shoes', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c5_id, 'Wearing a shirt', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c5_id, 'Buying a dress', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q4_c5_id, 'Taking off hat', FALSE);
-
-
--- -----------------------------------------------------------------
--- LEVEL 2: MEDIUM (LESSON 5-8)
--- -----------------------------------------------------------------
-
--- === LESSON 5: TRAVEL & AIRPORT ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (5, 5, 2, 'Travel & Airport', 'Thủ tục sân bay và đặt vé.', 1100, 0.4, 0.4, 0.2);
-
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(5, 'Passport', 'Hộ chiếu', 'noun', 2), (5, 'Ticket', 'Vé', 'noun', 2), (5, 'Luggage', 'Hành lý', 'noun', 2), (5, 'Gate', 'Cổng', 'noun', 2),
-(5, 'Boarding', 'Lên máy bay', 'noun', 2), (5, 'Delayed', 'Bị hoãn', 'adjective', 2), (5, 'Arrival', 'Đến nơi', 'noun', 2), (5, 'Departure', 'Khởi hành', 'noun', 2),
-(5, 'Customs', 'Hải quan', 'noun', 2), (5, 'Seat', 'Chỗ ngồi', 'noun', 2);
-
--- Ngữ pháp L5 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(5, 'Future Simple (Will)', 'Use "Will" for future actions.', 'Thì tương lai đơn.', 'I will travel to Japan.'),
-(5, 'Modals (May/Can)', 'May I see your passport?', 'Động từ khuyết thiếu để yêu cầu lịch sự.', 'Can you help me?'),
-(5, 'Airport Vocabulary', 'Passport, ticket, luggage, gate, boarding.', 'Từ vựng sân bay.', 'Show me your passport, please.'),
-(5, 'Asking for Help', 'Can you help me? Could you please...?', 'Cách yêu cầu giúp đỡ.', 'Could you help me with my luggage?'),
-(5, 'Flight Information', 'Departure time, arrival time, gate number.', 'Thông tin chuyến bay.', 'What time does the flight depart?');
-
--- Câu hỏi Ngữ pháp L5 (5 questions)
--- Question 1: "The plane ___ arrive at 9 PM."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'The plane ___ arrive at 9 PM.', 'MULTIPLE_CHOICE', 10);
-SET @q5_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q5_g1_id, 'will', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q5_g1_id, 'did', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q5_g1_id, 'is', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q5_g1_id, 'has', FALSE);
-
--- Question 2: Modals
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, '___ I see your ticket?', 'MULTIPLE_CHOICE', 10);
-SET @q5_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g2_id, 'May', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g2_id, 'Must', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g2_id, 'Should', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g2_id, 'Will', FALSE);
-
--- Question 3: Airport Vocabulary
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What do you need to show at the airport?', 'MULTIPLE_CHOICE', 10);
-SET @q5_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g3_id, 'Passport', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g3_id, 'Phone', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g3_id, 'Book', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g3_id, 'Pen', FALSE);
-
--- Question 4: Asking for Help
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'Complete: ___ you help me with my luggage?', 'MULTIPLE_CHOICE', 10);
-SET @q5_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g4_id, 'Can', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g4_id, 'Will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g4_id, 'Do', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g4_id, 'Are', FALSE);
-
--- Question 5: Flight Information
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What time does the flight ___?', 'MULTIPLE_CHOICE', 10);
-SET @q5_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g5_id, 'depart', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g5_id, 'departs', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g5_id, 'departing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_g5_id, 'departed', FALSE);
-
--- Hội thoại L5 (5 conversations)
--- Conversation 1: Check-in Counter
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (21, 5, 'Check-in Counter', 'Tại quầy làm thủ tục');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(21, 'Staff', 'May I have your passport?', 'Cho tôi xem hộ chiếu.', 1),
-(21, 'Guest', 'Here you go.', 'Của bạn đây.', 2);
-
--- Conversation 2: Asking about Gate
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (22, 5, 'Asking about Gate', 'Hỏi về cổng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(22, 'Passenger', 'What gate is my flight?', 'Chuyến bay của tôi ở cổng nào?', 1),
-(22, 'Staff', 'Gate 12, please go to gate 12.', 'Cổng 12, vui lòng đi đến cổng 12.', 2);
-
--- Conversation 3: Delayed Flight
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (23, 5, 'Delayed Flight', 'Chuyến bay bị hoãn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(23, 'Announcement', 'Flight 123 is delayed by 30 minutes.', 'Chuyến bay 123 bị hoãn 30 phút.', 1),
-(23, 'Passenger', 'Oh no, I have a meeting!', 'Ồ không, tôi có cuộc họp!', 2);
-
--- Conversation 4: Boarding
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (24, 5, 'Boarding', 'Lên máy bay');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(24, 'Staff', 'Boarding now for flight 456.', 'Bắt đầu lên máy bay cho chuyến 456.', 1),
-(24, 'Passenger', 'Thank you!', 'Cảm ơn!', 2);
-
--- Conversation 5: Customs
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (25, 5, 'Customs', 'Hải quan');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(25, 'Officer', 'Do you have anything to declare?', 'Bạn có gì cần khai báo không?', 1),
-(25, 'Traveler', 'No, nothing to declare.', 'Không, không có gì để khai báo.', 2);
-
--- Câu hỏi Hội thoại L5 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What does the staff ask for?', 'MULTIPLE_CHOICE', 10);
-SET @q5_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c1_id, 'Passport', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c1_id, 'Ticket', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c1_id, 'Luggage', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c1_id, 'Phone', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What gate is the flight?', 'MULTIPLE_CHOICE', 10);
-SET @q5_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c2_id, 'Gate 12', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c2_id, 'Gate 10', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c2_id, 'Gate 15', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c2_id, 'Gate 20', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'How long is the flight delayed?', 'MULTIPLE_CHOICE', 10);
-SET @q5_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c3_id, '30 minutes', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c3_id, '15 minutes', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c3_id, '1 hour', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c3_id, '45 minutes', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What flight is boarding?', 'MULTIPLE_CHOICE', 10);
-SET @q5_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c4_id, 'Flight 456', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c4_id, 'Flight 123', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c4_id, 'Flight 789', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c4_id, 'Flight 321', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (5, NULL, 'What does the officer ask?', 'MULTIPLE_CHOICE', 10);
-SET @q5_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c5_id, 'Do you have anything to declare?', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c5_id, 'Where are you going?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c5_id, 'What is your name?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q5_c5_id, 'How are you?', FALSE);
-
-
--- === LESSON 6: RESTAURANT & FOOD ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (6, 6, 2, 'Restaurant & Food', 'Gọi món và văn hóa ăn uống.', 1150, 0.2, 0.6, 0.2);
-
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(6, 'Menu', 'Thực đơn', 'noun', 2), (6, 'Order', 'Gọi món', 'verb', 2), (6, 'Delicious', 'Ngon', 'adjective', 2), (6, 'Spicy', 'Cay', 'adjective', 2),
-(6, 'Bill', 'Hóa đơn', 'noun', 2), (6, 'Waiter', 'Bồi bàn', 'noun', 2), (6, 'Chef', 'Đầu bếp', 'noun', 2), (6, 'Dessert', 'Tráng miệng', 'noun', 2),
-(6, 'Main course', 'Món chính', 'noun', 2), (6, 'Drink', 'Đồ uống', 'noun', 2);
-
--- Ngữ pháp L6 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(6, 'Would like', 'I would like a pizza.', 'Dùng để gọi món lịch sự.', 'Would you like some water?'),
-(6, 'Food Vocabulary', 'Menu, order, delicious, spicy, bill, waiter.', 'Từ vựng về nhà hàng.', 'The food is delicious.'),
-(6, 'Asking for Menu', 'Can I see the menu? May I have the menu?', 'Cách xin thực đơn.', 'Can I see the menu, please?'),
-(6, 'Ordering Food', 'I would like... I will have...', 'Cách gọi món.', 'I would like a burger.'),
-(6, 'Asking about Food', 'What would you like? What do you recommend?', 'Câu hỏi về món ăn.', 'What would you like to eat?');
-
--- Câu hỏi Ngữ pháp L6 (5 questions)
--- Question 1: "I ___ like a cup of tea."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'I ___ like a cup of tea.', 'MULTIPLE_CHOICE', 10);
-SET @q6_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q6_g1_id, 'would', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q6_g1_id, 'want', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q6_g1_id, 'can', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q6_g1_id, 'do', FALSE);
-
--- Question 2: Food Vocabulary
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What do you call the list of food in a restaurant?', 'MULTIPLE_CHOICE', 10);
-SET @q6_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g2_id, 'Menu', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g2_id, 'List', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g2_id, 'Paper', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g2_id, 'Book', FALSE);
-
--- Question 3: Asking for Menu
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'Complete: ___ I see the menu?', 'MULTIPLE_CHOICE', 10);
-SET @q6_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g3_id, 'Can', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g3_id, 'Will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g3_id, 'Do', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g3_id, 'Are', FALSE);
-
--- Question 4: Ordering Food
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'Complete: I ___ like a burger.', 'MULTIPLE_CHOICE', 10);
-SET @q6_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g4_id, 'would', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g4_id, 'will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g4_id, 'can', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g4_id, 'want', FALSE);
-
--- Question 5: Asking about Food
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What ___ you like to eat?', 'MULTIPLE_CHOICE', 10);
-SET @q6_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g5_id, 'would', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g5_id, 'will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g5_id, 'do', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_g5_id, 'are', FALSE);
-
--- Hội thoại L6 (5 conversations)
--- Conversation 1: Ordering Food
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (26, 6, 'Ordering Food', 'Gọi món ăn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(26, 'Waiter', 'Are you ready to order?', 'Quý khách gọi món chưa?', 1),
-(26, 'Customer', 'Yes, I would like the steak.', 'Vâng, cho tôi món bít tết.', 2);
-
--- Conversation 2: Asking for Menu
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (27, 6, 'Asking for Menu', 'Xin thực đơn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(27, 'Customer', 'Can I see the menu, please?', 'Cho tôi xem thực đơn được không?', 1),
-(27, 'Waiter', 'Of course, here is the menu.', 'Tất nhiên, đây là thực đơn.', 2);
-
--- Conversation 3: Asking for Recommendation
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (28, 6, 'Asking for Recommendation', 'Hỏi gợi ý');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(28, 'Customer', 'What do you recommend?', 'Bạn gợi ý món gì?', 1),
-(28, 'Waiter', 'The pasta is very delicious.', 'Món pasta rất ngon.', 2);
-
--- Conversation 4: Paying the Bill
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (29, 6, 'Paying the Bill', 'Thanh toán');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(29, 'Customer', 'Can I have the bill, please?', 'Cho tôi hóa đơn được không?', 1),
-(29, 'Waiter', 'Here is your bill.', 'Đây là hóa đơn của bạn.', 2);
-
--- Conversation 5: Complimenting Food
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (30, 6, 'Complimenting Food', 'Khen món ăn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(30, 'Customer', 'The food is delicious!', 'Món ăn rất ngon!', 1),
-(30, 'Waiter', 'Thank you very much!', 'Cảm ơn bạn rất nhiều!', 2);
-
--- Câu hỏi Hội thoại L6 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What does the customer order?', 'MULTIPLE_CHOICE', 10);
-SET @q6_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c1_id, 'Steak', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c1_id, 'Pizza', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c1_id, 'Pasta', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c1_id, 'Burger', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What does the customer ask for?', 'MULTIPLE_CHOICE', 10);
-SET @q6_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c2_id, 'The menu', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c2_id, 'The bill', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c2_id, 'Water', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c2_id, 'Food', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What does the waiter recommend?', 'MULTIPLE_CHOICE', 10);
-SET @q6_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c3_id, 'Pasta', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c3_id, 'Steak', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c3_id, 'Pizza', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c3_id, 'Burger', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What does the customer ask for at the end?', 'MULTIPLE_CHOICE', 10);
-SET @q6_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c4_id, 'The bill', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c4_id, 'The menu', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c4_id, 'More food', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c4_id, 'Water', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (6, NULL, 'What does the customer say about the food?', 'MULTIPLE_CHOICE', 10);
-SET @q6_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c5_id, 'It is delicious', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c5_id, 'It is bad', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c5_id, 'It is spicy', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q6_c5_id, 'It is cold', FALSE);
-
--- === LESSON 7: HOBBIES & SPORTS ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (7, 7, 2, 'Hobbies & Sports', 'Sở thích và thể thao', 1200, 0.3, 0.5, 0.2);
-
--- Từ vựng L7 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(7, 'Football', 'Bóng đá', 'noun', 2), (7, 'Basketball', 'Bóng rổ', 'noun', 2), (7, 'Swimming', 'Bơi lội', 'noun', 2), (7, 'Reading', 'Đọc sách', 'noun', 2),
-(7, 'Music', 'Âm nhạc', 'noun', 2), (7, 'Dancing', 'Khiêu vũ', 'noun', 2), (7, 'Drawing', 'Vẽ', 'noun', 2), (7, 'Playing', 'Chơi', 'verb', 2),
-(7, 'Watching', 'Xem', 'verb', 2), (7, 'Listening', 'Nghe', 'verb', 2);
-
--- Ngữ pháp L7 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(7, 'Like + Gerund', 'I like playing football. She likes reading books.', 'Thích làm gì với động từ thêm -ing.', 'I like swimming.'),
-(7, 'What do you like?', 'What do you like to do? What are your hobbies?', 'Câu hỏi về sở thích.', 'What do you like to do in your free time?'),
-(7, 'Sports Vocabulary', 'Football, basketball, swimming, tennis.', 'Từ vựng về thể thao.', 'I play football every weekend.'),
-(7, 'Hobby Expressions', 'In my free time, I like... My hobby is...', 'Cách diễn đạt sở thích.', 'In my free time, I like reading.'),
-(7, 'Frequency with Hobbies', 'I always play football. I sometimes go swimming.', 'Tần suất với sở thích.', 'I often play basketball.');
-
--- Câu hỏi Ngữ pháp L7 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'I like ___ football.', 'MULTIPLE_CHOICE', 10);
-SET @q7_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g1_id, 'playing', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g1_id, 'play', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g1_id, 'plays', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g1_id, 'played', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What do you like to ___?', 'MULTIPLE_CHOICE', 10);
-SET @q7_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g2_id, 'do', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g2_id, 'does', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g2_id, 'doing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g2_id, 'did', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'I ___ basketball every weekend.', 'MULTIPLE_CHOICE', 10);
-SET @q7_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g3_id, 'play', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g3_id, 'plays', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g3_id, 'playing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g3_id, 'played', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'Complete: In my free time, I like ___.', 'MULTIPLE_CHOICE', 10);
-SET @q7_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g4_id, 'reading', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g4_id, 'read', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g4_id, 'reads', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g4_id, 'readed', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'I ___ go swimming.', 'MULTIPLE_CHOICE', 10);
-SET @q7_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g5_id, 'sometimes', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g5_id, 'sometime', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g5_id, 'some time', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_g5_id, 'some times', FALSE);
-
--- Hội thoại L7 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (31, 7, 'Talking about Hobbies', 'Nói về sở thích');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(31, 'A', 'What do you like to do?', 'Bạn thích làm gì?', 1),
-(31, 'B', 'I like playing football.', 'Tôi thích chơi bóng đá.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (32, 7, 'Sports Discussion', 'Thảo luận về thể thao');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(32, 'A', 'Do you play any sports?', 'Bạn có chơi môn thể thao nào không?', 1),
-(32, 'B', 'Yes, I play basketball.', 'Có, tôi chơi bóng rổ.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (33, 7, 'Free Time Activities', 'Hoạt động thời gian rảnh');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(33, 'A', 'What do you do in your free time?', 'Bạn làm gì trong thời gian rảnh?', 1),
-(33, 'B', 'I like reading books and listening to music.', 'Tôi thích đọc sách và nghe nhạc.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (34, 7, 'Favorite Sport', 'Môn thể thao yêu thích');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(34, 'A', 'What is your favorite sport?', 'Môn thể thao yêu thích của bạn là gì?', 1),
-(34, 'B', 'My favorite sport is swimming.', 'Môn thể thao yêu thích của tôi là bơi lội.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (35, 7, 'Weekend Activities', 'Hoạt động cuối tuần');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(35, 'A', 'What do you do on weekends?', 'Bạn làm gì vào cuối tuần?', 1),
-(35, 'B', 'I usually play football with my friends.', 'Tôi thường chơi bóng đá với bạn bè.', 2);
-
--- Câu hỏi Hội thoại L7 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What does B like to do?', 'MULTIPLE_CHOICE', 10);
-SET @q7_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c1_id, 'Playing football', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c1_id, 'Playing basketball', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c1_id, 'Swimming', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c1_id, 'Reading', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What sport does B play?', 'MULTIPLE_CHOICE', 10);
-SET @q7_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c2_id, 'Basketball', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c2_id, 'Football', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c2_id, 'Swimming', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c2_id, 'Tennis', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What does B do in free time?', 'MULTIPLE_CHOICE', 10);
-SET @q7_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c3_id, 'Reading books and listening to music', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c3_id, 'Playing football', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c3_id, 'Watching TV', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c3_id, 'Swimming', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What is B''s favorite sport?', 'MULTIPLE_CHOICE', 10);
-SET @q7_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c4_id, 'Swimming', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c4_id, 'Football', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c4_id, 'Basketball', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c4_id, 'Tennis', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (7, NULL, 'What does B do on weekends?', 'MULTIPLE_CHOICE', 10);
-SET @q7_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c5_id, 'Plays football with friends', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c5_id, 'Plays basketball alone', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c5_id, 'Goes swimming', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q7_c5_id, 'Reads books', FALSE);
-
--- === LESSON 8: SHOPPING ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (8, 8, 2, 'Shopping', 'Mua sắm và mặc cả', 1250, 0.2, 0.6, 0.2);
-
--- Từ vựng L8 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(8, 'Shop', 'Cửa hàng', 'noun', 2), (8, 'Buy', 'Mua', 'verb', 2), (8, 'Sell', 'Bán', 'verb', 2), (8, 'Price', 'Giá', 'noun', 2),
-(8, 'Money', 'Tiền', 'noun', 2), (8, 'Cheap', 'Rẻ', 'adjective', 2), (8, 'Expensive', 'Đắt', 'adjective', 2), (8, 'Discount', 'Giảm giá', 'noun', 2),
-(8, 'Size', 'Kích cỡ', 'noun', 2), (8, 'Try on', 'Thử', 'verb', 2);
-
--- Ngữ pháp L8 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(8, 'How much?', 'How much is this? How much does it cost?', 'Câu hỏi về giá.', 'How much is this shirt?'),
-(8, 'Can I...?', 'Can I try this on? Can I see that?', 'Cách yêu cầu lịch sự.', 'Can I try on this dress?'),
-(8, 'Shopping Vocabulary', 'Buy, sell, price, cheap, expensive, discount.', 'Từ vựng mua sắm.', 'This shirt is too expensive.'),
-(8, 'Asking about Size', 'What size do you wear? Do you have size M?', 'Hỏi về kích cỡ.', 'What size is this?'),
-(8, 'Bargaining', 'Can you give me a discount? Is there a sale?', 'Mặc cả, hỏi giảm giá.', 'Can you make it cheaper?');
-
--- Câu hỏi Ngữ pháp L8 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, '___ much is this shirt?', 'MULTIPLE_CHOICE', 10);
-SET @q8_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g1_id, 'How', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g1_id, 'What', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g1_id, 'Where', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g1_id, 'When', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, '___ I try this on?', 'MULTIPLE_CHOICE', 10);
-SET @q8_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g2_id, 'Can', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g2_id, 'Will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g2_id, 'Do', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g2_id, 'Are', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'This shirt is too ___.', 'MULTIPLE_CHOICE', 10);
-SET @q8_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g3_id, 'expensive', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g3_id, 'expensively', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g3_id, 'expense', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g3_id, 'expenses', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'What ___ do you wear?', 'MULTIPLE_CHOICE', 10);
-SET @q8_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g4_id, 'size', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g4_id, 'sizes', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g4_id, 'sized', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g4_id, 'sizing', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'Can you give me a ___?', 'MULTIPLE_CHOICE', 10);
-SET @q8_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g5_id, 'discount', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g5_id, 'discounts', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g5_id, 'discounting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_g5_id, 'discounted', FALSE);
-
--- Hội thoại L8 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (36, 8, 'Asking Price', 'Hỏi giá');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(36, 'Customer', 'How much is this shirt?', 'Chiếc áo này giá bao nhiêu?', 1),
-(36, 'Shopkeeper', 'It is 50 dollars.', 'Nó giá 50 đô la.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (37, 8, 'Trying on Clothes', 'Thử quần áo');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(37, 'Customer', 'Can I try this on?', 'Tôi có thể thử cái này không?', 1),
-(37, 'Shopkeeper', 'Of course, the fitting room is over there.', 'Tất nhiên, phòng thử đồ ở đằng kia.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (38, 8, 'Asking about Size', 'Hỏi về kích cỡ');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(38, 'Customer', 'Do you have this in size M?', 'Bạn có cái này cỡ M không?', 1),
-(38, 'Shopkeeper', 'Yes, we have size M.', 'Có, chúng tôi có cỡ M.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (39, 8, 'Bargaining', 'Mặc cả');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(39, 'Customer', 'Can you give me a discount?', 'Bạn có thể giảm giá cho tôi không?', 1),
-(39, 'Shopkeeper', 'I can give you 10% off.', 'Tôi có thể giảm 10% cho bạn.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (40, 8, 'Buying Decision', 'Quyết định mua');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(40, 'Customer', 'I will take it.', 'Tôi sẽ lấy nó.', 1),
-(40, 'Shopkeeper', 'Great! That will be 45 dollars.', 'Tuyệt! Tổng cộng 45 đô la.', 2);
-
--- Câu hỏi Hội thoại L8 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'How much is the shirt?', 'MULTIPLE_CHOICE', 10);
-SET @q8_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c1_id, '50 dollars', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c1_id, '40 dollars', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c1_id, '60 dollars', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c1_id, '45 dollars', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'What does the customer want to do?', 'MULTIPLE_CHOICE', 10);
-SET @q8_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c2_id, 'Try it on', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c2_id, 'Buy it', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c2_id, 'Return it', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c2_id, 'Exchange it', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'What size does the customer ask for?', 'MULTIPLE_CHOICE', 10);
-SET @q8_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c3_id, 'Size M', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c3_id, 'Size S', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c3_id, 'Size L', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c3_id, 'Size XL', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'What discount does the shopkeeper offer?', 'MULTIPLE_CHOICE', 10);
-SET @q8_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c4_id, '10%', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c4_id, '5%', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c4_id, '15%', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c4_id, '20%', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (8, NULL, 'How much does the customer pay?', 'MULTIPLE_CHOICE', 10);
-SET @q8_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c5_id, '45 dollars', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c5_id, '50 dollars', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c5_id, '40 dollars', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q8_c5_id, '55 dollars', FALSE);
-
-
--- -----------------------------------------------------------------
--- LEVEL 3: HARD (LESSON 9-12)
--- -----------------------------------------------------------------
-
--- === LESSON 9: TECHNOLOGY ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (9, 9, 3, 'Technology & AI', 'Từ vựng công nghệ cao và trí tuệ nhân tạo.', 1400, 0.4, 0.5, 0.1);
-
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(9, 'Software', 'Phần mềm', 'noun', 3), (9, 'Database', 'Cơ sở dữ liệu', 'noun', 3), (9, 'Algorithm', 'Thuật toán', 'noun', 3), (9, 'Encryption', 'Mã hóa', 'noun', 3),
-(9, 'Network', 'Mạng lưới', 'noun', 3), (9, 'Artificial Intelligence', 'Trí tuệ nhân tạo', 'noun', 3), (9, 'Cybersecurity', 'An ninh mạng', 'noun', 3), (9, 'Cloud', 'Đám mây', 'noun', 3),
-(9, 'Developer', 'Lập trình viên', 'noun', 3), (9, 'Update', 'Cập nhật', 'verb', 3);
-
--- Ngữ pháp L9 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(9, 'Passive Voice', 'The data was processed by AI.', 'Câu bị động.', 'The file is being uploaded.'),
-(9, 'Technology Vocabulary', 'Software, database, algorithm, encryption, network.', 'Từ vựng công nghệ.', 'I use this software every day.'),
-(9, 'Present Perfect Passive', 'The system has been updated. The data has been saved.', 'Thì hiện tại hoàn thành bị động.', 'The website has been fixed.'),
-(9, 'Technical Questions', 'How does this work? What is this used for?', 'Câu hỏi kỹ thuật.', 'How does the algorithm work?'),
-(9, 'Giving Instructions', 'Click here. Press this button. Save the file.', 'Đưa ra hướng dẫn.', 'Click the save button.');
-
--- Câu hỏi Ngữ pháp L9 (5 questions)
--- Question 1: "The website ___ by the team yesterday."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'The website ___ by the team yesterday.', 'MULTIPLE_CHOICE', 10);
-SET @q9_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q9_g1_id, 'was built', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q9_g1_id, 'build', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q9_g1_id, 'is building', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q9_g1_id, 'builds', FALSE);
-
--- Question 2: Technology Vocabulary
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'What is "Phần mềm" in English?', 'MULTIPLE_CHOICE', 10);
-SET @q9_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g2_id, 'Software', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g2_id, 'Hardware', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g2_id, 'Database', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g2_id, 'Network', FALSE);
-
--- Question 3: Present Perfect Passive
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'The system ___ updated.', 'MULTIPLE_CHOICE', 10);
-SET @q9_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g3_id, 'has been', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g3_id, 'has', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g3_id, 'is', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g3_id, 'was', FALSE);
-
--- Question 4: Technical Questions
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, '___ does this software work?', 'MULTIPLE_CHOICE', 10);
-SET @q9_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g4_id, 'How', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g4_id, 'What', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g4_id, 'Where', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g4_id, 'When', FALSE);
-
--- Question 5: Giving Instructions
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'Complete: ___ the save button.', 'MULTIPLE_CHOICE', 10);
-SET @q9_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g5_id, 'Click', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g5_id, 'Clicks', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g5_id, 'Clicking', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_g5_id, 'Clicked', FALSE);
-
--- Hội thoại L9 (5 conversations)
--- Conversation 1: IT Support
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (41, 9, 'IT Support', 'Hỗ trợ kỹ thuật');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(41, 'User', 'My computer is freezing.', 'Máy tính tôi bị treo.', 1),
-(41, 'IT', 'Have you tried restarting it?', 'Bạn đã thử khởi động lại chưa?', 2);
-
--- Conversation 2: Software Installation
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (42, 9, 'Software Installation', 'Cài đặt phần mềm');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(42, 'User', 'How do I install this software?', 'Làm thế nào để cài đặt phần mềm này?', 1),
-(42, 'Tech', 'Click the install button and follow the instructions.', 'Nhấp vào nút cài đặt và làm theo hướng dẫn.', 2);
-
--- Conversation 3: System Update
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (43, 9, 'System Update', 'Cập nhật hệ thống');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(43, 'User', 'The system needs an update.', 'Hệ thống cần cập nhật.', 1),
-(43, 'Admin', 'The update has been installed automatically.', 'Bản cập nhật đã được cài đặt tự động.', 2);
-
--- Conversation 4: Data Backup
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (44, 9, 'Data Backup', 'Sao lưu dữ liệu');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(44, 'User', 'How do I backup my data?', 'Làm thế nào để sao lưu dữ liệu?', 1),
-(44, 'Tech', 'Your data is automatically saved to the cloud.', 'Dữ liệu của bạn được tự động lưu lên đám mây.', 2);
-
--- Conversation 5: Network Problem
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (45, 9, 'Network Problem', 'Vấn đề mạng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(45, 'User', 'I cannot connect to the network.', 'Tôi không thể kết nối mạng.', 1),
-(45, 'IT', 'Check your network settings and restart the router.', 'Kiểm tra cài đặt mạng và khởi động lại router.', 2);
-
--- Câu hỏi Hội thoại L9 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'What is the problem?', 'MULTIPLE_CHOICE', 10);
-SET @q9_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c1_id, 'Computer is freezing', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c1_id, 'Computer is slow', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c1_id, 'Computer is broken', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c1_id, 'Computer is off', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'What should the user do?', 'MULTIPLE_CHOICE', 10);
-SET @q9_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c2_id, 'Click install button and follow instructions', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c2_id, 'Restart computer', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c2_id, 'Delete software', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c2_id, 'Call IT support', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'How was the update installed?', 'MULTIPLE_CHOICE', 10);
-SET @q9_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c3_id, 'Automatically', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c3_id, 'Manually', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c3_id, 'By IT staff', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c3_id, 'By user', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'Where is the data saved?', 'MULTIPLE_CHOICE', 10);
-SET @q9_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c4_id, 'To the cloud', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c4_id, 'To the computer', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c4_id, 'To USB', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c4_id, 'To CD', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (9, NULL, 'What should the user check?', 'MULTIPLE_CHOICE', 10);
-SET @q9_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c5_id, 'Network settings and restart router', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c5_id, 'Computer settings', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c5_id, 'Software settings', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q9_c5_id, 'Internet browser', FALSE);
-
-
--- === LESSON 10: ENVIRONMENT ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (10, 10, 3, 'Environment', 'Môi trường và biến đổi khí hậu.', 1450, 0.3, 0.5, 0.2);
-
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(10, 'Pollution', 'Ô nhiễm', 'noun', 3), (10, 'Global Warming', 'Nóng lên toàn cầu', 'noun', 3), (10, 'Recycle', 'Tái chế', 'verb', 3), (10, 'Protect', 'Bảo vệ', 'verb', 3),
-(10, 'Energy', 'Năng lượng', 'noun', 3), (10, 'Climate', 'Khí hậu', 'noun', 3), (10, 'Waste', 'Rác thải', 'noun', 3), (10, 'Solar', 'Năng lượng mặt trời', 'adjective', 3),
-(10, 'Forest', 'Rừng', 'noun', 3), (10, 'Carbon', 'Carbon', 'noun', 3);
-
--- Ngữ pháp L10 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(10, 'Conditional Type 1', 'If we pollute, the earth will suffer.', 'Câu điều kiện loại 1.', 'If it rains, we will stay home.'),
-(10, 'Environment Vocabulary', 'Pollution, global warming, recycle, protect, energy.', 'Từ vựng môi trường.', 'We need to protect the environment.'),
-(10, 'Should/Must for Advice', 'We should recycle. We must protect nature.', 'Should/Must để đưa lời khuyên.', 'We should use less plastic.'),
-(10, 'Cause and Effect', 'Pollution causes global warming. Cutting trees causes problems.', 'Nguyên nhân và hậu quả.', 'Pollution causes health problems.'),
-(10, 'Environmental Actions', 'Recycle, reduce, reuse, protect, save energy.', 'Các hành động bảo vệ môi trường.', 'We should recycle more.');
-
--- Câu hỏi Ngữ pháp L10 (5 questions)
--- Question 1: "If we cut down trees, oxygen ___ decrease."
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'If we cut down trees, oxygen ___ decrease.', 'MULTIPLE_CHOICE', 10);
-SET @q10_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q10_g1_id, 'will', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q10_g1_id, 'would', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q10_g1_id, 'did', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@q10_g1_id, 'had', FALSE);
-
--- Question 2: Environment Vocabulary
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'What is "Ô nhiễm" in English?', 'MULTIPLE_CHOICE', 10);
-SET @q10_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g2_id, 'Pollution', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g2_id, 'Protection', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g2_id, 'Recycling', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g2_id, 'Energy', FALSE);
-
--- Question 3: Should/Must
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'We ___ recycle more.', 'MULTIPLE_CHOICE', 10);
-SET @q10_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g3_id, 'should', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g3_id, 'will', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g3_id, 'can', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g3_id, 'do', FALSE);
-
--- Question 4: Cause and Effect
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'Pollution ___ global warming.', 'MULTIPLE_CHOICE', 10);
-SET @q10_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g4_id, 'causes', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g4_id, 'cause', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g4_id, 'causing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g4_id, 'caused', FALSE);
-
--- Question 5: Environmental Actions
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'What should we do with plastic bottles?', 'MULTIPLE_CHOICE', 10);
-SET @q10_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g5_id, 'Recycle', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g5_id, 'Throw away', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g5_id, 'Burn', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_g5_id, 'Bury', FALSE);
-
--- Hội thoại L10 (5 conversations)
--- Conversation 1: Recycling
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (46, 10, 'Recycling', 'Tái chế rác');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(46, 'A', 'Where should I put this bottle?', 'Tôi nên bỏ chai này ở đâu?', 1),
-(46, 'B', 'Put it in the green bin for recycling.', 'Bỏ vào thùng xanh để tái chế.', 2);
-
--- Conversation 2: Saving Energy
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (47, 10, 'Saving Energy', 'Tiết kiệm năng lượng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(47, 'A', 'We should save energy.', 'Chúng ta nên tiết kiệm năng lượng.', 1),
-(47, 'B', 'Yes, let''s turn off the lights when not needed.', 'Đúng, hãy tắt đèn khi không cần.', 2);
-
--- Conversation 3: Protecting Nature
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (48, 10, 'Protecting Nature', 'Bảo vệ thiên nhiên');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(48, 'A', 'We must protect the forests.', 'Chúng ta phải bảo vệ rừng.', 1),
-(48, 'B', 'I agree, forests are very important.', 'Tôi đồng ý, rừng rất quan trọng.', 2);
-
--- Conversation 4: Reducing Waste
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (49, 10, 'Reducing Waste', 'Giảm rác thải');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(49, 'A', 'How can we reduce waste?', 'Làm thế nào để giảm rác thải?', 1),
-(49, 'B', 'We should use less plastic and recycle more.', 'Chúng ta nên dùng ít nhựa hơn và tái chế nhiều hơn.', 2);
-
--- Conversation 5: Climate Change
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (50, 10, 'Climate Change', 'Biến đổi khí hậu');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(50, 'A', 'Global warming is a serious problem.', 'Nóng lên toàn cầu là vấn đề nghiêm trọng.', 1),
-(50, 'B', 'Yes, we need to take action now.', 'Đúng, chúng ta cần hành động ngay bây giờ.', 2);
-
--- Câu hỏi Hội thoại L10 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'Where should the bottle be put?', 'MULTIPLE_CHOICE', 10);
-SET @q10_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c1_id, 'In the green bin for recycling', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c1_id, 'In the trash', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c1_id, 'On the ground', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c1_id, 'In the river', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'What should we do to save energy?', 'MULTIPLE_CHOICE', 10);
-SET @q10_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c2_id, 'Turn off lights when not needed', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c2_id, 'Leave lights on', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c2_id, 'Use more electricity', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c2_id, 'Waste energy', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'What must we protect?', 'MULTIPLE_CHOICE', 10);
-SET @q10_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c3_id, 'Forests', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c3_id, 'Pollution', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c3_id, 'Waste', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c3_id, 'Plastic', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'How can we reduce waste?', 'MULTIPLE_CHOICE', 10);
-SET @q10_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c4_id, 'Use less plastic and recycle more', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c4_id, 'Use more plastic', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c4_id, 'Throw away everything', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c4_id, 'Burn all waste', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (10, NULL, 'What is a serious problem?', 'MULTIPLE_CHOICE', 10);
-SET @q10_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c5_id, 'Global warming', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c5_id, 'Recycling', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c5_id, 'Saving energy', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q10_c5_id, 'Protecting forests', FALSE);
-
--- === LESSON 11: JOB INTERVIEW ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (11, 11, 3, 'Job Interview', 'Phỏng vấn xin việc', 1500, 0.3, 0.5, 0.2);
-
--- Từ vựng L11 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(11, 'Resume', 'Sơ yếu lý lịch', 'noun', 3), (11, 'Interview', 'Phỏng vấn', 'noun', 3), (11, 'Experience', 'Kinh nghiệm', 'noun', 3), (11, 'Qualification', 'Trình độ', 'noun', 3),
-(11, 'Skill', 'Kỹ năng', 'noun', 3), (11, 'Position', 'Vị trí', 'noun', 3), (11, 'Salary', 'Lương', 'noun', 3), (11, 'Company', 'Công ty', 'noun', 3),
-(11, 'Applicant', 'Ứng viên', 'noun', 3), (11, 'Employer', 'Nhà tuyển dụng', 'noun', 3);
-
--- Ngữ pháp L11 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(11, 'Present Perfect for Experience', 'I have worked in IT for 5 years. She has studied English.', 'Thì hiện tại hoàn thành cho kinh nghiệm.', 'I have worked as a teacher.'),
-(11, 'Job Interview Questions', 'Tell me about yourself. Why do you want this job?', 'Câu hỏi phỏng vấn xin việc.', 'What are your strengths?'),
-(11, 'Describing Skills', 'I am good at... I can... I have experience in...', 'Mô tả kỹ năng.', 'I am good at problem solving.'),
-(11, 'Future Plans', 'I will... I am going to... I plan to...', 'Kế hoạch tương lai.', 'I plan to improve my skills.'),
-(11, 'Professional Language', 'I would like to... I am interested in... I am looking for...', 'Ngôn ngữ chuyên nghiệp.', 'I am interested in this position.');
-
--- Câu hỏi Ngữ pháp L11 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'I ___ worked in IT for 5 years.', 'MULTIPLE_CHOICE', 10);
-SET @q11_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g1_id, 'have', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g1_id, 'has', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g1_id, 'had', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g1_id, 'am', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'What is a common interview question?', 'MULTIPLE_CHOICE', 10);
-SET @q11_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g2_id, 'Tell me about yourself', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g2_id, 'What is your name?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g2_id, 'How old are you?', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g2_id, 'Where do you live?', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'Complete: I am good ___ problem solving.', 'MULTIPLE_CHOICE', 10);
-SET @q11_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g3_id, 'at', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g3_id, 'in', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g3_id, 'on', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g3_id, 'for', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'I ___ to improve my skills.', 'MULTIPLE_CHOICE', 10);
-SET @q11_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g4_id, 'plan', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g4_id, 'plans', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g4_id, 'planning', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g4_id, 'planned', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'Complete: I am ___ in this position.', 'MULTIPLE_CHOICE', 10);
-SET @q11_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g5_id, 'interested', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g5_id, 'interest', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g5_id, 'interesting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_g5_id, 'interests', FALSE);
-
--- Hội thoại L11 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (51, 11, 'Interview Introduction', 'Giới thiệu phỏng vấn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(51, 'Interviewer', 'Tell me about yourself.', 'Hãy giới thiệu về bản thân.', 1),
-(51, 'Applicant', 'I have worked in IT for 5 years.', 'Tôi đã làm việc trong lĩnh vực IT được 5 năm.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (52, 11, 'Discussing Skills', 'Thảo luận kỹ năng');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(52, 'Interviewer', 'What are your strengths?', 'Điểm mạnh của bạn là gì?', 1),
-(52, 'Applicant', 'I am good at problem solving and teamwork.', 'Tôi giỏi giải quyết vấn đề và làm việc nhóm.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (53, 11, 'Why This Job', 'Tại sao muốn công việc này');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(53, 'Interviewer', 'Why do you want this job?', 'Tại sao bạn muốn công việc này?', 1),
-(53, 'Applicant', 'I am interested in this position and your company.', 'Tôi quan tâm đến vị trí này và công ty của bạn.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (54, 11, 'Future Plans', 'Kế hoạch tương lai');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(54, 'Interviewer', 'Where do you see yourself in 5 years?', 'Bạn thấy mình ở đâu trong 5 năm nữa?', 1),
-(54, 'Applicant', 'I plan to improve my skills and grow with the company.', 'Tôi dự định cải thiện kỹ năng và phát triển cùng công ty.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (55, 11, 'Closing Interview', 'Kết thúc phỏng vấn');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(55, 'Interviewer', 'Do you have any questions?', 'Bạn có câu hỏi nào không?', 1),
-(55, 'Applicant', 'Yes, what is the salary range for this position?', 'Có, mức lương cho vị trí này là bao nhiêu?', 2);
-
--- Câu hỏi Hội thoại L11 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'How long has the applicant worked in IT?', 'MULTIPLE_CHOICE', 10);
-SET @q11_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c1_id, '5 years', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c1_id, '3 years', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c1_id, '7 years', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c1_id, '10 years', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'What are the applicant''s strengths?', 'MULTIPLE_CHOICE', 10);
-SET @q11_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c2_id, 'Problem solving and teamwork', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c2_id, 'Coding and design', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c2_id, 'Writing and reading', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c2_id, 'Singing and dancing', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'Why does the applicant want this job?', 'MULTIPLE_CHOICE', 10);
-SET @q11_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c3_id, 'Interested in position and company', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c3_id, 'Needs money', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c3_id, 'Wants to travel', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c3_id, 'Has no other choice', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'What does the applicant plan to do?', 'MULTIPLE_CHOICE', 10);
-SET @q11_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c4_id, 'Improve skills and grow with company', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c4_id, 'Change jobs', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c4_id, 'Start own business', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c4_id, 'Retire', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (11, NULL, 'What does the applicant ask about?', 'MULTIPLE_CHOICE', 10);
-SET @q11_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c5_id, 'Salary range', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c5_id, 'Working hours', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c5_id, 'Vacation days', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q11_c5_id, 'Company location', FALSE);
-
--- === LESSON 12: BUSINESS MEETING ===
-INSERT INTO `lessons` (`id`, `lesson_number`, `level`, `name`, `description`, `difficulty_rating`, `grammar_weight`, `vocab_weight`, `listening_weight`) 
-VALUES (12, 12, 3, 'Business Meeting', 'Họp kinh doanh', 1550, 0.3, 0.5, 0.2);
-
--- Từ vựng L12 (10 words)
-INSERT INTO `vocabularies` (`lesson_id`, `word_english`, `vietnamese_meaning`, `word_type`, `difficulty_level`) VALUES
-(12, 'Meeting', 'Cuộc họp', 'noun', 3), (12, 'Agenda', 'Chương trình', 'noun', 3), (12, 'Presentation', 'Thuyết trình', 'noun', 3), (12, 'Proposal', 'Đề xuất', 'noun', 3),
-(12, 'Budget', 'Ngân sách', 'noun', 3), (12, 'Project', 'Dự án', 'noun', 3), (12, 'Deadline', 'Hạn chót', 'noun', 3), (12, 'Client', 'Khách hàng', 'noun', 3),
-(12, 'Strategy', 'Chiến lược', 'noun', 3), (12, 'Decision', 'Quyết định', 'noun', 3);
-
--- Ngữ pháp L12 (5 grammar points)
-INSERT INTO `grammars` (`lesson_id`, `title`, `explanation_english`, `explanation_vietnamese`, `example_sentences`) VALUES
-(12, 'Business Meeting Phrases', 'Let''s start the meeting. I would like to discuss...', 'Cụm từ trong cuộc họp.', 'Let''s move on to the next topic.'),
-(12, 'Making Suggestions', 'I suggest... I recommend... We should...', 'Đưa ra đề xuất.', 'I suggest we increase the budget.'),
-(12, 'Asking for Opinions', 'What do you think? What is your opinion?', 'Hỏi ý kiến.', 'What do you think about this proposal?'),
-(12, 'Agreeing/Disagreeing', 'I agree. I disagree. I think so too.', 'Đồng ý/Không đồng ý.', 'I agree with your suggestion.'),
-(12, 'Summarizing', 'To summarize... In conclusion... Let me summarize...', 'Tóm tắt.', 'To summarize, we need to finish by Friday.');
-
--- Câu hỏi Ngữ pháp L12 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'Complete: Let''s ___ the meeting.', 'MULTIPLE_CHOICE', 10);
-SET @q12_g1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g1_id, 'start', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g1_id, 'starts', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g1_id, 'starting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g1_id, 'started', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'I ___ we increase the budget.', 'MULTIPLE_CHOICE', 10);
-SET @q12_g2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g2_id, 'suggest', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g2_id, 'suggests', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g2_id, 'suggesting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g2_id, 'suggested', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'What do you ___ about this?', 'MULTIPLE_CHOICE', 10);
-SET @q12_g3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g3_id, 'think', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g3_id, 'thinks', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g3_id, 'thinking', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g3_id, 'thought', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'I ___ with your suggestion.', 'MULTIPLE_CHOICE', 10);
-SET @q12_g4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g4_id, 'agree', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g4_id, 'agrees', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g4_id, 'agreeing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g4_id, 'agreed', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'Complete: To ___, we need to finish by Friday.', 'MULTIPLE_CHOICE', 10);
-SET @q12_g5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g5_id, 'summarize', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g5_id, 'summarizes', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g5_id, 'summarizing', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_g5_id, 'summarized', FALSE);
-
--- Hội thoại L12 (5 conversations)
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (56, 12, 'Starting Meeting', 'Bắt đầu cuộc họp');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(56, 'Manager', 'Let''s start the meeting.', 'Hãy bắt đầu cuộc họp.', 1),
-(56, 'Team', 'OK, we are ready.', 'Được, chúng tôi sẵn sàng.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (57, 12, 'Discussing Proposal', 'Thảo luận đề xuất');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(57, 'Manager', 'I suggest we increase the budget.', 'Tôi đề xuất tăng ngân sách.', 1),
-(57, 'Team Member', 'I agree with your suggestion.', 'Tôi đồng ý với đề xuất của bạn.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (58, 12, 'Asking for Opinion', 'Hỏi ý kiến');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(58, 'Manager', 'What do you think about this proposal?', 'Bạn nghĩ gì về đề xuất này?', 1),
-(58, 'Team Member', 'I think it is a good idea.', 'Tôi nghĩ đó là ý tưởng tốt.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (59, 12, 'Setting Deadline', 'Đặt hạn chót');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(59, 'Manager', 'We need to finish this project by Friday.', 'Chúng ta cần hoàn thành dự án này trước thứ Sáu.', 1),
-(59, 'Team Member', 'That deadline is tight, but we can do it.', 'Hạn chót đó khá gấp, nhưng chúng ta có thể làm được.', 2);
-
-INSERT INTO `conversations` (`id`, `lesson_id`, `title`, `description`) VALUES (60, 12, 'Closing Meeting', 'Kết thúc cuộc họp');
-INSERT INTO `sentences` (`conversation_id`, `character_name`, `text_english`, `text_vietnamese`, `order_index`) VALUES
-(60, 'Manager', 'To summarize, we will increase the budget and finish by Friday.', 'Tóm lại, chúng ta sẽ tăng ngân sách và hoàn thành trước thứ Sáu.', 1),
-(60, 'Team', 'Understood. We will work on it.', 'Hiểu rồi. Chúng tôi sẽ làm việc đó.', 2);
-
--- Câu hỏi Hội thoại L12 (5 questions)
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'What does the manager want to do?', 'MULTIPLE_CHOICE', 10);
-SET @q12_c1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c1_id, 'Start the meeting', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c1_id, 'End the meeting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c1_id, 'Cancel the meeting', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c1_id, 'Postpone the meeting', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'What does the manager suggest?', 'MULTIPLE_CHOICE', 10);
-SET @q12_c2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c2_id, 'Increase the budget', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c2_id, 'Decrease the budget', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c2_id, 'Keep the budget same', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c2_id, 'Cancel the budget', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'What does the team member think?', 'MULTIPLE_CHOICE', 10);
-SET @q12_c3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c3_id, 'It is a good idea', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c3_id, 'It is a bad idea', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c3_id, 'It is too expensive', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c3_id, 'It is impossible', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'When is the deadline?', 'MULTIPLE_CHOICE', 10);
-SET @q12_c4_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c4_id, 'Friday', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c4_id, 'Monday', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c4_id, 'Wednesday', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c4_id, 'Next week', FALSE);
-
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (12, NULL, 'What is the summary?', 'MULTIPLE_CHOICE', 10);
-SET @q12_c5_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c5_id, 'Increase budget and finish by Friday', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c5_id, 'Decrease budget and finish next week', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c5_id, 'Keep budget and finish next month', FALSE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES (@q12_c5_id, 'Cancel project', FALSE);
-
-
--- =================================================================
--- 3. TẠO BÀI KIỂM TRA (TESTS) CHO 12 BÀI HỌC
--- =================================================================
-
-INSERT INTO `tests` (`id`, `name`, `level`, `passing_score`) VALUES 
-(1, 'Test: Lesson 1', 1, 60), (2, 'Test: Lesson 2', 1, 60), (3, 'Test: Lesson 3', 1, 60), (4, 'Test: Lesson 4', 1, 60),
-(5, 'Test: Lesson 5', 2, 70), (6, 'Test: Lesson 6', 2, 70), (7, 'Test: Lesson 7', 2, 70), (8, 'Test: Lesson 8', 2, 70),
-(9, 'Test: Lesson 9', 3, 80), (10, 'Test: Lesson 10', 3, 80), (11, 'Test: Lesson 11', 3, 80), (12, 'Test: Lesson 12', 3, 80);
-
--- Chèn 1 câu hỏi mẫu cho mỗi bài Test (Mỗi câu hỏi và đáp án là INSERT riêng)
--- Test 1: "Hello means: "
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (NULL, 1, 'Hello means: ', 'MULTIPLE_CHOICE', 10);
-SET @t1_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t1_id, 'Xin chào', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t1_id, 'Tạm biệt', FALSE);
-
--- Test 5: "Passport is used for: "
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (NULL, 5, 'Passport is used for: ', 'MULTIPLE_CHOICE', 10);
-SET @t2_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t2_id, 'Travel', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t2_id, 'Cooking', FALSE);
-
--- Test 9: "AI stands for: "
-INSERT INTO `questions` (`lesson_id`, `test_id`, `question_text`, `question_type`, `points`) 
-VALUES (NULL, 9, 'AI stands for: ', 'MULTIPLE_CHOICE', 10);
-SET @t3_id = LAST_INSERT_ID();
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t3_id, 'Artificial Intelligence', TRUE);
-INSERT INTO `answer_options` (`question_id`, `option_text`, `is_correct`) VALUES 
-(@t3_id, 'Apple Inc', FALSE);
-
-SELECT 'DATA SEEDING COMPLETE! 12 Realistic Lessons Created.' AS Status;
+-- ============================================================
+-- BƯỚC 2: TẠO DANH SÁCH 25 BÀI HỌC THEO LỘ TRÌNH NGỮ PHÁP
+-- ============================================================
+INSERT INTO lessons (id, lesson_number, level, name, audio_url) VALUES 
+-- LEVEL 1: TỪ LOẠI & THÌ CƠ BẢN
+(1, 1, 1, 'Nouns & Articles (Danh từ & Mạo từ)', 'audio/l1.mp3'),
+(2, 2, 1, 'Pronouns & Present Simple (Đại từ & HT Đơn)', 'audio/l2.mp3'),
+(3, 3, 1, 'Verbs & Present Continuous (Động từ & HT Tiếp diễn)', 'audio/l3.mp3'),
+(4, 4, 1, 'Adjectives & Comparisons (Tính từ & So sánh)', 'audio/l4.mp3'),
+(5, 5, 1, 'Adverbs & Word Order (Trạng từ & Trật tự từ)', 'audio/l5.mp3'),
+(6, 6, 1, 'Prepositions & Conjunctions (Giới từ & Liên từ)', 'audio/l6.mp3'),
+
+-- LEVEL 2: THÌ QUÁ KHỨ, TƯƠNG LAI & CẤU TRÚC CÂU
+(7, 7, 2, 'Past Simple (Quá khứ đơn)', 'audio/l7.mp3'),
+(8, 8, 2, 'Future & Be Going To (Tương lai đơn & Gần)', 'audio/l8.mp3'),
+(9, 9, 2, 'Passive Voice (Câu bị động)', 'audio/l9.mp3'),
+(10, 10, 2, 'Conditional Sentences (Câu điều kiện)', 'audio/l10.mp3'),
+(11, 11, 2, 'Relative Clauses (Mệnh đề quan hệ)', 'audio/l11.mp3'),
+(12, 12, 2, 'Reported Speech (Câu tường thuật)', 'audio/l12.mp3'),
+
+-- LEVEL 3: NÂNG CAO (MỆNH ĐỀ & SỰ HÒA HỢP)
+(13, 13, 3, 'Subject-Verb Agreement (Hòa hợp Chủ-Vị)', 'audio/l13.mp3'),
+(14, 14, 3, 'Parallel Structure (Cấu trúc song song)', 'audio/l14.mp3'),
+(15, 15, 3, 'Noun Clauses (Mệnh đề danh từ)', 'audio/l15.mp3'),
+(16, 16, 3, 'Adverbial Clauses (Mệnh đề trạng ngữ)', 'audio/l16.mp3'),
+(17, 17, 3, 'Sequence of Tenses (Sự phối hợp thì)', 'audio/l17.mp3'),
+(18, 18, 3, 'Connectors & Linking Words (Từ nối)', 'audio/l18.mp3'),
+
+-- LEVEL 4 & 5: CÁC CHỦ ĐỀ THỰC HÀNH KHÁC
+(19, 19, 4, 'Perfect Tenses (Các thì hoàn thành)', 'audio/l19.mp3'),
+(20, 20, 4, 'Modal Verbs (Động từ khuyết thiếu)', 'audio/l20.mp3'),
+(21, 21, 4, 'Gerunds & Infinitives (V-ing & To V)', 'audio/l21.mp3'),
+(22, 22, 5, 'Inversion (Đảo ngữ)', 'audio/l22.mp3'),
+(23, 23, 5, 'Phrasal Verbs (Cụm động từ)', 'audio/l23.mp3'),
+(24, 24, 5, 'Idioms (Thành ngữ)', 'audio/l24.mp3'),
+(25, 25, 5, 'Collocations (Các cụm từ cố định)', 'audio/l25.mp3');
+
+-- ============================================================
+-- BƯỚC 3: CHI TIẾT NỘI DUNG (TỪ BÀI 1 ĐẾN BÀI 4)
+-- ============================================================
+
+-- --- BÀI 1: DANH TỪ & MẠO TỪ (NOUNS & ARTICLES) ---
+-- 10 Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(1, 'Apple', '/ˈæp.l̩/', 'Quả táo (Danh từ đếm được)', 'I have an apple.', 'Tôi có một quả táo.'),
+(1, 'Water', '/ˈwɔː.tər/', 'Nước (Danh từ không đếm được)', 'Water is essential.', 'Nước rất cần thiết.'),
+(1, 'The Sun', '/ðə sʌn/', 'Mặt trời (Dùng mạo từ The)', 'The sun is hot.', 'Mặt trời thì nóng.'),
+(1, 'Student', '/ˈstjuː.dənt/', 'Học sinh', 'He is a student.', 'Cậu ấy là một học sinh.'),
+(1, 'Hour', '/ˈaʊər/', 'Giờ (Dùng "an")', 'Wait an hour.', 'Đợi một tiếng nhé.'),
+(1, 'University', '/ˌjuː.nɪˈvɜː.sə.ti/', 'Đại học (Dùng "a")', 'A university in Hanoi.', 'Một trường đại học ở Hà Nội.'),
+(1, 'Information', '/ˌɪn.fəˈmeɪ.ʃən/', 'Thông tin (Không đếm được)', 'I need some information.', 'Tôi cần một vài thông tin.'),
+(1, 'Women', '/ˈwɪm.ɪn/', 'Phụ nữ (Số nhiều bất quy tắc)', 'Two women are talking.', 'Hai người phụ nữ đang nói chuyện.'),
+(1, 'City', '/ˈsɪt.i/', 'Thành phố', 'Hanoi is a big city.', 'Hà Nội là một thành phố lớn.'),
+(1, 'Knowledge', '/ˈnɒl.ɪdʒ/', 'Kiến thức', 'Knowledge is power.', 'Kiến thức là sức mạnh.');
+
+-- Ngữ pháp (Mạo từ & Danh từ)
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(1, 'Articles: A/An vs The', 'Mạo từ bất định (A/An) dùng cho vật chưa xác định. "An" dùng trước nguyên âm (u,e,o,a,i) nhưng dựa trên cách phát âm (vd: An hour, A university). Mạo từ xác định (The) dùng cho vật duy nhất (The sun) hoặc vật đã được nhắc đến.'),
+(1, 'Nouns: Countable vs Uncountable', 'Danh từ đếm được (Book -> Books) và Không đếm được (Water, Rice - Không thêm "s").');
+
+-- Hội thoại
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (1, 1, 'At the Grocery Store', 'audio/c1.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(1, 'Alice', 'I need to buy an apple and some water.', 'Tôi cần mua một quả táo và ít nước.'),
+(1, 'Bob', 'Look! The apples here are very fresh.', 'Nhìn kìa! Những quả táo ở đây rất tươi.'),
+(1, 'Alice', 'Yes, and the water is on that shelf.', 'Ừ, và nước thì ở trên cái kệ kia.');
+
+-- --- BÀI 2: ĐẠI TỪ & THÌ HIỆN TẠI ĐƠN (PRONOUNS & PRESENT SIMPLE) ---
+-- 10 Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(2, 'I', '/aɪ/', 'Tôi (Đại từ nhân xưng)', 'I am a teacher.', 'Tôi là giáo viên.'),
+(2, 'Them', '/ðem/', 'Họ (Tân ngữ)', 'I give them a gift.', 'Tôi tặng họ một món quà.'),
+(2, 'Myself', '/maɪˈself/', 'Chính tôi (Đại từ phản thân)', 'I look at myself.', 'Tôi nhìn chính mình.'),
+(2, 'Hers', '/hɜːz/', 'Của cô ấy (Đại từ sở hữu)', 'This bag is hers.', 'Cái túi này là của cô ấy.'),
+(2, 'Always', '/ˈɔːl.weɪz/', 'Luôn luôn (Trạng từ tần suất)', 'He always runs.', 'Anh ấy luôn chạy bộ.'),
+(2, 'Usually', '/ˈjuː.ʒu.ə.li/', 'Thường xuyên', 'I usually sleep late.', 'Tôi thường ngủ muộn.'),
+(2, 'Work', '/wɜːk/', 'Làm việc', 'She works at a bank.', 'Cô ấy làm việc tại ngân hàng.'),
+(2, 'Study', '/ˈstʌd.i/', 'Học tập', 'We study English.', 'Chúng tôi học tiếng Anh.'),
+(2, 'Go', '/ɡəʊ/', 'Đi', 'He goes to school.', 'Anh ấy đi học (thêm es).'),
+(2, 'Have', '/hæv/', 'Có', 'She has a cat.', 'Cô ấy có một con mèo (biến đổi).');
+
+-- Ngữ pháp
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(2, 'Present Simple Tense', 'Thì hiện tại đơn diễn tả sự thật hiển nhiên hoặc thói quen. Công thức: S + V(s/es). Với He/She/It động từ thêm s/es (Work -> Works, Go -> Goes).'),
+(2, 'Pronouns Types', 'Đại từ nhân xưng (I, You, He), Tân ngữ (Me, You, Him), Sở hữu (Mine, Yours, His).');
+
+-- Hội thoại
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (2, 2, 'Daily Habits', 'audio/c2.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(2, 'Tom', 'What do you usually do on Sundays?', 'Bạn thường làm gì vào Chủ nhật?'),
+(2, 'Jerry', 'I usually visit my parents. They live nearby.', 'Tôi thường thăm bố mẹ. Họ sống gần đây.'),
+(2, 'Tom', 'Does your brother go with you?', 'Anh trai bạn có đi cùng không?'),
+(2, 'Jerry', 'Yes, he always goes with me.', 'Có, anh ấy luôn đi cùng tôi.');
+
+-- --- BÀI 3: ĐỘNG TỪ & HIỆN TẠI TIẾP DIỄN (VERBS & PRESENT CONTINUOUS) ---
+-- 10 Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(3, 'Run', '/rʌn/', 'Chạy (Động từ)', 'He is running.', 'Anh ấy đang chạy.'),
+(3, 'Eat', '/iːt/', 'Ăn', 'They are eating lunch.', 'Họ đang ăn trưa.'),
+(3, 'Sleep', '/sliːp/', 'Ngủ', 'The baby is sleeping.', 'Em bé đang ngủ.'),
+(3, 'Write', '/raɪt/', 'Viết', 'I am writing an email.', 'Tôi đang viết email.'),
+(3, 'Listen', '/ˈlɪs.ən/', 'Nghe', 'Are you listening?', 'Bạn có đang nghe không?'),
+(3, 'Now', '/naʊ/', 'Bây giờ (Dấu hiệu nhận biết)', 'Do it now.', 'Làm ngay bây giờ đi.'),
+(3, 'At the moment', '/æt ðə ˈməʊ.mənt/', 'Ngay lúc này', 'She is busy at the moment.', 'Lúc này cô ấy đang bận.'),
+(3, 'Look', '/lʊk/', 'Nhìn kìa!', 'Look! The bus is coming.', 'Nhìn kìa! Xe buýt đang tới.'),
+(3, 'Watch', '/wɒtʃ/', 'Xem', 'We are watching TV.', 'Chúng tôi đang xem TV.'),
+(3, 'Cook', '/kʊk/', 'Nấu ăn', 'Dad is cooking dinner.', 'Bố đang nấu bữa tối.');
+
+-- Ngữ pháp
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(3, 'Present Continuous Tense', 'Thì hiện tại tiếp diễn tả hành động đang xảy ra. Công thức: S + am/is/are + V-ing. Dấu hiệu: Now, Look!, Listen!, At the moment.'),
+(3, 'Action Verbs vs State Verbs', 'Động từ chỉ hành động (Run, Eat) dùng được tiếp diễn. Động từ chỉ trạng thái (Love, Know, Need) thường KHÔNG dùng V-ing.');
+
+-- Hội thoại
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (3, 3, 'Phone Call', 'audio/c3.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(3, 'Mom', 'Where are you, John?', 'Con đang ở đâu thế John?'),
+(3, 'John', 'I am at the library. I am studying.', 'Con đang ở thư viện. Con đang học bài.'),
+(3, 'Mom', 'Are you eating anything?', 'Con có đang ăn gì không?'),
+(3, 'John', 'No, I am not eating. I am reading a book.', 'Không, con không ăn. Con đang đọc sách.');
+
+-- --- BÀI 4: TÍNH TỪ & CÂU SO SÁNH (ADJECTIVES & COMPARISONS) ---
+-- 10 Từ vựng
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(4, 'Tall', '/tɔːl/', 'Cao (Tính từ)', 'He is taller than me.', 'Anh ấy cao hơn tôi.'),
+(4, 'Short', '/ʃɔːt/', 'Thấp/Ngắn', 'This pencil is short.', 'Cây bút chì này ngắn.'),
+(4, 'Beautiful', '/ˈbjuː.tɪ.fəl/', 'Đẹp (Tính từ dài)', 'She is the most beautiful girl.', 'Cô ấy là cô gái đẹp nhất.'),
+(4, 'Fast', '/fɑːst/', 'Nhanh', 'A car is faster than a bike.', 'Ô tô nhanh hơn xe đạp.'),
+(4, 'Expensive', '/ɪkˈspen.sɪv/', 'Đắt tiền', 'This watch is expensive.', 'Cái đồng hồ này đắt tiền.'),
+(4, 'Good', '/ɡʊd/', 'Tốt', 'He is a good student.', 'Cậu ấy là học sinh giỏi.'),
+(4, 'Better', '/ˈbet.ər/', 'Tốt hơn (Bất quy tắc)', 'This one is better.', 'Cái này tốt hơn.'),
+(4, 'Best', '/best/', 'Tốt nhất', 'You are the best.', 'Bạn là tuyệt nhất.'),
+(4, 'Bad', '/bæd/', 'Tệ', 'The weather is bad.', 'Thời tiết tệ quá.'),
+(4, 'Interesting', '/ˈɪn.trə.stɪŋ/', 'Thú vị', 'The movie is interesting.', 'Bộ phim rất thú vị.');
+
+-- Ngữ pháp
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(4, 'Comparative Sentences', 'So sánh hơn: Tính từ ngắn + ER + than (Taller than). Tính từ dài + MORE + adj + than (More beautiful than).'),
+(4, 'Superlative Sentences', 'So sánh nhất: The + Tính từ ngắn + EST (The tallest). The MOST + Tính từ dài (The most expensive). Bất quy tắc: Good -> Better -> Best.');
+
+-- Hội thoại
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (4, 4, 'Shopping for Clothes', 'audio/c4.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(4, 'Customer', 'This shirt is nice, but it is expensive.', 'Cái áo này đẹp, nhưng đắt quá.'),
+(4, 'Shopkeeper', 'How about this blue one? It is cheaper.', 'Cái màu xanh này thì sao? Nó rẻ hơn đấy.'),
+(4, 'Customer', 'Yes, but the red one is the most beautiful.', 'Ừ, nhưng cái màu đỏ là đẹp nhất.');
+
+-- --- BÀI 5: TRẠNG TỪ & TRẬT TỰ TỪ (ADVERBS & WORD ORDER) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(5, 'Quickly', '/ˈkwɪk.li/', 'Một cách nhanh chóng (Trạng từ)', 'He runs quickly.', 'Anh ấy chạy nhanh.'),
+(5, 'Happily', '/ˈhæp.ɪ.li/', 'Một cách vui vẻ', 'They lived happily.', 'Họ sống vui vẻ.'),
+(5, 'Well', '/wel/', 'Tốt (Trạng từ của Good)', 'She sings well.', 'Cô ấy hát hay.'),
+(5, 'Carefully', '/ˈkeə.fəl.i/', 'Một cách cẩn thận', 'Drive carefully.', 'Lái xe cẩn thận nhé.'),
+(5, 'Hard', '/hɑːd/', 'Chăm chỉ/Vất vả (Tính/Trạng từ giống nhau)', 'He works hard.', 'Anh ấy làm việc chăm chỉ.'),
+(5, 'Never', '/ˈnev.ər/', 'Không bao giờ', 'I never smoke.', 'Tôi không bao giờ hút thuốc.'),
+(5, 'Often', '/ˈɒf.ən/', 'Thường xuyên', 'Do you often travel?', 'Bạn có hay đi du lịch không?'),
+(5, 'Yesterday', '/ˈjes.tə.deɪ/', 'Hôm qua (Trạng từ thời gian)', 'I saw him yesterday.', 'Tôi thấy anh ấy hôm qua.'),
+(5, 'Here', '/hɪər/', 'Ở đây (Trạng từ nơi chốn)', 'Come here.', 'Lại đây.'),
+(5, 'Really', '/ˈrɪə.li/', 'Thực sự (Trạng từ mức độ)', 'I am really tired.', 'Tôi thực sự mệt.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(5, 'Adverbs of Manner', 'Trạng từ chỉ cách thức thường đứng sau động từ. Cấu trúc: Adj + ly (Quick -> Quickly). Bất quy tắc: Good -> Well, Hard -> Hard.'),
+(5, 'Word Order (S-V-O)', 'Trật tự từ cơ bản: Chủ ngữ (S) + Trạng từ tần suất + Động từ (V) + Tân ngữ (O) + Trạng từ nơi chốn + Trạng từ thời gian. (VD: He always plays soccer here on Sundays).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (5, 5, 'How do you do it?', 'audio/c5.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(5, 'Anna', 'You speak English very well.', 'Bạn nói tiếng Anh giỏi quá.'),
+(5, 'Ben', 'Thanks. I study hard every day.', 'Cảm ơn. Tôi học chăm chỉ mỗi ngày.'),
+(5, 'Anna', 'Do you learn quickly?', 'Bạn học có nhanh không?'),
+(5, 'Ben', 'No, I learn slowly but carefully.', 'Không, tôi học chậm nhưng cẩn thận.');
+
+
+-- --- BÀI 6: GIỚI TỪ & LIÊN TỪ (PREPOSITIONS & CONJUNCTIONS) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(6, 'In', '/ɪn/', 'Trong (Giới từ)', 'The cat is in the box.', 'Con mèo ở trong hộp.'),
+(6, 'On', '/ɒn/', 'Trên', 'The book is on the table.', 'Quyển sách ở trên bàn.'),
+(6, 'At', '/æt/', 'Tại (Thời gian/Địa điểm cụ thể)', 'Meet me at 5 PM.', 'Gặp tôi lúc 5 giờ chiều.'),
+(6, 'Under', '/ˈʌn.dər/', 'Dưới', 'Under the tree.', 'Ở dưới gốc cây.'),
+(6, 'And', '/ænd/', 'Và (Liên từ)', 'You and I.', 'Bạn và tôi.'),
+(6, 'But', '/bʌt/', 'Nhưng', 'I like it, but it is expensive.', 'Tôi thích nó, nhưng nó đắt.'),
+(6, 'Because', '/bɪˈkɒz/', 'Bởi vì', 'I stay home because it rains.', 'Tôi ở nhà vì trời mưa.'),
+(6, 'So', '/səʊ/', 'Vì vậy/Nên', 'He was sick, so he slept.', 'Anh ấy ốm nên anh ấy đã ngủ.'),
+(6, 'Although', '/ɔːlˈðəʊ/', 'Mặc dù', 'Although he is old, he runs fast.', 'Mặc dù ông ấy già, ông ấy chạy nhanh.'),
+(6, 'Between', '/bɪˈtwiːn/', 'Ở giữa', 'Between A and B.', 'Ở giữa A và B.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(6, 'Prepositions of Time/Place', 'IN (Tháng, Năm, Mùa, Trong phòng), ON (Ngày, Thứ, Trên bề mặt), AT (Giờ giấc, Địa điểm nhỏ).'),
+(6, 'Conjunctions (FANBOYS)', 'Liên từ kết hợp: And (thêm vào), But (ngược lại), So (kết quả), Because (nguyên nhân).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (6, 6, 'Meeting Plan', 'audio/c6.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(6, 'Tom', 'Are we meeting on Monday or Tuesday?', 'Chúng ta gặp nhau vào thứ Hai hay thứ Ba?'),
+(6, 'Lisa', 'On Monday, at 7 PM.', 'Vào thứ Hai, lúc 7 giờ tối.'),
+(6, 'Tom', 'I am busy then, so can we meet in the afternoon?', 'Lúc đó tôi bận, nên chúng ta gặp buổi chiều được không?');
+
+
+-- --- BÀI 7: QUÁ KHỨ ĐƠN (PAST SIMPLE) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(7, 'Went', '/went/', 'Đã đi (Qúa khứ của Go)', 'I went to Paris.', 'Tôi đã đi Paris.'),
+(7, 'Did', '/dɪd/', 'Đã làm (Qúa khứ của Do)', 'I did my homework.', 'Tôi đã làm bài tập.'),
+(7, 'Was/Were', '/wɒz/', 'Đã là/Đã ở (Qúa khứ của To Be)', 'He was happy.', 'Anh ấy đã rất vui.'),
+(7, 'Bought', '/bɔːt/', 'Đã mua (Qúa khứ của Buy)', 'She bought a car.', 'Cô ấy đã mua xe.'),
+(7, 'Saw', '/sɔː/', 'Đã thấy (Qúa khứ của See)', 'I saw a ghost.', 'Tôi đã thấy ma.'),
+(7, 'Yesterday', '/ˈjes.tə.deɪ/', 'Hôm qua', 'Yesterday was fun.', 'Hôm qua rất vui.'),
+(7, 'Last night', '/lɑːst naɪt/', 'Tối qua', 'I slept late last night.', 'Tối qua tôi ngủ muộn.'),
+(7, 'Ago', '/əˈɡəʊ/', 'Cách đây', 'Two years ago.', 'Cách đây 2 năm.'),
+(7, 'Visited', '/ˈvɪz.ɪ.tɪd/', 'Đã thăm (Có quy tắc)', 'We visited the museum.', 'Chúng tôi đã thăm bảo tàng.'),
+(7, 'Played', '/pleɪd/', 'Đã chơi (Có quy tắc)', 'He played soccer.', 'Anh ấy đã chơi bóng đá.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(7, 'Past Simple Tense', 'Diễn tả hành động đã chấm dứt trong quá khứ. Động từ có quy tắc thêm -ED (Play -> Played). Bất quy tắc phải học thuộc (Go -> Went, See -> Saw). Dấu hiệu: Yesterday, Last..., Ago.'),
+(7, 'Negative & Question', 'Phủ định: Didn''t + V_nguyên_thể. Nghi vấn: Did + S + V_nguyên_thể?');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (7, 7, 'Last Weekend', 'audio/c7.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(7, 'A', 'Where did you go yesterday?', 'Hôm qua bạn đi đâu?'),
+(7, 'B', 'I went to the cinema and saw a movie.', 'Tôi đi rạp chiếu phim và xem một bộ phim.'),
+(7, 'A', 'Was it good?', 'Nó có hay không?'),
+(7, 'B', 'Yes, it was amazing.', 'Có, nó tuyệt lắm.');
+
+
+-- --- BÀI 8: TƯƠNG LAI & BE GOING TO ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(8, 'Will', '/wɪl/', 'Sẽ (Tương lai)', 'I will help you.', 'Tôi sẽ giúp bạn.'),
+(8, 'Tomorrow', '/təˈmɒr.əʊ/', 'Ngày mai', 'See you tomorrow.', 'Gặp bạn ngày mai.'),
+(8, 'Next week', '/nekst wiːk/', 'Tuần tới', 'I travel next week.', 'Tôi đi du lịch tuần tới.'),
+(8, 'Plan', '/plæn/', 'Kế hoạch', 'What is your plan?', 'Kế hoạch của bạn là gì?'),
+(8, 'Hope', '/həʊp/', 'Hy vọng', 'I hope it rains.', 'Tôi hy vọng trời mưa.'),
+(8, 'Predict', '/prɪˈdɪkt/', 'Dự đoán', 'Predict the future.', 'Dự đoán tương lai.'),
+(8, 'Probably', '/ˈprɒb.ə.bli/', 'Có lẽ', 'I will probably go.', 'Có lẽ tôi sẽ đi.'),
+(8, 'Flight', '/flaɪt/', 'Chuyến bay', 'The flight is at 9.', 'Chuyến bay lúc 9 giờ.'),
+(8, 'Intention', '/ɪnˈten.ʃən/', 'Ý định', 'My intention is to study.', 'Ý định của tôi là học tập.'),
+(8, 'Soon', '/suːn/', 'Sớm thôi', 'Get well soon.', 'Sớm bình phục nhé.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(8, 'Future Simple (Will)', 'Dùng Will + V cho quyết định ngay lúc nói hoặc dự đoán không căn cứ. (I think it will rain).'),
+(8, 'Be Going To', 'Dùng Am/Is/Are + Going to + V cho kế hoạch đã định trước hoặc dự đoán có căn cứ. (Look at the clouds! It is going to rain).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (8, 8, 'Summer Plans', 'audio/c8.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(8, 'John', 'What are you going to do this summer?', 'Bạn định làm gì hè này?'),
+(8, 'Mary', 'I am going to travel to Japan. I bought the tickets.', 'Tôi định đi Nhật. Tôi mua vé rồi.'),
+(8, 'John', 'Wow. I will probably just stay home.', 'Chà. Tôi chắc sẽ chỉ ở nhà thôi.');
+
+-- --- BÀI 9: CÂU BỊ ĐỘNG (PASSIVE VOICE) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(9, 'Built', '/bɪlt/', 'Được xây dựng (P2)', 'The house was built.', 'Ngôi nhà được xây dựng.'),
+(9, 'Written', '/ˈrɪt.ən/', 'Được viết (P2)', 'The book was written by him.', 'Sách được viết bởi anh ấy.'),
+(9, 'Made', '/meɪd/', 'Được làm (P2)', 'Made in Vietnam.', 'Sản xuất tại Việt Nam.'),
+(9, 'Stolen', '/ˈstəʊ.lən/', 'Bị trộm (P2)', 'My car was stolen.', 'Xe tôi bị trộm.'),
+(9, 'Cleaned', '/kliːnd/', 'Được dọn dẹp', 'The room is cleaned daily.', 'Phòng được dọn hàng ngày.'),
+(9, 'Done', '/dʌn/', 'Được hoàn thành (P2)', 'The work is done.', 'Công việc đã xong.'),
+(9, 'Invented', '/ɪnˈven.tɪd/', 'Được phát minh', 'The bulb was invented by Edison.', 'Bóng đèn do Edison phát minh.'),
+(9, 'Discovered', '/dɪˈskʌv.əd/', 'Được khám phá', 'America was discovered.', 'Châu Mỹ đã được khám phá.'),
+(9, 'Broken', '/ˈbrəʊ.kən/', 'Bị vỡ (P2)', 'The glass is broken.', 'Cái ly bị vỡ.'),
+(9, 'By', '/baɪ/', 'Bởi (Chỉ tác nhân)', 'Written by Shakespeare.', 'Viết bởi Shakespeare.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(9, 'Passive Voice Structure', 'Cấu trúc: To Be + V(p2). Dùng khi muốn nhấn mạnh vào đối tượng chịu tác động hơn là người thực hiện. (VD: The letter was sent).'),
+(9, 'By + Agent', 'Dùng "By" để chỉ người thực hiện hành động nếu cần thiết (By the police, By me...).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (9, 9, 'The Broken Vase', 'audio/c9.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(9, 'Mom', 'What happened here?', 'Chuyện gì xảy ra ở đây?'),
+(9, 'Son', 'The vase was broken, mom.', 'Cái bình bị vỡ rồi mẹ ạ.'),
+(9, 'Mom', 'Was it broken by the cat?', 'Có phải bị con mèo làm vỡ không?'),
+(9, 'Son', 'Yes, it was pushed off the table.', 'Vâng, nó bị đẩy khỏi bàn.');
+
+-- --- BÀI 10: CÂU ĐIỀU KIỆN (CONDITIONAL SENTENCES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(10, 'If', '/ɪf/', 'Nếu', 'If you study, you pass.', 'Nếu bạn học, bạn đậu.'),
+(10, 'Unless', '/ənˈles/', 'Trừ khi (Nếu không)', 'Unless you run, you will be late.', 'Trừ khi bạn chạy, bạn sẽ muộn.'),
+(10, 'Pass', '/pɑːs/', 'Đậu (kỳ thi)', 'Pass the exam.', 'Đậu kỳ thi.'),
+(10, 'Fail', '/feɪl/', 'Trượt', 'Fail the test.', 'Trượt bài kiểm tra.'),
+(10, 'Rich', '/rɪtʃ/', 'Giàu có', 'If I were rich...', 'Nếu tôi giàu...'),
+(10, 'Would', '/wʊd/', 'Sẽ (Quá khứ/Giả định)', 'I would go.', 'Tôi sẽ đi.'),
+(10, 'Truth', '/truːθ/', 'Sự thật', 'Tell the truth.', 'Nói sự thật.'),
+(10, 'Imagine', '/ɪˈmædʒ.ɪn/', 'Tưởng tượng', 'Imagine if you could fly.', 'Tưởng tượng nếu bạn biết bay.'),
+(10, 'Real', '/rɪəl/', 'Thật', 'Is it real?', 'Nó có thật không?'),
+(10, 'Possible', '/ˈpɒs.ə.bəl/', 'Có thể xảy ra', 'It is possible.', 'Nó có khả năng xảy ra.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(10, 'Type 1 (Real Present)', 'Điều kiện có thể xảy ra ở hiện tại/tương lai. [If + S + V(hiện tại), S + Will + V]. (If it rains, I will stay home).'),
+(10, 'Type 2 (Unreal Present)', 'Điều kiện không có thật ở hiện tại. [If + S + V(quá khứ), S + Would + V]. (If I were you, I would buy it).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (10, 10, 'Dreaming', 'audio/c10.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(10, 'A', 'What would you do if you won the lottery?', 'Bạn sẽ làm gì nếu trúng số?'),
+(10, 'B', 'If I won a million dollars, I would travel the world.', 'Nếu tôi trúng 1 triệu đô, tôi sẽ đi vòng quanh thế giới.'),
+(10, 'A', 'If you travel, will you take me?', 'Nếu bạn đi, bạn sẽ đưa tôi đi cùng chứ?'),
+(10, 'B', 'Maybe if you are nice!', 'Có thể nếu bạn ngoan!');
+
+-- --- BÀI 11: MỆNH ĐỀ QUAN HỆ (RELATIVE CLAUSES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(11, 'Who', '/huː/', 'Người mà (Thay cho người)', 'The man who called.', 'Người đàn ông đã gọi.'),
+(11, 'Which', '/wɪtʃ/', 'Cái mà (Thay cho vật)', 'The car which I bought.', 'Cái xe tôi đã mua.'),
+(11, 'That', '/ðæt/', 'Người/Cái mà (Đa năng)', 'The book that I read.', 'Quyển sách tôi đã đọc.'),
+(11, 'Whose', '/huːz/', 'Của người mà (Sở hữu)', 'The boy whose dad is a doctor.', 'Cậu bé có bố là bác sĩ.'),
+(11, 'Where', '/weər/', 'Nơi mà', 'The place where we met.', 'Nơi chúng ta gặp nhau.'),
+(11, 'When', '/wen/', 'Khi mà', 'The day when I was born.', 'Ngày tôi sinh ra.'),
+(11, 'Person', '/ˈpɜː.sən/', 'Người', 'He is a nice person.', 'Anh ấy là người tốt.'),
+(11, 'Thing', '/θɪŋ/', 'Vật/Thứ', 'It is a good thing.', 'Đó là một điều tốt.'),
+(11, 'Reason', '/ˈriː.zən/', 'Lý do', 'The reason why.', 'Lý do tại sao.'),
+(11, 'Identify', '/aɪˈden.tɪ.faɪ/', 'Xác định', 'Identify the thief.', 'Nhận diện kẻ trộm.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(11, 'Relative Pronouns', 'Who (người), Which (vật), That (cả hai), Whose (sở hữu). Dùng để nối câu và giải thích rõ hơn về danh từ đứng trước.'),
+(11, 'Defining vs Non-defining', 'Mệnh đề xác định (bắt buộc có) và Mệnh đề không xác định (có dấu phẩy, chỉ để bổ sung thông tin). (VD: My dad, who is 50, is a doctor).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (11, 11, 'Lost Item', 'audio/c11.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(11, 'Police', 'Can you describe the bag that you lost?', 'Cô có thể mô tả cái túi cô bị mất không?'),
+(11, 'Lady', 'It is the bag which has a red star on it.', 'Đó là cái túi có ngôi sao đỏ ở trên.'),
+(11, 'Police', 'Is this the man who stole it?', 'Đây có phải người đàn ông đã trộm nó không?');
+
+-- --- BÀI 12: CÂU TƯỜNG THUẬT (REPORTED SPEECH) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(12, 'Say/Said', '/sed/', 'Nói/Đã nói', 'He said he was tired.', 'Anh ấy nói anh ấy mệt.'),
+(12, 'Tell/Told', '/təʊld/', 'Kể/Bảo', 'She told me to go.', 'Cô ấy bảo tôi đi.'),
+(12, 'Ask/Asked', '/ɑːskt/', 'Hỏi/Yêu cầu', 'He asked where I lived.', 'Anh ấy hỏi tôi sống ở đâu.'),
+(12, 'Report', '/rɪˈpɔːt/', 'Báo cáo/Tường thuật', 'Report the news.', 'Tường thuật tin tức.'),
+(12, 'Direct', '/daɪˈrekt/', 'Trực tiếp', 'Direct speech.', 'Lời nói trực tiếp.'),
+(12, 'Previous', '/ˈpriː.vi.əs/', 'Trước đó', 'The previous day.', 'Ngày trước đó.'),
+(12, 'Following', '/ˈfɒl.əʊ.ɪŋ/', 'Tiếp theo', 'The following week.', 'Tuần tiếp theo.'),
+(12, 'Order', '/ˈɔː.dər/', 'Ra lệnh', 'He ordered him to stop.', 'Anh ta ra lệnh cho hắn dừng lại.'),
+(12, 'Advise', '/ədˈvaɪz/', 'Khuyên bảo', 'He advised me to study.', 'Anh ấy khuyên tôi học.'),
+(12, 'Whether', '/ˈweð.ər/', 'Liệu rằng (Dùng trong câu hỏi Yes/No)', 'He asked whether I liked it.', 'Anh ấy hỏi liệu tôi có thích nó không.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(12, 'Backshift Rules (Lùi thì)', 'Khi chuyển sang gián tiếp, lùi 1 thì: Hiện tại -> Quá khứ, Quá khứ -> Quá khứ hoàn thành, Will -> Would, Can -> Could.'),
+(12, 'Time & Place Changes', 'Now -> Then, Here -> There, Tomorrow -> The following day, Yesterday -> The previous day.');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (12, 12, 'Gossip', 'audio/c12.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(12, 'A', 'What did Sarah say?', 'Sarah đã nói gì?'),
+(12, 'B', 'She said that she was getting married.', 'Cô ấy nói rằng cô ấy sắp kết hôn.'),
+(12, 'A', 'Really? She told me she was single last week!', 'Thật á? Tuần trước cô ấy bảo tôi là cô ấy độc thân mà!');
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- PHẦN 3: LEVEL 3 - NÂNG CAO (TIẾP TỤC TỪ BÀI 13)
+-- ============================================================
+
+-- --- BÀI 13: SỰ HÒA HỢP CHỦ NGỮ & ĐỘNG TỪ (SUBJECT-VERB AGREEMENT) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(13, 'Everyone', '/ˈev.ri.wʌn/', 'Mọi người (Đi với V số ít)', 'Everyone is here.', 'Mọi người đều ở đây.'),
+(13, 'Everything', '/ˈev.ri.θɪŋ/', 'Mọi thứ (Đi với V số ít)', 'Everything looks good.', 'Mọi thứ trông có vẻ ổn.'),
+(13, 'Nobody', '/ˈnəʊ.bɒd.i/', 'Không ai (Đi với V số ít)', 'Nobody knows the answer.', 'Không ai biết câu trả lời.'),
+(13, 'Team', '/tiːm/', 'Đội (Danh từ tập hợp)', 'The team is winning.', 'Đội đang chiến thắng.'),
+(13, 'Police', '/pəˈliːs/', 'Cảnh sát (Luôn số nhiều)', 'The police are coming.', 'Cảnh sát đang tới.'),
+(13, 'News', '/njuːz/', 'Tin tức (Luôn số ít)', 'The news is bad.', 'Tin tức này tệ quá.'),
+(13, 'Mathematics', '/ˌmæθˈmæt.ɪks/', 'Toán học (Môn học - Số ít)', 'Mathematics is difficult.', 'Toán học rất khó.'),
+(13, 'Glasses', '/ˈɡlɑː.sɪz/', 'Kính mắt (Luôn số nhiều)', 'My glasses are broken.', 'Kính của tôi bị vỡ.'),
+(13, 'Furniture', '/ˈfɜː.nɪ.tʃər/', 'Nội thất (Không đếm được - Số ít)', 'The furniture is new.', 'Nội thất còn mới.'),
+(13, 'Cattle', '/ˈkæt.əl/', 'Gia súc (Luôn số nhiều)', 'The cattle are eating.', 'Gia súc đang ăn.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(13, 'Basic Rules', 'Chủ ngữ số ít -> Động từ số ít (thêm s/es). Chủ ngữ số nhiều -> Động từ số nhiều (nguyên thể).'),
+(13, 'Special Cases', 'Các đại từ bất định (Everyone, Someone, Nothing...) luôn chia số ít. Các danh từ tập hợp (News, Maths, Physics) chia số ít. Police, Cattle, Glasses luôn chia số nhiều.');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (13, 13, 'The News', 'audio/c13.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(13, 'A', 'Have you heard the news? It is shocking.', 'Bạn nghe tin chưa? Sốc lắm.'),
+(13, 'B', 'No, nobody tells me anything.', 'Chưa, chả ai nói gì với tôi cả.'),
+(13, 'A', 'The police are investigating a crime nearby.', 'Cảnh sát đang điều tra một vụ án gần đây.');
+
+-- --- BÀI 14: CẤU TRÚC SONG SONG (PARALLEL STRUCTURE) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(14, 'Hiking', '/ˈhaɪ.kɪŋ/', 'Đi bộ đường dài', 'I like hiking and swimming.', 'Tôi thích đi bộ và bơi lội.'),
+(14, 'Neither', '/ˈnaɪ.ðər/', 'Không... (cũng không)', 'Neither Tom nor Jerry.', 'Không phải Tom cũng chẳng phải Jerry.'),
+(14, 'Nor', '/nɔːr/', 'Cũng không', 'I neither smoke nor drink.', 'Tôi không hút thuốc cũng không uống rượu.'),
+(14, 'Either', '/ˈaɪ.ðər/', 'Hoặc...', 'Either you or me.', 'Hoặc bạn hoặc tôi.'),
+(14, 'Not only', '/nɒt ˈəʊn.li/', 'Không những...', 'Not only smart...', 'Không những thông minh...'),
+(14, 'But also', '/bʌt ˈɔːl.səʊ/', 'Mà còn...', '...but also kind.', '...mà còn tốt bụng.'),
+(14, 'Prefer', '/prɪˈfɜːr/', 'Thích hơn', 'I prefer walking to running.', 'Tôi thích đi bộ hơn chạy.'),
+(14, 'Both', '/bəʊθ/', 'Cả hai', 'Both red and blue.', 'Cả màu đỏ và xanh.'),
+(14, 'Swimming', '/ˈswɪm.ɪŋ/', 'Bơi lội', 'He enjoys swimming.', 'Anh ấy thích bơi.'),
+(14, 'Cooking', '/ˈkʊk.ɪŋ/', 'Nấu ăn', 'Cooking is fun.', 'Nấu ăn rất vui.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(14, 'Parallelism Rule', 'Trong câu liệt kê, các thành phần phải cùng dạng (V-ing đi với V-ing, To V đi với To V, Danh từ đi với Danh từ). Sai: I like swimming and to cook. Đúng: I like swimming and cooking.'),
+(14, 'Paired Conjunctions', 'Cấu trúc cặp: Neither...nor, Either...or, Not only...but also, Both...and. Động từ chia theo chủ ngữ gần nhất (với or/nor).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (14, 14, 'Hobbies', 'audio/c14.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(14, 'Tom', 'What do you like doing?', 'Bạn thích làm gì?'),
+(14, 'Anna', 'I like reading, writing, and painting.', 'Tôi thích đọc, viết và vẽ.'),
+(14, 'Tom', 'Not only do you read, but you also write? Wow.', 'Bạn không những đọc mà còn viết nữa à? Wow.');
+
+-- --- BÀI 15: MỆNH ĐỀ DANH TỪ (NOUN CLAUSES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(15, 'Believe', '/bɪˈliːv/', 'Tin rằng', 'I believe that he is right.', 'Tôi tin rằng anh ấy đúng.'),
+(15, 'Wonder', '/ˈwʌn.dər/', 'Tự hỏi', 'I wonder where she is.', 'Tôi tự hỏi cô ấy ở đâu.'),
+(15, 'Fact', '/fækt/', 'Sự thật', 'The fact that he left.', 'Sự thật là anh ấy đã đi.'),
+(15, 'Doubt', '/daʊt/', 'Nghi ngờ', 'I doubt if it is true.', 'Tôi nghi ngờ liệu nó có đúng không.'),
+(15, 'Explain', '/ɪkˈspleɪn/', 'Giải thích', 'Explain why you did it.', 'Giải thích tại sao bạn làm vậy.'),
+(15, 'Guess', '/ɡes/', 'Đoán', 'Guess what I bought.', 'Đoán xem tôi mua gì.'),
+(15, 'Certain', '/ˈsɜː.tən/', 'Chắc chắn', 'I am certain that we won.', 'Tôi chắc chắn chúng ta đã thắng.'),
+(15, 'Realize', '/ˈrɪə.laɪz/', 'Nhận ra', 'I realized that I was lost.', 'Tôi nhận ra mình đã bị lạc.'),
+(15, 'Forget', '/fəˈɡet/', 'Quên', 'Don''t forget what I said.', 'Đừng quên những gì tôi nói.'),
+(15, 'Sure', '/ʃɔːr/', 'Chắc chắn', 'Are you sure who he is?', 'Bạn có chắc anh ta là ai không?');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(15, 'Definition', 'Mệnh đề danh từ đóng vai trò như một danh từ (làm chủ ngữ hoặc tân ngữ). Thường bắt đầu bằng: That, What, Where, When, Why, How, Whether/If.'),
+(15, 'Structure', 'S + V + (Wh-word/That + S + V). Ví dụ: I know [where he lives]. (Không đảo ngữ trong mệnh đề danh từ).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (15, 15, 'The Secret', 'audio/c15.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(15, 'A', 'Do you know why she is crying?', 'Bạn có biết tại sao cô ấy khóc không?'),
+(15, 'B', 'I guess that she failed the exam.', 'Tôi đoán rằng cô ấy trượt bài thi.'),
+(15, 'A', 'That explains why she is sad.', 'Điều đó giải thích tại sao cô ấy buồn.');
+
+-- --- BÀI 16: MỆNH ĐỀ TRẠNG NGỮ (ADVERBIAL CLAUSES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(16, 'While', '/waɪl/', 'Trong khi', 'While I was sleeping...', 'Trong khi tôi đang ngủ...'),
+(16, 'Whereas', '/weərˈæz/', 'Trong khi (Ngược lại)', 'He is rich whereas I am poor.', 'Anh ấy giàu trong khi tôi nghèo.'),
+(16, 'Since', '/sɪns/', 'Vì/Từ khi', 'Since he is lazy...', 'Vì anh ấy lười...'),
+(16, 'Provided', '/prəˈvaɪ.dɪd/', 'Miễn là', 'Provided that you pay.', 'Miễn là bạn trả tiền.'),
+(16, 'Unless', '/ənˈles/', 'Trừ khi', 'Unless you hurry.', 'Trừ khi bạn nhanh lên.'),
+(16, 'As soon as', '/æz suːn æz/', 'Ngay khi', 'Call me as soon as you arrive.', 'Gọi tôi ngay khi bạn tới.'),
+(16, 'Until', '/ənˈtɪl/', 'Cho đến khi', 'Wait until I come.', 'Đợi cho đến khi tôi đến.'),
+(16, 'Whenever', '/wenˈev.ər/', 'Bất cứ khi nào', 'Visit me whenever you want.', 'Thăm tôi bất cứ khi nào bạn muốn.'),
+(16, 'Even if', '/ˈiː.vən ɪf/', 'Ngay cả khi', 'Even if it rains, I go.', 'Ngay cả khi trời mưa, tôi vẫn đi.'),
+(16, 'In case', '/ɪn keɪs/', 'Phòng khi', 'Take an umbrella in case it rains.', 'Mang ô phòng khi trời mưa.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(16, 'Types of Adverbial Clauses', 'Chỉ thời gian (When, While, Until), Nguyên nhân (Because, Since), Điều kiện (If, Unless), Nhượng bộ (Although), Mục đích (So that).'),
+(16, 'Position', 'Có thể đứng đầu câu (dùng dấu phẩy) hoặc cuối câu. (Because I was sick, I stayed home = I stayed home because I was sick).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (16, 16, 'Making Plans', 'audio/c16.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(16, 'A', 'I will wait here until you finish.', 'Tôi sẽ đợi ở đây cho đến khi bạn xong.'),
+(16, 'B', 'Thanks. Take this key in case you need to enter.', 'Cảm ơn. Cầm chìa khóa này phòng khi bạn cần vào trong.'),
+(16, 'A', 'Call me as soon as you are done.', 'Gọi tôi ngay khi bạn xong nhé.');
+
+-- --- BÀI 17: SỰ PHỐI HỢP THÌ (SEQUENCE OF TENSES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(17, 'Before', '/bɪˈfɔːr/', 'Trước khi', 'Before I came, he had left.', 'Trước khi tôi đến, anh ấy đã đi rồi.'),
+(17, 'After', '/ˈɑːf.tər/', 'Sau khi', 'After I ate, I slept.', 'Sau khi ăn, tôi ngủ.'),
+(17, 'By the time', '/baɪ ðə taɪm/', 'Vào lúc/Trước lúc', 'By the time we arrived...', 'Trước lúc chúng tôi tới...'),
+(17, 'Arrive', '/əˈraɪv/', 'Đến', 'When he arrived, I was cooking.', 'Khi anh ấy đến, tôi đang nấu ăn.'),
+(17, 'Leave', '/liːv/', 'Rời đi', 'The train had left.', 'Tàu đã rời đi.'),
+(17, 'Meanwhile', '/ˈmiːn.waɪl/', 'Trong khi đó', 'Meanwhile, she was reading.', 'Trong khi đó, cô ấy đang đọc sách.'),
+(17, 'During', '/ˈdʒʊə.rɪŋ/', 'Trong suốt', 'During the summer.', 'Trong suốt mùa hè.'),
+(17, 'Already', '/ɔːlˈred.i/', 'Rồi', 'I had already finished.', 'Tôi đã xong rồi.'),
+(17, 'Just', '/dʒʌst/', 'Vừa mới', 'He has just left.', 'Anh ấy vừa mới đi.'),
+(17, 'Then', '/ðen/', 'Sau đó', 'I ate, then I worked.', 'Tôi ăn, sau đó tôi làm việc.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(17, 'Past & Past Perfect', 'Hành động xảy ra trước 1 hành động khác trong quá khứ dùng Quá khứ hoàn thành. (When I arrived, he HAD left).'),
+(17, 'Past Continuous & Simple', 'Hành động đang xảy ra (Qúa khứ tiếp diễn) thì hành động khác chen vào (Qúa khứ đơn). (I WAS sleeping when he called).');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (17, 17, 'The Accident', 'audio/c17.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(17, 'Police', 'What were you doing when the accident happened?', 'Anh đang làm gì khi tai nạn xảy ra?'),
+(17, 'Witness', 'I was walking down the street when I saw the car.', 'Tôi đang đi bộ xuống phố thì tôi thấy cái xe.'),
+(17, 'Police', 'Had the driver seen you?', 'Tài xế có thấy anh trước đó không?');
+
+-- --- BÀI 18: TỪ NỐI (CONNECTORS & LINKING WORDS) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning, example_sentence_english, example_sentence_vietnamese) VALUES 
+(18, 'However', '/haʊˈev.ər/', 'Tuy nhiên', 'He is old. However, he is strong.', 'Ông ấy già. Tuy nhiên, ông ấy khỏe.'),
+(18, 'Therefore', '/ˈðeə.fɔːr/', 'Vì vậy', 'It rained. Therefore, we stayed home.', 'Trời mưa. Vì vậy, chúng tôi ở nhà.'),
+(18, 'Moreover', '/ˌmɔːˈrəʊ.vər/', 'Hơn nữa', 'He is rich. Moreover, he is handsome.', 'Anh ấy giàu. Hơn nữa còn đẹp trai.'),
+(18, 'Otherwise', '/ˈʌð.ə.waɪz/', 'Nếu không thì', 'Study hard, otherwise you fail.', 'Học chăm đi, nếu không bạn sẽ trượt.'),
+(18, 'Despite', '/dɪˈspaɪt/', 'Mặc dù (cộng Noun/Ving)', 'Despite the rain...', 'Mặc dù trời mưa...'),
+(18, 'Consequently', '/ˈkɒn.sɪ.kwənt.li/', 'Hậu quả là', 'He missed the bus. Consequently, he was late.', 'Anh ấy lỡ xe. Hậu quả là anh ấy bị muộn.'),
+(18, 'Furthermore', '/ˌfɜː.ðəˈmɔːr/', 'Thêm vào đó', 'Furthermore, it is free.', 'Thêm vào đó, nó miễn phí.'),
+(18, 'Thus', '/ðʌs/', 'Như vậy/Do đó', 'Thus, we conclude...', 'Do đó, chúng tôi kết luận...'),
+(18, 'In addition', '/ɪn əˈdɪʃ.ən/', 'Ngoài ra', 'In addition, I like pizza.', 'Ngoài ra, tôi thích pizza.'),
+(18, 'On the other hand', '/ɒn ði ˈʌð.ər hænd/', 'Mặt khác', 'On the other hand, it is cheap.', 'Mặt khác, nó rẻ.');
+
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(18, 'Linking Words Usage', 'Dùng để nối các ý hoặc các câu văn. However/Therefore thường đứng đầu câu và có dấu phẩy. Despite/In spite of + Danh từ/V-ing. Although + Mệnh đề.'),
+(18, 'Adding & Contrasting', 'Thêm ý: Moreover, Furthermore, In addition. Đối lập: However, Nevertheless, On the other hand.');
+
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (18, 18, 'Debate', 'audio/c18.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(18, 'A', 'I think we should buy a car.', 'Tôi nghĩ ta nên mua xe ô tô.'),
+(18, 'B', 'Cars are useful. However, they are expensive.', 'Xe hơi hữu ích. Tuy nhiên, chúng đắt đỏ.'),
+(18, 'A', 'True. Otherwise, we have to take the bus every day.', 'Đúng. Nếu không thì ngày nào ta cũng phải bắt xe buýt.');
+
+-- ============================================================
+-- PHẦN 4: LEVEL 4 & 5 (BÀI 19 - 25)
+-- ============================================================
+
+-- --- BÀI 19: CÁC THÌ HOÀN THÀNH (PERFECT TENSES) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(19, 'Recently', '...','Gần đây'), (19, 'Lately', '...','Mới đây'), (19, 'Yet', '...','Chưa (dùng trong câu phủ định/nghi vấn)'),
+(19, 'Experience', '...','Kinh nghiệm'), (19, 'Ever', '...','Đã từng'), (19, 'Never', '...','Chưa từng'),
+(19, 'Result', '...','Kết quả'), (19, 'Finish', '...','Hoàn thành'), (19, 'Since', '...','Kể từ khi'), (19, 'For', '...','Trong khoảng (thời gian)');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(19, 'Present Perfect', 'S + Have/Has + P2. Diễn tả hành động vừa xảy ra, lặp lại nhiều lần, hoặc bắt đầu trong quá khứ kéo dài đến hiện tại.'),
+(19, 'Past Perfect', 'S + Had + P2. Diễn tả hành động xảy ra trước một hành động khác trong quá khứ.');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (19, 19, 'Job Interview', 'audio/c19.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(19, 'Interviewer', 'Have you ever worked in a team?', 'Bạn đã bao giờ làm việc nhóm chưa?'),
+(19, 'Candidate', 'Yes, I have worked in many teams since 2020.', 'Rồi, tôi đã làm việc trong nhiều nhóm từ năm 2020.');
+
+-- --- BÀI 20: ĐỘNG TỪ KHUYẾT THIẾU (MODAL VERBS) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(20, 'Must', '...','Phải (Bắt buộc)'), (20, 'Should', '...','Nên (Khuyên)'), (20, 'Can', '...','Có thể (Khả năng)'),
+(20, 'May', '...','Có lẽ (Xác suất 50%)'), (20, 'Might', '...','Có lẽ (Xác suất thấp hơn)'), (20, 'Ought to', '...','Nên'),
+(20, 'Permission', '...','Sự cho phép'), (20, 'Ability', '...','Khả năng'), (20, 'Obligation', '...','Nghĩa vụ'), (20, 'Advice', '...','Lời khuyên');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(20, 'Modals of Obligation', 'Must (Bắt buộc chủ quan), Have to (Bắt buộc khách quan/Luật lệ).'),
+(20, 'Modals of Advice', 'Should/Ought to (Khuyên nên làm gì). Better (Nên làm nếu không sẽ có hậu quả).');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (20, 20, 'Doctor Advice', 'audio/c20.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(20, 'Doc', 'You must stop smoking.', 'Anh bắt buộc phải bỏ thuốc.'),
+(20, 'Patient', 'I know I should, but it is hard.', 'Tôi biết tôi nên làm thế, nhưng khó quá.');
+
+-- --- BÀI 21: GERUNDS & INFINITIVES (V-ING & TO V) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(21, 'Enjoy', '...','Thích (Enjoy + Ving)'), (21, 'Avoid', '...','Tránh (Avoid + Ving)'), (21, 'Decide', '...','Quyết định (Decide + To V)'),
+(21, 'Plan', '...','Lên kế hoạch (Plan + To V)'), (21, 'Suggest', '...','Gợi ý (Suggest + Ving)'), (21, 'Promise', '...','Hứa (Promise + To V)'),
+(21, 'Mind', '...','Phiền (Mind + Ving)'), (21, 'Refuse', '...','Từ chối (Refuse + To V)'), (21, 'Keep', '...','Tiếp tục (Keep + Ving)'), (21, 'Want', '...','Muốn (Want + To V)');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(21, 'Verbs + V-ing', 'Một số động từ theo sau là V-ing: Enjoy, Avoid, Suggest, Mind, Keep, Finish.'),
+(21, 'Verbs + To V', 'Một số động từ theo sau là To V: Want, Decide, Plan, Promise, Refuse, Hope.');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (21, 21, 'Weekend Plan', 'audio/c21.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(21, 'A', 'I suggest going to the cinema.', 'Tôi gợi ý đi xem phim.'),
+(21, 'B', 'I decide to stay home instead.', 'Tôi quyết định ở nhà thì hơn.');
+
+-- --- BÀI 22: ĐẢO NGỮ (INVERSION) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(22, 'Rarely', '...','Hiếm khi'), (22, 'Seldom', '...','Hiếm khi'), (22, 'Never', '...','Chưa bao giờ'),
+(22, 'Hardly', '...','Hầu như không'), (22, 'Scarcely', '...','Vừa mới... thì...'), (22, 'No sooner', '...','Vừa mới... thì...'),
+(22, 'Only', '...','Chỉ khi'), (22, 'Not until', '...','Mãi đến khi'), (22, 'Little', '...','Rất ít khi (phủ định)'), (22, 'Nowhere', '...','Không nơi nào');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(22, 'Negative Adverbs Inversion', 'Khi trạng từ phủ định đứng đầu câu, phải đảo ngữ: Never have I seen such a thing. (Chưa bao giờ tôi thấy thứ như vậy).'),
+(22, 'Only/Not until', 'Only when I arrived did I know. (Chỉ khi tôi đến tôi mới biết).');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (22, 22, 'Surprise', 'audio/c22.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(22, 'A', 'Rarely do we see such a beautiful sunset.', 'Hiếm khi nào chúng ta thấy hoàng hôn đẹp thế này.'),
+(22, 'B', 'Little did I know it would be this nice.', 'Tôi không hề biết là nó sẽ đẹp thế này.');
+
+-- --- BÀI 23: CỤM ĐỘNG TỪ (PHRASAL VERBS) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(23, 'Give up', '...','Từ bỏ'), (23, 'Look for', '...','Tìm kiếm'), (23, 'Look after', '...','Chăm sóc'),
+(23, 'Run out of', '...','Hết/Cạn kiệt'), (23, 'Put off', '...','Trì hoãn'), (23, 'Call off', '...','Hủy bỏ'),
+(23, 'Turn on', '...','Bật'), (23, 'Turn off', '...','Tắt'), (23, 'Get up', '...','Thức dậy'), (23, 'Find out', '...','Tìm ra');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(23, 'Definition', 'Cụm động từ gồm Động từ + Giới từ/Trạng từ, mang nghĩa khác với động từ gốc. (Look = Nhìn, Look after = Chăm sóc).'),
+(23, 'Separable vs Inseparable', 'Một số cụm có thể tách rời (Turn the light on / Turn on the light). Một số không thể tách (Look after him).');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (23, 23, 'Lost Key', 'audio/c23.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(23, 'A', 'What are you looking for?', 'Bạn đang tìm cái gì thế?'),
+(23, 'B', 'I am looking for my keys. I can''t find out where they are.', 'Tôi đang tìm chìa khóa. Tôi không tìm ra chúng ở đâu.');
+
+-- --- BÀI 24: THÀNH NGỮ (IDIOMS) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(24, 'Piece of cake', '...','Dễ ợt'), (24, 'Break a leg', '...','Chúc may mắn'), (24, 'Under the weather', '...','Cảm thấy không khỏe'),
+(24, 'Cost an arm and a leg', '...','Rất đắt đỏ'), (24, 'Once in a blue moon', '...','Hiếm khi'), (24, 'Spill the beans', '...','Tiết lộ bí mật'),
+(24, 'Hit the sack', '...','Đi ngủ'), (24, 'See eye to eye', '...','Đồng quan điểm'), (24, 'Let the cat out of the bag', '...','Lộ bí mật'), (24, 'Feeling blue', '...','Cảm thấy buồn');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(24, 'Usage', 'Thành ngữ không thể dịch nghĩa đen từng từ (Piece of cake = Bánh ngọt -> Nghĩa bóng: Dễ dàng). Dùng thành ngữ giúp tiếng Anh tự nhiên hơn.'),
+(24, 'Context', 'Thường dùng trong văn nói (Speaking) thân mật.');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (24, 24, 'Exam Day', 'audio/c24.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(24, 'A', 'The exam was a piece of cake.', 'Bài thi dễ ợt.'),
+(24, 'B', 'Really? I was feeling blue because I thought I failed.', 'Thật á? Tôi đang buồn thiu vì tưởng trượt.');
+
+-- --- BÀI 25: COLLOCATIONS (CỤM TỪ CỐ ĐỊNH) ---
+INSERT INTO vocabularies (lesson_id, word_english, phonetic_spelling, vietnamese_meaning) VALUES 
+(25, 'Make a decision', '...','Ra quyết định'), (25, 'Do a favor', '...','Giúp đỡ'), (25, 'Pay attention', '...','Chú ý'),
+(25, 'Take a break', '...','Nghỉ giải lao'), (25, 'Catch a cold', '...','Bị cảm lạnh'), (25, 'Keep a secret', '...','Giữ bí mật'),
+(25, 'Save time', '...','Tiết kiệm thời gian'), (25, 'Waste money', '...','Lãng phí tiền'), (25, 'Have fun', '...','Vui vẻ'), (25, 'Make an effort', '...','Nỗ lực');
+INSERT INTO grammars (lesson_id, explanation_english, explanation_vietnamese) VALUES 
+(25, 'Make vs Do', 'Make: Tạo ra cái mới (Make a cake, Make a mistake). Do: Hành động, công việc (Do homework, Do exercise).'),
+(25, 'Common Collocations', 'Các từ đi chung với nhau theo thói quen bản xứ: Pay attention (không dùng Give attention), Fast food (không dùng Quick food).');
+INSERT INTO conversations (id, lesson_id, title, audio_url) VALUES (25, 25, 'Advice', 'audio/c25.mp3');
+INSERT INTO sentences (conversation_id, character_name, text_english, text_vietnamese) VALUES 
+(25, 'A', 'Please pay attention to what I say.', 'Làm ơn chú ý những gì tôi nói.'),
+(25, 'B', 'Okay. Can you do me a favor?', 'Ok. Bạn giúp tôi một việc được không?');
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+-- Xóa dữ liệu cũ để nạp mới cho sạch
+TRUNCATE TABLE answer_options;
+TRUNCATE TABLE questions;
+TRUNCATE TABLE tests; 
+-- (Nếu muốn giữ bài học thì KHÔNG truncate lessons/vocabularies)
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================================
+-- KHỞI TẠO 15 BÀI KIỂM TRA
+-- ============================================================
+INSERT INTO tests (id, name, level, audio_url) VALUES 
+(1, 'Test 1: Basic Grammar (Easy)', 1, 'audio/t1.mp3'),
+(2, 'Test 2: Tenses Review (Easy)', 1, 'audio/t2.mp3'),
+(3, 'Test 3: Nouns & Pronouns (Easy)', 1, 'audio/t3.mp3'),
+(4, 'Test 4: Adjectives (Easy)', 1, 'audio/t4.mp3'),
+(5, 'Test 5: Vocabulary Check (Easy)', 1, 'audio/t5.mp3'),
+(6, 'Test 6: Passive & Future (Medium)', 2, 'audio/t6.mp3'),
+(7, 'Test 7: Conditionals (Medium)', 2, 'audio/t7.mp3'),
+(8, 'Test 8: Reported Speech (Medium)', 2, 'audio/t8.mp3'),
+(9, 'Test 9: Relative Clauses (Medium)', 2, 'audio/t9.mp3'),
+(10, 'Test 10: Mixed Grammar (Medium)', 2, 'audio/t10.mp3'),
+(11, 'Test 11: Advanced Structure (Hard)', 3, 'audio/t11.mp3'),
+(12, 'Test 12: Inversion & Emphasis (Hard)', 3, 'audio/t12.mp3'),
+(13, 'Test 13: Idioms & Phrasal Verbs (Hard)', 3, 'audio/t13.mp3'),
+(14, 'Test 14: Complex Clauses (Hard)', 3, 'audio/t14.mp3'),
+(15, 'Test 15: Proficiency Final (Hard)', 3, 'audio/t15.mp3');
+
+-- ============================================================
+-- NỘI DUNG TEST 1 (EASY) - NGỮ PHÁP CƠ BẢN
+-- ============================================================
+-- Q1: Single Choice
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (1, 1, 'I ___ a student.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (1, 'am', 1), (1, 'is', 0), (1, 'are', 0);
+
+-- Q2: True/False
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (2, 1, '"Apple" is a noun.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (2, 'True', 1), (2, 'False', 0);
+
+-- Q3: Arrange Sentence
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (3, 1, 'Arrange: name / My / John / is', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (3, 'My', 1), (3, 'name', 1), (3, 'is', 1), (3, 'John', 1);
+
+-- Q4: Multiple Choice (Chọn 2 đáp án đúng)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (4, 1, 'Select TWO vowels (nguyên âm):', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (4, 'A', 1), (4, 'B', 0), (4, 'E', 1), (4, 'Z', 0);
+
+-- Q5: Fill in Blank
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (5, 1, 'She ___ (go) to school everyday.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (5, 'goes', 1);
+
+-- Q6-Q10: Single Choice
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(6, 1, 'Which word is a verb?', 'SINGLE_CHOICE'),
+(7, 1, 'He ___ not like pizza.', 'SINGLE_CHOICE'),
+(8, 1, 'They ___ playing soccer now.', 'SINGLE_CHOICE'),
+(9, 1, 'Choose the plural of "Child":', 'SINGLE_CHOICE'),
+(10, 1, 'Is she beautiful? Yes, ___ is.', 'SINGLE_CHOICE');
+
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(6, 'Run', 1), (6, 'Red', 0), (6, 'Big', 0),
+(7, 'do', 0), (7, 'does', 1), (7, 'is', 0),
+(8, 'is', 0), (8, 'are', 1), (8, 'am', 0),
+(9, 'Childs', 0), (9, 'Children', 1), (9, 'Childes', 0),
+(10, 'he', 0), (10, 'she', 1), (10, 'it', 0);
+
+-- ============================================================
+-- NỘI DUNG TEST 6 (MEDIUM) - BỊ ĐỘNG & TƯƠNG LAI
+-- ============================================================
+-- Q51: Arrange Sentence (Bị động)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (51, 6, 'Arrange: car / washed / The / was / dad / by', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(51, 'The', 1), (51, 'car', 1), (51, 'was', 1), (51, 'washed', 1), (51, 'by', 1), (51, 'dad', 1);
+
+-- Q52: Single Choice (Will vs Going to)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (52, 6, 'Look at the clouds! It ___ rain.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (52, 'is going to', 1), (52, 'will', 0), (52, 'shall', 0);
+
+-- Q53: True/False
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (53, 6, '"I will help you" is a prediction.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (53, 'True', 0), (53, 'False', 1); -- Nó là lời hứa/quyết định tức thì
+
+-- Q54: Multiple Choice (Chọn câu đúng ngữ pháp)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (54, 6, 'Select ALL correct passive sentences:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(54, 'The cake was eaten.', 1), 
+(54, 'The cake eaten was.', 0), 
+(54, 'The letter is written by John.', 1);
+
+-- Q55: Fill in Blank
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (55, 6, 'Passive: The house ___ (build) in 1990.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (55, 'was built', 1);
+
+-- Q56-60: Single Choice
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(56, 6, 'This problem must ___ solved immediately.', 'SINGLE_CHOICE'),
+(57, 6, 'I promise I ___ tell anyone.', 'SINGLE_CHOICE'),
+(58, 6, 'Next year, I ___ 20 years old.', 'SINGLE_CHOICE'),
+(59, 6, 'Active: "Someone stole my bag." -> Passive: "My bag ___."', 'SINGLE_CHOICE'),
+(60, 6, 'Choose the correct form: "The room is ___ every day."', 'SINGLE_CHOICE');
+
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(56, 'be', 1), (56, 'been', 0), (56, 'being', 0),
+(57, 'won''t', 1), (57, 'don''t', 0), (57, 'not', 0),
+(58, 'will be', 1), (58, 'am going to be', 0), (58, 'am', 0),
+(59, 'was stolen', 1), (59, 'is stolen', 0), (59, 'stole', 0),
+(60, 'cleaned', 1), (60, 'clean', 0), (60, 'cleaning', 0);
+
+-- ============================================================
+-- NỘI DUNG TEST 11 (HARD) - ADVANCED STRUCTURE
+-- ============================================================
+-- Q101: Inversion (Đảo ngữ - Fill in blank)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (101, 11, 'Never ___ (I / see) such a beautiful bird.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (101, 'have I seen', 1);
+
+-- Q102: Single Choice (Idioms)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (102, 11, 'The exam was a piece of ___. (Very easy)', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (102, 'cake', 1), (102, 'candy', 0), (102, 'pie', 0), (102, 'pizza', 0);
+
+-- Q103: Multiple Choice (Phrasal Verbs - Chọn 2 nghĩa đúng)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (103, 11, 'Which words can replace "GIVE UP"?', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(103, 'Stop doing something', 1), 
+(103, 'Quit', 1), 
+(103, 'Continue', 0), 
+(103, 'Start', 0);
+
+-- Q104: Arrange Sentence (Conditional Type 3 - Đảo ngữ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (104, 11, 'Arrange: known / Had / I / would / come / I / have', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(104, 'Had', 1), (104, 'I', 1), (104, 'known', 1), (104, 'I', 1), (104, 'would', 1), (104, 'have', 1), (104, 'come', 1);
+
+-- Q105: Single Choice (Relative Clause - Advanced)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (105, 11, 'The man, ___ I spoke to, is my boss.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (105, 'whom', 1), (105, 'who', 0), (105, 'which', 0), (105, 'that', 0); -- Whom chuẩn ngữ pháp trong non-defining
+
+-- Q106-110: Mixed Advanced
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(106, 11, 'No sooner had I arrived ___ the phone rang.', 'SINGLE_CHOICE'),
+(107, 11, 'I wish I ___ (know) the answer yesterday.', 'SINGLE_CHOICE'),
+(108, 11, 'It is high time we ___ home.', 'SINGLE_CHOICE'),
+(109, 11, 'Neither the teacher nor the students ___ aware of the fire.', 'SINGLE_CHOICE'),
+(110, 11, 'Select the correct collocation: "___ an effort"', 'SINGLE_CHOICE');
+
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(106, 'than', 1), (106, 'when', 0), (106, 'then', 0),
+(107, 'had known', 1), (107, 'knew', 0), (107, 'know', 0),
+(108, 'went', 1), (108, 'go', 0), (108, 'gone', 0),
+(109, 'were', 1), (109, 'was', 0), (109, 'is', 0),
+(110, 'Make', 1), (110, 'Do', 0), (110, 'Create', 0);
+
+-- ============================================================
+-- NỘI DUNG TEST 15 (HARD) - FINAL PROFICIENCY
+-- ============================================================
+-- Q141: Fill in blank (Cleft Sentence)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (141, 15, 'It was Tom ___ broke the window.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (141, 'who', 1);
+
+-- Q142: Single Choice (Advanced Vocab)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (142, 15, 'His explanation was completely ___. (Unbelievable)', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (142, 'implausible', 1), (142, 'impossible', 0), (142, 'imperfect', 0);
+
+-- Q143: Multiple Choice (Synonyms)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (143, 15, 'Select synonyms for "IMPORTANT":', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(143, 'Crucial', 1), 
+(143, 'Essential', 1), 
+(143, 'Trivial', 0), 
+(143, 'Minor', 0);
+
+-- Q144: Arrange Sentence (Inversion with 'Not only')
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (144, 15, 'Arrange: he / Not / play / only / does / piano / well', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(144, 'Not', 1), (144, 'only', 1), (144, 'does', 1), (144, 'he', 1), (144, 'play', 1), (144, 'piano', 1), (144, 'well', 1);
+
+-- Q145: Single Choice (Tag Question)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES (145, 15, 'Let''s go for a walk, ___?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES (145, 'shall we', 1), (145, 'will we', 0), (145, 'don''t we', 0);
+
+-- Q146-150: Final Mix
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(146, 15, 'Hardly had I slept when the phone ___.', 'SINGLE_CHOICE'),
+(147, 15, 'He suggested ___ for a walk.', 'SINGLE_CHOICE'),
+(148, 15, 'Despite ___ tired, he kept working.', 'SINGLE_CHOICE'),
+(149, 15, 'I would rather you ___ smoke here.', 'SINGLE_CHOICE'),
+(150, 15, 'By the time you arrive, I ___ finished.', 'SINGLE_CHOICE');
+
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(146, 'rang', 1), (146, 'ring', 0), (146, 'rung', 0),
+(147, 'going', 1), (147, 'to go', 0), (147, 'go', 0),
+(148, 'being', 1), (148, 'be', 0), (148, 'was', 0),
+(149, 'didn''t', 1), (149, 'don''t', 0), (149, 'not', 0),
+(150, 'will have', 1), (150, 'will', 0), (150, 'have', 0);
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 2 (Nếu chưa có trong bảng tests)
+-- ============================================================
+-- Lưu ý: Nếu bạn đã chạy lệnh tạo Tests trước đó rồi thì dòng này có thể báo trùng ID, 
+-- nhưng không sao, MySQL sẽ bỏ qua hoặc bạn có thể xóa dòng INSERT INTO tests này đi.
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(2, 'Test 2: Tenses Review (Easy)', 1, 'audio/test2.mp3');
+
+-- ============================================================
+-- XÓA CÂU HỎI CŨ CỦA TEST 2 (ĐỂ TRÁNH TRÙNG LẶP)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 11 AND 20;
+DELETE FROM questions WHERE id BETWEEN 11 AND 20;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 2 (ID 11 -> 20)
+-- ============================================================
+
+-- Câu 11: Hiện tại tiếp diễn (Dấu hiệu "Look!")
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(11, 2, 'Look! The bus ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(11, 'come', 0), 
+(11, 'is coming', 1), 
+(11, 'came', 0);
+
+-- Câu 12: Quá khứ đơn (To Be - born)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(12, 2, 'I ___ born in 2000.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(12, 'was', 1), 
+(12, 'were', 0), 
+(12, 'am', 0);
+
+-- Câu 13: Điền từ (Quá khứ đơn phủ định)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(13, 2, 'She ___ (not/go) to school yesterday.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(13, 'did not go', 1);
+
+-- Câu 14: Hiện tại đơn (Thói quen - every summer)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(14, 2, 'We ___ to the beach every summer.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(14, 'go', 1), 
+(14, 'going', 0), 
+(14, 'went', 0);
+
+-- Câu 15: Sắp xếp câu (Hiện tại tiếp diễn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(15, 2, 'Arrange: playing / They / now / soccer / are', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(15, 'They', 1), 
+(15, 'are', 1), 
+(15, 'playing', 1), 
+(15, 'soccer', 1), 
+(15, 'now', 1);
+
+-- Câu 16: Đúng/Sai (Ngữ pháp sai: "goed")
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(16, 2, 'True or False: "I goed to the cinema" is correct.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(16, 'True', 0), 
+(16, 'False', 1);
+
+-- Câu 17: Hiện tại tiếp diễn (at the moment)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(17, 2, 'He ___ his homework at the moment.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(17, 'is doing', 1), 
+(17, 'does', 0), 
+(17, 'did', 0);
+
+-- Câu 18: Câu hỏi Quá khứ đơn (When did...)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(18, 2, 'When ___ you buy this car?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(18, 'did', 1), 
+(18, 'do', 0), 
+(18, 'were', 0);
+
+-- Câu 19: Chọn nhiều đáp án (Dấu hiệu thì Quá khứ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(19, 2, 'Select TWO signal words for Past Simple:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(19, 'Yesterday', 1), 
+(19, 'Now', 0), 
+(19, 'Ago', 1), 
+(19, 'Tomorrow', 0);
+
+-- Câu 20: Quá khứ đơn (Động từ to be số nhiều)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(20, 2, 'Where ___ you and Tom last night?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(20, 'was', 0), 
+(20, 'were', 1), 
+(20, 'are', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 3 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(3, 'Test 3: Nouns & Pronouns (Easy)', 1, 'audio/test3.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 3 (ID 21-30)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 21 AND 30;
+DELETE FROM questions WHERE id BETWEEN 21 AND 30;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 3 (ID 21 -> 30)
+-- ============================================================
+
+-- Câu 21: Danh từ số nhiều bất quy tắc (Person -> People)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(21, 3, 'There are five ___ in the room.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(21, 'person', 0), 
+(21, 'people', 1), 
+(21, 'persons', 0);
+
+-- Câu 22: Đại từ sở hữu (Mine)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(22, 3, 'This book belongs to me. It is ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(22, 'my', 0), 
+(22, 'mine', 1), 
+(22, 'me', 0);
+
+-- Câu 23: Đại từ phản thân (Herself)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(23, 3, 'She looked at ___ in the mirror.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(23, 'herself', 1), 
+(23, 'himself', 0), 
+(23, 'her', 0);
+
+-- Câu 24: Từ để hỏi (What name)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(24, 3, '___ is your name?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(24, 'What', 1), 
+(24, 'Who', 0), 
+(24, 'Which', 0);
+
+-- Câu 25: Sắp xếp câu (Sở hữu cách)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(25, 3, 'Arrange: car / This / my / father''s / is', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(25, 'This', 1), 
+(25, 'is', 1), 
+(25, 'my', 1), 
+(25, 'father''s', 1), 
+(25, 'car', 1);
+
+-- Câu 26: Chọn nhiều đáp án (Danh từ không đếm được)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(26, 3, 'Select TWO Uncountable Nouns:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(26, 'Water', 1), 
+(26, 'Apple', 0), 
+(26, 'Information', 1), 
+(26, 'Table', 0);
+
+-- Câu 27: Lượng từ (Any trong câu phủ định)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(27, 3, 'I don''t have ___ money.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(27, 'any', 1), 
+(27, 'some', 0), 
+(27, 'many', 0);
+
+-- Câu 28: Liên từ đôi (Both...and)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(28, 3, '___ Tom and Jerry are friends.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(28, 'Both', 1), 
+(28, 'Neither', 0), 
+(28, 'Either', 0);
+
+-- Câu 29: Điền từ (Tính từ sở hữu - Your)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(29, 3, 'Is this ___ (you) pen?', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(29, 'your', 1);
+
+-- Câu 30: Đúng/Sai (Chính tả số nhiều)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(30, 3, 'True or False: "Childs" is the plural of "Child".', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(30, 'True', 0), 
+(30, 'False', 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 4 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(4, 'Test 4: Adjectives & Comparisons (Easy)', 1, 'audio/test4.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 4 (ID 31-40)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 31 AND 40;
+DELETE FROM questions WHERE id BETWEEN 31 AND 40;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 4 (ID 31 -> 40)
+-- ============================================================
+
+-- Câu 31: Trạng từ bất quy tắc (Fast -> Fast)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(31, 4, 'He runs very ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(31, 'fast', 1), 
+(31, 'fastly', 0), 
+(31, 'fastness', 0);
+
+-- Câu 32: So sánh hơn bất quy tắc (Good -> Better)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(32, 4, 'This movie is ___ than the other one.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(32, 'good', 0), 
+(32, 'better', 1), 
+(32, 'best', 0);
+
+-- Câu 33: So sánh nhất (Tính từ dài)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(33, 4, 'She is the ___ girl in the class.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(33, 'beautiful', 0), 
+(33, 'more beautiful', 0), 
+(33, 'most beautiful', 1);
+
+-- Câu 34: Điền từ (Tính từ đuôi -ed chỉ cảm xúc)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(34, 4, 'I am ___ (tired) because I worked all day.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(34, 'tired', 1);
+
+-- Câu 35: Sắp xếp câu (Trật tự tính từ: Ý kiến -> Màu sắc)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(35, 4, 'Arrange: beautiful / has / She / eyes / blue', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(35, 'She', 1), 
+(35, 'has', 1), 
+(35, 'beautiful', 1), 
+(35, 'blue', 1), 
+(35, 'eyes', 1);
+
+-- Câu 36: Trạng từ chỉ cách thức (Good -> Well)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(36, 4, 'He speaks English ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(36, 'good', 0), 
+(36, 'well', 1), 
+(36, 'goodly', 0);
+
+-- Câu 37: Đúng/Sai (Ngữ pháp so sánh sai)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(37, 4, 'True or False: "He is more fast than me" is correct.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(37, 'True', 0), 
+(37, 'False', 1);
+
+-- Câu 38: Chọn nhiều đáp án (Từ đồng nghĩa - Happy)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(38, 4, 'Select TWO synonyms for "Happy":', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(38, 'Glad', 1), 
+(38, 'Sad', 0), 
+(38, 'Joyful', 1), 
+(38, 'Angry', 0);
+
+-- Câu 39: Trạng từ bổ nghĩa cho tính từ
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(39, 4, 'The test was ___ easy.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(39, 'surprise', 0), 
+(39, 'surprisingly', 1), 
+(39, 'surprising', 0);
+
+-- Câu 40: So sánh hơn (Tính từ dài - Expensive)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(40, 4, 'Gold is ___ expensive than silver.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(40, 'more', 1), 
+(40, 'much', 0), 
+(40, 'many', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 5 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(5, 'Test 5: Vocabulary Check (Easy)', 1, 'audio/test5.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 5 (ID 41-50)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 41 AND 50;
+DELETE FROM questions WHERE id BETWEEN 41 AND 50;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 5 (ID 41 -> 50)
+-- ============================================================
+
+-- Câu 41: Trái nghĩa (Hot)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(41, 5, 'Opposite of "Hot"?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(41, 'Cold', 1), 
+(41, 'Warm', 0), 
+(41, 'Cool', 0);
+
+-- Câu 42: Từ vựng nghề nghiệp (Hospital)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(42, 5, 'A ___ works in a hospital.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(42, 'Teacher', 0), 
+(42, 'Doctor', 1), 
+(42, 'Farmer', 0);
+
+-- Câu 43: Từ vựng màu sắc (Banana)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(43, 5, 'Which color is a banana?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(43, 'Red', 0), 
+(43, 'Yellow', 1), 
+(43, 'Blue', 0);
+
+-- Câu 44: Chọn nhiều đáp án (Động vật)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(44, 5, 'Select TWO animals:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(44, 'Cat', 1), 
+(44, 'Table', 0), 
+(44, 'Dog', 1), 
+(44, 'Car', 0);
+
+-- Câu 45: Từ vựng thời gian (Breakfast)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(45, 5, 'I eat breakfast in the ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(45, 'morning', 1), 
+(45, 'evening', 0), 
+(45, 'night', 0);
+
+-- Câu 46: Dịch thuật (Gia đình)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(46, 5, 'Translate: "Gia đình"', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(46, 'Family', 1), 
+(46, 'Friend', 0), 
+(46, 'School', 0);
+
+-- Câu 47: Sắp xếp câu (Want to drink)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(47, 5, 'Arrange: drink / I / water / to / want', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(47, 'I', 1), 
+(47, 'want', 1), 
+(47, 'to', 1), 
+(47, 'drink', 1), 
+(47, 'water', 1);
+
+-- Câu 48: Từ vựng gia đình (Aunt)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(48, 5, 'My mother''s sister is my ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(48, 'Uncle', 0), 
+(48, 'Aunt', 1), 
+(48, 'Cousin', 0);
+
+-- Câu 49: Từ vựng bộ phận cơ thể (Ears)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(49, 5, 'We use "ears" to ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(49, 'see', 0), 
+(49, 'hear', 1), 
+(49, 'touch', 0);
+
+-- Câu 50: Đúng/Sai (Kiến thức chung)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(50, 5, 'True or False: "Sunday" is a month.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(50, 'True', 0), 
+(50, 'False', 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 5 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(5, 'Test 5: Vocabulary Check (Easy)', 1, 'audio/test5.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 5 (ID 41-50)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 41 AND 50;
+DELETE FROM questions WHERE id BETWEEN 41 AND 50;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 5 (ID 41 -> 50)
+-- ============================================================
+
+-- Câu 41: Trái nghĩa (Hot)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(41, 5, 'Opposite of "Hot"?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(41, 'Cold', 1), 
+(41, 'Warm', 0), 
+(41, 'Cool', 0);
+
+-- Câu 42: Từ vựng nghề nghiệp (Hospital)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(42, 5, 'A ___ works in a hospital.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(42, 'Teacher', 0), 
+(42, 'Doctor', 1), 
+(42, 'Farmer', 0);
+
+-- Câu 43: Từ vựng màu sắc (Banana)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(43, 5, 'Which color is a banana?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(43, 'Red', 0), 
+(43, 'Yellow', 1), 
+(43, 'Blue', 0);
+
+-- Câu 44: Chọn nhiều đáp án (Động vật)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(44, 5, 'Select TWO animals:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(44, 'Cat', 1), 
+(44, 'Table', 0), 
+(44, 'Dog', 1), 
+(44, 'Car', 0);
+
+-- Câu 45: Từ vựng thời gian (Breakfast)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(45, 5, 'I eat breakfast in the ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(45, 'morning', 1), 
+(45, 'evening', 0), 
+(45, 'night', 0);
+
+-- Câu 46: Dịch thuật (Gia đình)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(46, 5, 'Translate: "Gia đình"', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(46, 'Family', 1), 
+(46, 'Friend', 0), 
+(46, 'School', 0);
+
+-- Câu 47: Sắp xếp câu (Want to drink)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(47, 5, 'Arrange: drink / I / water / to / want', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(47, 'I', 1), 
+(47, 'want', 1), 
+(47, 'to', 1), 
+(47, 'drink', 1), 
+(47, 'water', 1);
+
+-- Câu 48: Từ vựng gia đình (Aunt)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(48, 5, 'My mother''s sister is my ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(48, 'Uncle', 0), 
+(48, 'Aunt', 1), 
+(48, 'Cousin', 0);
+
+-- Câu 49: Từ vựng bộ phận cơ thể (Ears)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(49, 5, 'We use "ears" to ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(49, 'see', 0), 
+(49, 'hear', 1), 
+(49, 'touch', 0);
+
+-- Câu 50: Đúng/Sai (Kiến thức chung)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(50, 5, 'True or False: "Sunday" is a month.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(50, 'True', 0), 
+(50, 'False', 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 7 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(7, 'Test 7: Conditionals (Medium)', 2, 'audio/test7.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 7 (ID 61-70)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 61 AND 70;
+DELETE FROM questions WHERE id BETWEEN 61 AND 70;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 7 (ID 61 -> 70)
+-- ============================================================
+
+-- Câu 61: Điều kiện loại 1 (Will)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(61, 7, 'If it rains, I ___ stay home.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(61, 'will', 1), 
+(61, 'would', 0), 
+(61, 'had', 0);
+
+-- Câu 62: Điều kiện loại 2 (If I were you)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(62, 7, 'If I were you, I ___ buy that car.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(62, 'will', 0), 
+(62, 'would', 1), 
+(62, 'am', 0);
+
+-- Câu 63: Đúng/Sai (Lý thuyết loại 2)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(63, 7, 'True or False: Type 2 conditional describes real situations in the present.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(63, 'True', 0), 
+(63, 'False', 1); -- Sai, loại 2 là không có thật (unreal)
+
+-- Câu 64: Cấu trúc Unless (Trừ khi)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(64, 7, 'Unless you hurry, you ___ miss the bus.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(64, 'will', 1), 
+(64, 'would', 0), 
+(64, 'won''t', 0);
+
+-- Câu 65: Sắp xếp câu (Loại 2 - If I were rich)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(65, 7, 'Arrange: rich / If / I / were / travel / would / I', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(65, 'If', 1), 
+(65, 'I', 1), 
+(65, 'were', 1), 
+(65, 'rich', 1), 
+(65, 'I', 1), 
+(65, 'would', 1), 
+(65, 'travel', 1);
+
+-- Câu 66: Điều kiện loại 0 (Sự thật hiển nhiên)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(66, 7, 'If you mix red and blue, you ___ purple.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(66, 'get', 1), 
+(66, 'will get', 0), 
+(66, 'got', 0);
+
+-- Câu 67: Chọn nhiều đáp án (Câu đúng ngữ pháp)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(67, 7, 'Select TWO correct conditional sentences:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(67, 'If I go, I will buy it.', 1),       -- Loại 1 đúng
+(67, 'If I go, I would buy it.', 0),      -- Sai
+(67, 'If I went, I would buy it.', 1),    -- Loại 2 đúng
+(67, 'If I went, I will buy it.', 0);     -- Sai
+
+-- Câu 68: Điền từ (Chia động từ loại 2)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(68, 7, 'If she ___ (study) harder, she would pass the exam.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(68, 'studied', 1);
+
+-- Câu 69: Điều kiện loại 2 (Động từ bất quy tắc See -> Saw)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(69, 7, 'What would you do if you ___ a ghost?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(69, 'see', 0), 
+(69, 'saw', 1), 
+(69, 'seen', 0);
+
+-- Câu 70: Điều kiện loại 1 (Vế If chia hiện tại đơn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(70, 7, 'I will call you if he ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(70, 'comes', 1), 
+(70, 'will come', 0), 
+(70, 'came', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 8 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(8, 'Test 8: Reported Speech (Medium)', 2, 'audio/test8.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 8 (ID 71-80)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 71 AND 80;
+DELETE FROM questions WHERE id BETWEEN 71 AND 80;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 8 (ID 71 -> 80)
+-- ============================================================
+
+-- Câu 71: Lùi thì (Hiện tại đơn -> Quá khứ đơn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(71, 8, 'He said: "I am tired." -> He said he ___ tired.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(71, 'was', 1), 
+(71, 'is', 0), 
+(71, 'were', 0);
+
+-- Câu 72: Câu mệnh lệnh (Imperative -> To V)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(72, 8, 'She told me ___ close the door.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(72, 'to', 1), 
+(72, 'not', 0), 
+(72, 'don''t', 0);
+
+-- Câu 73: Câu hỏi Yes/No (Will -> Would)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(73, 8, 'Direct: "Will you go?" -> Reported: He asked if I ___ go.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(73, 'would', 1), 
+(73, 'will', 0), 
+(73, 'did', 0);
+
+-- Câu 74: Đúng/Sai (Đổi trạng từ thời gian)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(74, 8, 'True or False: In reported speech, "Tomorrow" becomes "The previous day".', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(74, 'True', 0), 
+(74, 'False', 1); -- Sai, phải là "The following day" hoặc "The next day"
+
+-- Câu 75: Chọn nhiều đáp án (Động từ trần thuật)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(75, 8, 'Select TWO common reporting verbs:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(75, 'Told', 1), 
+(75, 'Talked', 0), 
+(75, 'Asked', 1), 
+(75, 'Spoke', 0);
+
+-- Câu 76: Trật tự từ trong câu hỏi gián tiếp (Wh-question)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(76, 8, 'He asked me where ___.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(76, 'I lived', 1), 
+(76, 'did I live', 0), 
+(76, 'do I live', 0);
+
+-- Câu 77: Sắp xếp câu (Cấu trúc Said that)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(77, 8, 'Arrange: said / She / that / she / happy / was', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(77, 'She', 1), 
+(77, 'said', 1), 
+(77, 'that', 1), 
+(77, 'she', 1), 
+(77, 'was', 1), 
+(77, 'happy', 1);
+
+-- Câu 78: Lùi thì Modal Verbs (Can -> Could)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(78, 8, 'Direct: "I can swim." -> Reported: He said he ___ swim.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(78, 'could', 1), 
+(78, 'can', 0), 
+(78, 'able', 0);
+
+-- Câu 79: Điền từ (Từ nối If/Whether)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(79, 8, 'She asked: "Do you like it?" -> She asked ___ I liked it.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(79, 'if', 1); 
+-- Lưu ý: Backend nên chấp nhận cả 'whether', nhưng ở đây ta set 1 đáp án chuẩn 'if' cho dễ.
+
+-- Câu 80: Phân biệt Say và Tell
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(80, 8, 'He ___ me that he was busy.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(80, 'told', 1), 
+(80, 'said', 0), 
+(80, 'asked', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 9 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(9, 'Test 9: Relative Clauses (Medium)', 2, 'audio/test9.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 9 (ID 81-90)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 81 AND 90;
+DELETE FROM questions WHERE id BETWEEN 81 AND 90;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 9 (ID 81 -> 90)
+-- ============================================================
+
+-- Câu 81: Đại từ quan hệ chỉ người (Chủ ngữ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(81, 9, 'The man ___ called yesterday is here.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(81, 'who', 1), 
+(81, 'which', 0), 
+(81, 'whose', 0);
+
+-- Câu 82: Đại từ quan hệ chỉ vật
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(82, 9, 'This is the book ___ I bought.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(82, 'which', 1), 
+(82, 'who', 0), 
+(82, 'where', 0);
+
+-- Câu 83: Trạng từ quan hệ chỉ lý do
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(83, 9, 'Do you know the reason ___ he left?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(83, 'why', 1), 
+(83, 'which', 0), 
+(83, 'who', 0);
+
+-- Câu 84: Chọn nhiều đáp án (Đại từ chỉ người)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(84, 9, 'Select TWO relative pronouns used for people:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(84, 'Who', 1), 
+(84, 'Which', 0), 
+(84, 'Whom', 1), 
+(84, 'Where', 0);
+
+-- Câu 85: Đại từ quan hệ chỉ sở hữu (Whose)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(85, 9, 'The boy ___ father is a doctor is my friend.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(85, 'whose', 1), 
+(85, 'who', 0), 
+(85, 'which', 0);
+
+-- Câu 86: Sắp xếp câu (Mệnh đề quan hệ chỉ nơi chốn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(86, 9, 'Arrange: house / This / the / is / where / live / I', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(86, 'This', 1), 
+(86, 'is', 1), 
+(86, 'the', 1), 
+(86, 'house', 1), 
+(86, 'where', 1), 
+(86, 'I', 1), 
+(86, 'live', 1);
+
+-- Câu 87: Đúng/Sai (Quy tắc dùng "That" trong mệnh đề không xác định)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(87, 9, 'True or False: We can use "That" after a comma (Non-defining clause).', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(87, 'True', 0), 
+(87, 'False', 1); -- Sai, không dùng "that" sau dấu phẩy
+
+-- Câu 88: Điền từ (Sở hữu)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(88, 9, 'I met a girl ___ (possessive) name was Sarah.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(88, 'whose', 1);
+
+-- Câu 89: Đại từ quan hệ (Vật/Nơi chốn - Cần phân biệt)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(89, 9, 'The city ___ we visited was beautiful.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(89, 'which', 1), -- Vì "visited" tác động trực tiếp lên "city" (tân ngữ), không phải "in the city"
+(89, 'where', 0), 
+(89, 'who', 0);
+
+-- Câu 90: Nối câu
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(90, 9, 'Combine: "I saw the dog. The dog bit me." -> "I saw the dog ___ bit me."', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(90, 'which', 1), 
+(90, 'who', 0), 
+(90, 'it', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 9 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(9, 'Test 9: Relative Clauses (Medium)', 2, 'audio/test9.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 9 (ID 81-90)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 81 AND 90;
+DELETE FROM questions WHERE id BETWEEN 81 AND 90;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 9 (ID 81 -> 90)
+-- ============================================================
+
+-- Câu 81: Đại từ quan hệ chỉ người (Chủ ngữ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(81, 9, 'The man ___ called yesterday is here.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(81, 'who', 1), 
+(81, 'which', 0), 
+(81, 'whose', 0);
+
+-- Câu 82: Đại từ quan hệ chỉ vật
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(82, 9, 'This is the book ___ I bought.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(82, 'which', 1), 
+(82, 'who', 0), 
+(82, 'where', 0);
+
+-- Câu 83: Trạng từ quan hệ chỉ lý do
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(83, 9, 'Do you know the reason ___ he left?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(83, 'why', 1), 
+(83, 'which', 0), 
+(83, 'who', 0);
+
+-- Câu 84: Chọn nhiều đáp án (Đại từ chỉ người)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(84, 9, 'Select TWO relative pronouns used for people:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(84, 'Who', 1), 
+(84, 'Which', 0), 
+(84, 'Whom', 1), 
+(84, 'Where', 0);
+
+-- Câu 85: Đại từ quan hệ chỉ sở hữu (Whose)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(85, 9, 'The boy ___ father is a doctor is my friend.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(85, 'whose', 1), 
+(85, 'who', 0), 
+(85, 'which', 0);
+
+-- Câu 86: Sắp xếp câu (Mệnh đề quan hệ chỉ nơi chốn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(86, 9, 'Arrange: house / This / the / is / where / live / I', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(86, 'This', 1), 
+(86, 'is', 1), 
+(86, 'the', 1), 
+(86, 'house', 1), 
+(86, 'where', 1), 
+(86, 'I', 1), 
+(86, 'live', 1);
+
+-- Câu 87: Đúng/Sai (Quy tắc dùng "That" trong mệnh đề không xác định)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(87, 9, 'True or False: We can use "That" after a comma (Non-defining clause).', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(87, 'True', 0), 
+(87, 'False', 1); -- Sai, không dùng "that" sau dấu phẩy
+
+-- Câu 88: Điền từ (Sở hữu)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(88, 9, 'I met a girl ___ (possessive) name was Sarah.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(88, 'whose', 1);
+
+-- Câu 89: Đại từ quan hệ (Vật/Nơi chốn - Cần phân biệt)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(89, 9, 'The city ___ we visited was beautiful.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(89, 'which', 1), -- Vì "visited" tác động trực tiếp lên "city" (tân ngữ), không phải "in the city"
+(89, 'where', 0), 
+(89, 'who', 0);
+
+-- Câu 90: Nối câu
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(90, 9, 'Combine: "I saw the dog. The dog bit me." -> "I saw the dog ___ bit me."', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(90, 'which', 1), 
+(90, 'who', 0), 
+(90, 'it', 0); -- Phải có dấu chấm phẩy ở đây
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 11 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(11, 'Test 11: Advanced Structure (Hard)', 3, 'audio/test11.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 11 (ID 101-110)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 101 AND 110;
+DELETE FROM questions WHERE id BETWEEN 101 AND 110;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 11 (ID 101 -> 110)
+-- ============================================================
+
+-- Câu 101: Đảo ngữ với Never (Fill in blank)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(101, 11, 'Never ___ (I / see) such a beautiful bird.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(101, 'have I seen', 1);
+
+-- Câu 102: Thành ngữ (Idiom - Piece of cake)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(102, 11, 'The exam was a piece of ___. (Very easy)', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(102, 'cake', 1), 
+(102, 'candy', 0), 
+(102, 'pie', 0), 
+(102, 'pizza', 0);
+
+-- Câu 103: Chọn nhiều đáp án (Phrasal Verb - Give up)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(103, 11, 'Select TWO meanings/synonyms for "GIVE UP":', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(103, 'Stop doing something', 1), 
+(103, 'Quit', 1), 
+(103, 'Continue', 0), 
+(103, 'Start', 0);
+
+-- Câu 104: Sắp xếp câu (Đảo ngữ câu điều kiện loại 3)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(104, 11, 'Arrange: known / Had / I / would / come / I / have', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(104, 'Had', 1), 
+(104, 'I', 1), 
+(104, 'known', 1), 
+(104, 'I', 1), 
+(104, 'would', 1), 
+(104, 'have', 1), 
+(104, 'come', 1);
+
+-- Câu 105: Mệnh đề quan hệ (Whom - Tân ngữ chỉ người)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(105, 11, 'The man, ___ I spoke to, is my boss.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(105, 'whom', 1), 
+(105, 'who', 0), 
+(105, 'which', 0), 
+(105, 'that', 0);
+
+-- Câu 106: Cấu trúc đảo ngữ (No sooner... than)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(106, 11, 'No sooner had I arrived ___ the phone rang.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(106, 'than', 1), 
+(106, 'when', 0), 
+(106, 'then', 0);
+
+-- Câu 107: Câu ước (Wish + Quá khứ hoàn thành)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(107, 11, 'I wish I ___ (know) the answer yesterday.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(107, 'had known', 1), 
+(107, 'knew', 0), 
+(107, 'know', 0);
+
+-- Câu 108: Cấu trúc giả định (It's high time + Past Simple)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(108, 11, 'It is high time we ___ home.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(108, 'went', 1), 
+(108, 'go', 0), 
+(108, 'gone', 0);
+
+-- Câu 109: Sự hòa hợp chủ ngữ (Neither...nor)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(109, 11, 'Neither the teacher nor the students ___ aware of the fire.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(109, 'were', 1), -- Chia theo chủ ngữ gần nhất (students - số nhiều)
+(109, 'was', 0), 
+(109, 'is', 0);
+
+-- Câu 110: Collocation (Make an effort)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(110, 11, 'Select the correct collocation: "___ an effort"', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(110, 'Make', 1), 
+(110, 'Do', 0), 
+(110, 'Create', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 12 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(12, 'Test 12: Inversion & Emphasis (Hard)', 3, 'audio/test12.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 12 (ID 111-120)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 111 AND 120;
+DELETE FROM questions WHERE id BETWEEN 111 AND 120;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 12 (ID 111 -> 120)
+-- ============================================================
+
+-- Câu 111: Đảo ngữ với Rarely (Điền từ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(111, 12, 'Rarely ___ (I / eat) sushi.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(111, 'do I eat', 1);
+
+-- Câu 112: Đảo ngữ với Little (Biết ít/không biết gì)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(112, 12, '___ did I know the truth about him.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(112, 'Little', 1), 
+(112, 'Small', 0), 
+(112, 'Few', 0);
+
+-- Câu 113: Đảo ngữ với Not only (Đảo to be)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(113, 12, 'Not only ___ smart, but also kind.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(113, 'is he', 1), 
+(113, 'he is', 0), 
+(113, 'he be', 0);
+
+-- Câu 114: Sắp xếp câu (On no account - Không đời nào)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(114, 12, 'Arrange: account / On / no / you / leave / should', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(114, 'On', 1), 
+(114, 'no', 1), 
+(114, 'account', 1), 
+(114, 'should', 1), 
+(114, 'you', 1), 
+(114, 'leave', 1);
+
+-- Câu 115: Câu chẻ (Cleft Sentence - It was... that)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(115, 12, 'It was in Paris ___ we met, not London.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(115, 'that', 1), 
+(115, 'where', 0), 
+(115, 'when', 0);
+
+-- Câu 116: Chọn nhiều đáp án (Trạng từ phủ định dùng đảo ngữ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(116, 12, 'Select TWO negative adverbs used in inversion:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(116, 'Seldom', 1), 
+(116, 'Always', 0), 
+(116, 'Hardly', 1), 
+(116, 'Often', 0);
+
+-- Câu 117: Đảo ngữ giới từ chỉ nơi chốn (Here comes...)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(117, 12, '___ comes the bus!', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(117, 'Here', 1), 
+(117, 'There', 0), 
+(117, 'Where', 0);
+
+-- Câu 118: Đảo ngữ với Only when
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(118, 12, 'Only when I called her ___ she answer.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(118, 'did', 1), 
+(118, 'does', 0), 
+(118, 'do', 0);
+
+-- Câu 119: Đảo ngữ với So... that
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(119, 12, 'So beautiful ___ that everyone looked at her.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(119, 'was she', 1), 
+(119, 'she was', 0), 
+(119, 'is she', 0);
+
+-- Câu 120: Đúng/Sai (Đảo ngữ với đại từ)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(120, 12, 'True or False: "Here comes he" is correct.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(120, 'True', 0), 
+(120, 'False', 1); 
+-- Giải thích: Với đại từ (he/she/it), không đảo ngữ động từ ra trước. Phải là "Here he comes".
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 13 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(13, 'Test 13: Idioms & Phrasal Verbs (Hard)', 3, 'audio/test13.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 13 (ID 121-130)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 121 AND 130;
+DELETE FROM questions WHERE id BETWEEN 121 AND 130;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 13 (ID 121 -> 130)
+-- ============================================================
+
+-- Câu 121: Phrasal Verb (Quit -> Give up)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(121, 13, 'He decided to ___ smoking. (Quit)', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(121, 'give up', 1), 
+(121, 'give in', 0), 
+(121, 'give out', 0);
+
+-- Câu 122: Phrasal Verb (Cancel -> Call off)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(122, 13, 'The meeting was ___ due to rain. (Cancelled)', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(122, 'called off', 1), 
+(122, 'put off', 0), 
+(122, 'taken off', 0);
+
+-- Câu 123: Chọn nhiều đáp án (Idioms mang nghĩa Chúc may mắn)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(123, 13, 'Select TWO idioms meaning "Good luck":', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(123, 'Break a leg', 1), 
+(123, 'Fingers crossed', 1), 
+(123, 'Miss the boat', 0), 
+(123, 'Cold feet', 0);
+
+-- Câu 124: Giới từ đi với Look forward (to)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(124, 13, 'I am looking ___ to the holiday.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(124, 'forward', 1), 
+(124, 'for', 0), 
+(124, 'after', 0);
+
+-- Câu 125: Sắp xếp câu (Thành ngữ: Spill the beans - Lộ bí mật)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(125, 13, 'Arrange: beans / He / the / spilled', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(125, 'He', 1), 
+(125, 'spilled', 1), 
+(125, 'the', 1), 
+(125, 'beans', 1);
+
+-- Câu 126: Phrasal Verb (Đón ai đó - Pick up)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(126, 13, 'Can you ___ me up at the airport?', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(126, 'pick', 1), 
+(126, 'take', 0), 
+(126, 'get', 0);
+
+-- Câu 127: Điền từ (Idiom: Cost an arm and a leg - Rất đắt)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(127, 13, 'It costs an ___ and a leg.', 'FILL_IN_BLANK');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(127, 'arm', 1);
+
+-- Câu 128: Idiom (See eye to eye - Đồng quan điểm)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(128, 13, 'I don''t see ___ to eye with him.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(128, 'eye', 1), 
+(128, 'ear', 0), 
+(128, 'nose', 0);
+
+-- Câu 129: Phrasal Verb (Hết sạch - Run out of)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(129, 13, 'We ran ___ of gas.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(129, 'out', 1), 
+(129, 'away', 0), 
+(129, 'over', 0);
+
+-- Câu 130: Đúng/Sai (Nghĩa của Break a leg)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(130, 13, 'True or False: "Break a leg" means getting hurt.', 'TRUE_FALSE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(130, 'True', 0), 
+(130, 'False', 1); -- Sai, nó có nghĩa là Chúc may mắn
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- TẠO BÀI TEST SỐ 14 (Nếu chưa có)
+-- ============================================================
+INSERT IGNORE INTO tests (id, name, level, audio_url) VALUES 
+(14, 'Test 14: Complex Clauses (Hard)', 3, 'audio/test14.mp3');
+
+-- ============================================================
+-- XÓA DỮ LIỆU CŨ CỦA TEST 14 (ID 131-140)
+-- ============================================================
+DELETE FROM answer_options WHERE question_id BETWEEN 131 AND 140;
+DELETE FROM questions WHERE id BETWEEN 131 AND 140;
+
+-- ============================================================
+-- NỘI DUNG CÂU HỎI TEST 14 (ID 131 -> 140)
+-- ============================================================
+
+-- Câu 131: Rút gọn mệnh đề cùng chủ ngữ (Feeling tired)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(131, 14, '___ tired, he went to bed early.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(131, 'Feeling', 1), 
+(131, 'Felt', 0), 
+(131, 'To feel', 0);
+
+-- Câu 132: Câu giả định với Suggest (Suggest + S + (should) V-bare)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(132, 14, 'I suggest that he ___ a doctor immediately.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(132, 'see', 1), 
+(132, 'sees', 0), 
+(132, 'saw', 0);
+
+-- Câu 133: Chọn nhiều đáp án (Câu giả định đúng)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(133, 14, 'Select TWO sentences using correct Subjunctive Mood:', 'MULTIPLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(133, 'I wish I were rich.', 1), 
+(133, 'I insist he stay here.', 1), 
+(133, 'I wish I am rich.', 0), 
+(133, 'It is vital that she goes.', 0); -- Phải là "go"
+
+-- Câu 134: Phân từ hoàn thành (Having + P2)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(134, 14, '___ seen the movie twice, I didn''t want to go again.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(134, 'Having', 1), 
+(134, 'Have', 0), 
+(134, 'Had', 0);
+
+-- Câu 135: Sắp xếp câu (Đảo ngữ điều kiện loại 3)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(135, 14, 'Arrange: known / I / had / truth / the / If', 'ARRANGE_SENTENCE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(135, 'If', 1), 
+(135, 'I', 1), 
+(135, 'had', 1), 
+(135, 'known', 1), 
+(135, 'the', 1), 
+(135, 'truth', 1);
+
+-- Câu 136: Cấu trúc tính từ + That + S + V-bare (It is essential)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(136, 14, 'It is essential that she ___ on time.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(136, 'be', 1), 
+(136, 'is', 0), 
+(136, 'was', 0);
+
+-- Câu 137: Giới từ + V-ing (Despite being)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(137, 14, 'Despite ___ late, he finished the job.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(137, 'being', 1), 
+(137, 'be', 0), 
+(137, 'is', 0);
+
+-- Câu 138: Liên từ thời gian (While vs During)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(138, 14, '___ walking down the street, I met John.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(138, 'While', 1), 
+(138, 'During', 0), 
+(138, 'Since', 0);
+
+-- Câu 139: Cấu trúc As if/As though (Như thể là - Unreal)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(139, 14, 'He talks as if he ___ the boss.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(139, 'were', 1), 
+(139, 'was', 0), 
+(139, 'is', 0);
+
+-- Câu 140: Cụm từ cố định (Given the...)
+INSERT INTO questions (id, test_id, question_text, question_type) VALUES 
+(140, 14, 'Given the ___, we should stop now.', 'SINGLE_CHOICE');
+INSERT INTO answer_options (question_id, option_text, is_correct) VALUES 
+(140, 'situation', 1), 
+(140, 'place', 0), 
+(140, 'time', 0);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
