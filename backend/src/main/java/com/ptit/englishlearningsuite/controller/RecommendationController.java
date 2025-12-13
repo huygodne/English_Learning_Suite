@@ -16,15 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * HYBRID RECOMMENDATION SYSTEM CONTROLLER
- * 
- * Controller xử lý các API endpoint cho hệ thống gợi ý lai:
- * - GET /api/recommendations: Lấy danh sách bài học được gợi ý cho user đang đăng nhập
- * - POST /api/recommendations/simulate: API test để simulate kết quả học bài
- * 
- * @author English Learning Suite Team
- */
 @RestController
 @RequestMapping("/api/recommendations")
 public class RecommendationController {
@@ -35,37 +26,21 @@ public class RecommendationController {
     @Autowired
     private AccountRepository accountRepository;
 
-    /**
-     * GET /api/recommendations
-     * 
-     * Lấy danh sách bài học được gợi ý cho user
-     * 
-     * Hệ thống sẽ:
-     * 1. Lọc bài học theo độ khó phù hợp với Elo Rating của user (Adaptive Filtering)
-     * 2. Xếp hạng bài học theo Cosine Similarity giữa User Needs và Lesson Content (Content-Based Filtering)
-     * 3. Trả về Top 5 bài học phù hợp nhất
-     * 
-     * @param userId (Optional) ID của user. Nếu không có, sẽ lấy user đang đăng nhập hoặc user đầu tiên
-     * @return Danh sách Top 5 bài học được gợi ý
-     */
     @GetMapping
     public ResponseEntity<?> getRecommendedLessons(@RequestParam(required = false) Long userId) {
         try {
             Account account = null;
             
-            // Nếu có userId trong query parameter, sử dụng userId đó
             if (userId != null) {
                 account = accountRepository.findById(userId)
                         .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
             } else {
-                // Thử lấy user từ Security Context
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null && authentication.isAuthenticated()) {
                     String username = authentication.getName();
                     account = accountRepository.findByUsername(username).orElse(null);
                 }
                 
-                // Nếu vẫn không có user, lấy user đầu tiên (demo user)
                 if (account == null) {
                     account = accountRepository.findAll().stream()
                             .findFirst()
@@ -73,11 +48,9 @@ public class RecommendationController {
                 }
             }
 
-            // Lấy danh sách bài học được gợi ý kèm similarity score
-            List<RecommendationService.LessonWithSimilarity> lessonsWithSimilarity = 
+            List<RecommendationService.LessonWithSimilarity> lessonsWithSimilarity =
                     recommendationService.getRecommendedLessonsWithSimilarity(account.getId());
 
-            // Chuyển đổi sang RecommendedLessonDTO
             List<RecommendedLessonDTO> lessonDTOs = lessonsWithSimilarity.stream()
                     .map(this::convertToRecommendedDTO)
                     .collect(Collectors.toList());
@@ -92,32 +65,21 @@ public class RecommendationController {
         }
     }
 
-    /**
-     * GET /api/recommendations/user-stats
-     * 
-     * Lấy thông tin stats của user (Elo, Proficiency)
-     * 
-     * @param userId (Optional) ID của user. Nếu không có, sẽ lấy user đang đăng nhập hoặc user đầu tiên
-     * @return User stats với Elo Rating và các Proficiency
-     */
     @GetMapping("/user-stats")
     public ResponseEntity<?> getUserStats(@RequestParam(required = false) Long userId) {
         try {
             Account account = null;
             
-            // Nếu có userId trong query parameter, sử dụng userId đó
             if (userId != null) {
                 account = accountRepository.findById(userId)
                         .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
             } else {
-                // Thử lấy user từ Security Context
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null && authentication.isAuthenticated()) {
                     String username = authentication.getName();
                     account = accountRepository.findByUsername(username).orElse(null);
                 }
                 
-                // Nếu vẫn không có user, lấy user đầu tiên (demo user)
                 if (account == null) {
                     account = accountRepository.findAll().stream()
                             .findFirst()
@@ -125,7 +87,6 @@ public class RecommendationController {
                 }
             }
 
-            // Tạo response object
             java.util.Map<String, Object> stats = new java.util.HashMap<>();
             stats.put("id", account.getId());
             stats.put("username", account.getUsername());
@@ -145,23 +106,9 @@ public class RecommendationController {
         }
     }
 
-    /**
-     * POST /api/recommendations/simulate
-     * 
-     * API để test nhanh hệ thống recommendation
-     * Nhận vào userId, lessonId, và kết quả (pass/fail) để kích hoạt feedback loop
-     * 
-     * Sau khi gọi API này:
-     * - Elo Rating của user và Difficulty Rating của lesson sẽ được cập nhật
-     * - Proficiency của user (grammar, vocab, listening) sẽ được cập nhật nếu pass
-     * 
-     * @param request DTO chứa userId, lessonId, isPassed
-     * @return Thông báo kết quả và các chỉ số đã được cập nhật
-     */
     @PostMapping("/simulate")
     public ResponseEntity<?> simulateLessonResult(@RequestBody SimulateLessonResultDTO request) {
         try {
-            // Validate input
             if (request.getUserId() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Error: userId is required");
@@ -175,28 +122,23 @@ public class RecommendationController {
                         .body("Error: isPassed is required");
             }
 
-            // Lấy Account và Lesson để hiển thị thông tin trước khi cập nhật
             Account account = accountRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("Account not found with id: " + request.getUserId()));
 
-            // Lưu giá trị cũ để so sánh
             int oldElo = account.getEloRating() != null ? account.getEloRating() : 1500;
             double oldGrammar = account.getGrammarProficiency() != null ? account.getGrammarProficiency() : 0.0;
             double oldVocab = account.getVocabProficiency() != null ? account.getVocabProficiency() : 0.0;
             double oldListening = account.getListeningProficiency() != null ? account.getListeningProficiency() : 0.0;
 
-            // Xử lý kết quả (cập nhật Elo và Proficiency)
             recommendationService.processLessonResult(
                     request.getUserId(),
                     request.getLessonId(),
                     request.getIsPassed()
             );
 
-            // Lấy lại Account sau khi cập nhật
             account = accountRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("Account not found after update"));
 
-            // Tạo response message
             StringBuilder response = new StringBuilder();
             response.append("Simulation completed successfully!\n\n");
             response.append("=== BEFORE ===\n");
@@ -229,9 +171,6 @@ public class RecommendationController {
         }
     }
 
-    /**
-     * Chuyển đổi LessonWithSimilarity sang RecommendedLessonDTO
-     */
     private RecommendedLessonDTO convertToRecommendedDTO(RecommendationService.LessonWithSimilarity lws) {
         Lesson lesson = lws.lesson;
         RecommendedLessonDTO dto = new RecommendedLessonDTO();

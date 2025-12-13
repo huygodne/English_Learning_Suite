@@ -12,20 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * HYBRID RECOMMENDATION SYSTEM SERVICE
- * 
- * Hệ thống gợi ý lai kết hợp 2 phương pháp:
- * 1. Elo Rating System (Collaborative Filtering): Lọc bài học theo độ khó phù hợp
- * 2. Vector Space Model (Content-Based Filtering): Xếp hạng theo nhu cầu học tập
- * 
- * Quy trình:
- * - Giai đoạn 1: Lọc bài học có difficultyRating nằm trong khoảng [eloRating - 150, eloRating + 150]
- * - Giai đoạn 2: Tính Cosine Similarity giữa User Needs Vector và Lesson Content Vector
- * - Kết quả: Top 5 bài học có similarity cao nhất
- * 
- * @author English Learning Suite Team
- */
 @Service
 public class RecommendationService {
 
@@ -38,73 +24,50 @@ public class RecommendationService {
     @Autowired
     private com.ptit.englishlearningsuite.repository.LessonProgressRepository lessonProgressRepository;
 
-    /**
-     * Lấy danh sách bài học được gợi ý cho user (chỉ trả về Lesson entities)
-     * 
-     * @param accountId ID của user
-     * @return Danh sách Top 5 bài học được gợi ý, sắp xếp theo similarity giảm dần
-     */
     @Transactional(readOnly = true)
     public List<Lesson> getRecommendedLessons(Long accountId) {
-        // Bước 1: Lấy thông tin Account
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
 
-        // Lấy Elo Rating của user (mặc định 1500 nếu null)
         int userEloRating = account.getEloRating() != null ? account.getEloRating() : 1500;
 
-        // Bước 2: Lấy danh sách tất cả bài học đang active
         List<Lesson> allActiveLessons = lessonRepository.findAll().stream()
                 .filter(lesson -> {
-                    // Chỉ lấy bài học đang active
                     return lesson.getIsActive() != null && lesson.getIsActive();
                 })
                 .collect(Collectors.toList());
 
-        // Bước 3: Lọc bỏ các bài học đã có tiến độ (đã học hoặc đang học)
-        // Chỉ đề xuất những bài học chưa học (chưa có bất kỳ tiến độ nào)
         Set<Long> learnedLessonIds = lessonProgressRepository.findAllByAccount(account).stream()
                 .map(progress -> progress.getLesson().getId())
                 .collect(Collectors.toSet());
 
-        // Loại bỏ các bài học đã có tiến độ (chỉ giữ lại bài học chưa học)
         allActiveLessons = allActiveLessons.stream()
                 .filter(lesson -> !learnedLessonIds.contains(lesson.getId()))
                 .collect(Collectors.toList());
-
-        // GIAI ĐOẠN 1: ADAPTIVE FILTERING (Lọc theo độ khó)
-        // Chỉ lấy các lesson có difficultyRating nằm trong khoảng [eloRating - 150, eloRating + 150]
         List<Lesson> filteredLessons = allActiveLessons.stream()
                 .filter(lesson -> {
                     int lessonDifficulty = lesson.getDifficultyRating() != null 
                             ? lesson.getDifficultyRating() 
                             : 1500; // Mặc định 1500 nếu null
                     
-                    // Lọc bài học có độ khó phù hợp với năng lực user
-                    return lessonDifficulty >= (userEloRating - 150) 
+                    return lessonDifficulty >= (userEloRating - 150)
                         && lessonDifficulty <= (userEloRating + 150);
                 })
                 .collect(Collectors.toList());
 
-        // Nếu không có bài học nào phù hợp, mở rộng khoảng tìm kiếm
         if (filteredLessons.isEmpty()) {
             filteredLessons = allActiveLessons.stream()
                     .filter(lesson -> {
                         int lessonDifficulty = lesson.getDifficultyRating() != null 
                                 ? lesson.getDifficultyRating() 
                                 : 1500;
-                        // Mở rộng khoảng: [eloRating - 300, eloRating + 300]
-                        return lessonDifficulty >= (userEloRating - 300) 
+                        return lessonDifficulty >= (userEloRating - 300)
                             && lessonDifficulty <= (userEloRating + 300);
                     })
                     .collect(Collectors.toList());
         }
-
-        // GIAI ĐOẠN 2: CONTENT-BASED FILTERING (Xếp hạng theo nhu cầu)
-        // Tạo User Needs Vector
         double[] userNeedsVector = createUserNeedsVector(account);
 
-        // Tính similarity cho từng lesson và sắp xếp
         List<LessonWithSimilarity> lessonsWithSimilarity = filteredLessons.stream()
                 .map(lesson -> {
                     // Tạo Lesson Content Vector
@@ -128,31 +91,20 @@ public class RecommendationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Lấy danh sách bài học được gợi ý kèm similarity score
-     * 
-     * @param accountId ID của user
-     * @return Danh sách Top 5 bài học với similarity score
-     */
+
     @Transactional(readOnly = true)
     public List<LessonWithSimilarity> getRecommendedLessonsWithSimilarity(Long accountId) {
-        // Bước 1: Lấy thông tin Account
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
 
-        // Lấy Elo Rating của user (mặc định 1500 nếu null)
         int userEloRating = account.getEloRating() != null ? account.getEloRating() : 1500;
 
-        // Bước 2: Lấy danh sách tất cả bài học đang active
         List<Lesson> allActiveLessons = lessonRepository.findAll().stream()
                 .filter(lesson -> {
                     // Chỉ lấy bài học đang active
                     return lesson.getIsActive() != null && lesson.getIsActive();
                 })
                 .collect(Collectors.toList());
-
-        // Bước 3: Lọc bỏ các bài học đã có tiến độ (đã học hoặc đang học)
-        // Chỉ đề xuất những bài học chưa học (chưa có bất kỳ tiến độ nào)
         Set<Long> learnedLessonIds = lessonProgressRepository.findAllByAccount(account).stream()
                 .map(progress -> progress.getLesson().getId())
                 .collect(Collectors.toSet());
@@ -208,19 +160,6 @@ public class RecommendationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Tạo User Needs Vector dựa trên proficiency của user
-     * 
-     * Logic: User càng yếu kỹ năng nào thì nhu cầu học kỹ năng đó càng cao
-     * 
-     * Vector có 3 chiều:
-     * - v_grammar = 1.0 - grammarProficiency
-     * - v_vocab = 1.0 - vocabProficiency
-     * - v_listening = 1.0 - listeningProficiency
-     * 
-     * @param account Account của user
-     * @return User Needs Vector [grammar, vocab, listening]
-     */
     private double[] createUserNeedsVector(Account account) {
         double grammarNeed = 1.0 - (account.getGrammarProficiency() != null 
                 ? account.getGrammarProficiency() 
@@ -240,17 +179,6 @@ public class RecommendationService {
         return new double[]{grammarNeed, vocabNeed, listeningNeed};
     }
 
-    /**
-     * Tạo Lesson Content Vector từ các weight của lesson
-     * 
-     * Vector có 3 chiều:
-     * - grammarWeight
-     * - vocabWeight
-     * - listeningWeight
-     * 
-     * @param lesson Lesson cần tạo vector
-     * @return Lesson Content Vector [grammar, vocab, listening]
-     */
     private double[] createLessonVector(Lesson lesson) {
         double grammarWeight = lesson.getGrammarWeight() != null 
                 ? lesson.getGrammarWeight() 
@@ -270,17 +198,6 @@ public class RecommendationService {
         return new double[]{grammarWeight, vocabWeight, listeningWeight};
     }
 
-    /**
-     * Xử lý kết quả học bài và cập nhật feedback loop
-     * 
-     * Feedback Loop bao gồm:
-     * 1. Cập nhật Elo Rating cho User và Difficulty Rating cho Lesson
-     * 2. Cập nhật Proficiency của User dựa trên weight của lesson
-     * 
-     * @param accountId ID của user
-     * @param lessonId ID của lesson
-     * @param isPassed true nếu user pass bài học, false nếu fail
-     */
     @Transactional
     public void processLessonResult(Long accountId, Long lessonId, boolean isPassed) {
         // Lấy Account và Lesson
@@ -318,11 +235,7 @@ public class RecommendationService {
         );
         lesson.setDifficultyRating(newLessonDifficulty);
 
-        // =================================================================
-        // PHẦN 2: CẬP NHẬT PROFICIENCY CỦA USER
-        // =================================================================
-        // Cập nhật proficiency dựa trên kết quả (tăng khi đúng, giảm khi sai)
-        // Lấy weight của lesson
+
         double grammarWeight = lesson.getGrammarWeight() != null 
                 ? lesson.getGrammarWeight() 
                 : 0.33;
@@ -364,10 +277,6 @@ public class RecommendationService {
         lessonRepository.save(lesson);
     }
 
-    /**
-     * Inner class để lưu Lesson kèm Similarity score
-     * Public để có thể truy cập từ controller
-     */
     public static class LessonWithSimilarity {
         public Lesson lesson;
         public double similarity;

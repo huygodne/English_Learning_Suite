@@ -16,10 +16,6 @@ public class LeaderboardController {
     @Autowired
     private StatisticsService statisticsService;
 
-    /**
-     * Trả về danh sách top người dùng theo XP (tính từ số bài học & bài test đã hoàn thành).
-     * Endpoint này dành cho tất cả người dùng đã đăng nhập, không yêu cầu quyền ADMIN.
-     */
     @GetMapping("/xp")
     public List<StatisticsDTO.UserStatisticsDTO> getXpLeaderboard() {
         return statisticsService.getStatistics().getTopUsers();

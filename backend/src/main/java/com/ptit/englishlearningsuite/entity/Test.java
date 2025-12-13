@@ -9,7 +9,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "tests")
-// THAY THẾ @Data
 @Getter
 @Setter
 @ToString

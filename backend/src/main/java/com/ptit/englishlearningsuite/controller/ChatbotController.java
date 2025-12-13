@@ -18,14 +18,9 @@ public class ChatbotController {
     @Autowired
     private ChatbotService chatbotService;
 
-    /**
-     * Endpoint để GỬI tin nhắn mới
-     * (POST /api/chatbot/send)
-     */
     @PostMapping("/send")
     public ResponseEntity<ChatResponseDTO> sendMessage(@RequestBody ChatRequestDTO request) {
         try {
-            // Tự động lấy username của người dùng đã đăng nhập (nhờ JWT)
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             String reply = chatbotService.getReplyAndSave(request.getUserMessage(), username);
@@ -40,20 +35,14 @@ public class ChatbotController {
         }
     }
 
-    /**
-     * Endpoint để LẤY LỊCH SỬ chat
-     * (GET /api/chatbot/history)
-     */
     @GetMapping("/history")
     public ResponseEntity<List<ChatMessageDTO>> getChatHistory() {
         try {
-            // Tự động lấy username của người dùng đã đăng nhập
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             List<ChatMessageDTO> history = chatbotService.getChatHistory(username);
             return ResponseEntity.ok(history);
         } catch (Exception e) {
-            // Trả về lỗi server nếu có vấn đề
             return ResponseEntity.status(500).build();
         }
     }

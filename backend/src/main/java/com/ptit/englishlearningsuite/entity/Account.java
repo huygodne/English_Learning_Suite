@@ -10,7 +10,7 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(exclude = {"lessonProgresses", "testProgresses"}) // Loại trừ các danh sách con
+@EqualsAndHashCode(exclude = {"lessonProgresses", "testProgresses"})
 public class Account {
 
     @Id
@@ -33,36 +33,18 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private Set<TestProgress> testProgresses;
 
-    @Column(nullable = false) // Đảm bảo role không được null
+    @Column(nullable = false)
     private String role;
-    
-    // =================================================================
-    // HYBRID RECOMMENDATION SYSTEM FIELDS
-    // =================================================================
-    
-    /**
-     * Elo Rating: Đánh giá năng lực tổng thể của user (tương tự Elo trong cờ vua)
-     * Giá trị mặc định: 1000 (mức khởi đầu cho người mới)
-     */
+
     @Column(name = "elo_rating")
     private Integer eloRating = 1000;
-    
-    /**
-     * Grammar Proficiency: Mức độ thành thạo ngữ pháp (0.0 - 1.0)
-     * 0.0 = hoàn toàn chưa biết, 1.0 = thành thạo hoàn toàn
-     */
+
     @Column(name = "grammar_proficiency")
     private Double grammarProficiency = 0.0;
-    
-    /**
-     * Vocabulary Proficiency: Mức độ thành thạo từ vựng (0.0 - 1.0)
-     */
+
     @Column(name = "vocab_proficiency")
     private Double vocabProficiency = 0.0;
-    
-    /**
-     * Listening Proficiency: Mức độ thành thạo nghe hiểu (0.0 - 1.0)
-     */
+
     @Column(name = "listening_proficiency")
     private Double listeningProficiency = 0.0;
     

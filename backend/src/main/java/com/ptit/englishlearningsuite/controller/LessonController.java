@@ -51,21 +51,6 @@ public class LessonController {
         return ResponseEntity.ok("Deleted Lesson ID: " + id);
     }
 
-    /**
-     * POST /api/lessons/{id}/submit-practice
-     * 
-     * Submit answer for a practice question during an interactive lesson.
-     * This endpoint:
-     * 1. Validates the answer
-     * 2. IMMEDIATELY calls processLessonResult to update User Elo and Lesson Difficulty
-     * 3. Returns feedback including isCorrect, correctAnswer, explanation, and newElo
-     * 
-     * This allows continuous Elo tracking during the lesson, not just at the end.
-     * 
-     * @param id Lesson ID
-     * @param submission Practice submission containing questionId and selectedOptionId
-     * @return Practice submission response with feedback and updated Elo
-     */
     @PostMapping("/{id}/submit-practice")
     public ResponseEntity<?> submitPractice(
             @PathVariable Long id,
@@ -93,25 +78,11 @@ public class LessonController {
         }
     }
 
-    /**
-     * POST /api/lessons/{id}/submit-answer
-     * 
-     * Submit answer for a practice question during an interactive lesson.
-     * This endpoint:
-     * 1. Validates the answer
-     * 2. IMMEDIATELY calls processLessonResult to update User Elo and Lesson Difficulty
-     * 3. Returns feedback including correct, newElo, and explanation
-     * 
-     * @param id Lesson ID
-     * @param submission Answer submission containing questionId and selectedOptionId
-     * @return Answer submission response with feedback and updated Elo
-     */
     @PostMapping("/{id}/submit-answer")
     public ResponseEntity<?> submitAnswer(
             @PathVariable Long id,
             @RequestBody AnswerSubmissionDTO submission) {
         try {
-            // Validate input
             if (submission.getQuestionId() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Error: questionId is required");

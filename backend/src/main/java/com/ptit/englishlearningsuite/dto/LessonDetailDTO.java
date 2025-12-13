@@ -12,7 +12,6 @@ public class LessonDetailDTO {
     private int level;
     private String name;
     private String audioUrl;
-    // Đảm bảo các dòng này dùng đúng tên DTO
     private Set<VocabularyDTO> vocabularies;
     private Set<GrammarDTO> grammars;
     private Set<ConversationDTO> conversations;

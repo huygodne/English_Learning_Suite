@@ -25,7 +25,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        // Spring Security yêu cầu vai trò phải có tiền tố "ROLE_"
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + account.getRole()));
 
         return new User(account.getUsername(), account.getPassword(), authorities);

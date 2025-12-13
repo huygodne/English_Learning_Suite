@@ -74,9 +74,7 @@ public class TestService {
                         Collectors.mapping(AnswerSubmissionDTO::getSelectedOptionId, Collectors.toList())
                 ));
 
-        // Improved scoring logic that supports:
-        // 1. SINGLE_CHOICE: Check if selected option is correct
-        // 2. MULTIPLE_CHOICE: Check if all selected options match all correct options (exact match)
+
         for (Question question : questions) {
             List<Long> userSelectedOptions = answersByQuestion.getOrDefault(question.getId(), List.of());
             

@@ -6,20 +6,17 @@ import java.util.Map;
 
 @Data
 public class StatisticsDTO {
-    // Tổng quan
     private long totalUsers;
-    private long activeUsers; // Người dùng đã hoàn thành ít nhất 1 bài học hoặc test
+    private long activeUsers;
     private long totalLessons;
     private long totalTests;
     private long totalMediaAssets;
     
-    // Thống kê bài học
     private long totalLessonCompletions;
     private double averageLessonScore;
-    private long totalLessonTimeSpent; // Tổng thời gian học (giây)
-    private Map<Integer, Long> lessonCompletionsByLevel; // Số bài học hoàn thành theo cấp độ
+    private long totalLessonTimeSpent;
+    private Map<Integer, Long> lessonCompletionsByLevel;
     
-    // Thống kê bài kiểm tra
     private long totalTestCompletions;
     private double averageTestScore;
     private long totalTestTimeSpent; // Tổng thời gian làm test (giây)

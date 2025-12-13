@@ -34,13 +34,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                    // Tích hợp CORS vào Security Filter Chain
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/api/recommendations/**").permitAll() // Cho phép truy cập công khai recommendations
+                        .requestMatchers("/api/recommendations/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/media/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
@@ -52,16 +51,15 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Bean để cấu hình CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // Cho phép tất cả các domain
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Cho phép tất cả các method
-        configuration.setAllowedHeaders(List.of("*")); // Cho phép tất cả các header
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration); // Áp dụng cấu hình cho tất cả API
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 }

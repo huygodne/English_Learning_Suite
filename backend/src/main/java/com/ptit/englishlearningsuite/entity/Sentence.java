@@ -18,7 +18,7 @@ public class Sentence {
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
 
-    private String characterName; // Tên nhân vật nói (A, B,...)
+    private String characterName;
     private String textEnglish;
     private String textVietnamese;
 }

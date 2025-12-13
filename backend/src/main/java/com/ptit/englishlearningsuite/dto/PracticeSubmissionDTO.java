@@ -2,9 +2,6 @@ package com.ptit.englishlearningsuite.dto;
 
 import lombok.Data;
 
-/**
- * DTO for submitting practice question answers during interactive lessons
- */
 @Data
 public class PracticeSubmissionDTO {
     private Long questionId;

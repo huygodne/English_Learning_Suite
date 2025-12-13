@@ -8,7 +8,6 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "answer_options")
-// THAY THẾ @Data
 @Getter
 @Setter
 @ToString

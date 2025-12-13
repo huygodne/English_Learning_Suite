@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class LessonProgressDTO {
     private Long lessonId;
-    private int score; // Điểm đạt được ở phần quiz từ vựng
+    private int score;
     @JsonProperty("isCompleted")
     private boolean isCompleted;
     private Integer timeSpentSeconds;

@@ -8,11 +8,10 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "vocabularies")
-// THAY THẾ @Data
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(exclude = "lesson") // Loại trừ thuộc tính lesson
+@EqualsAndHashCode(exclude = "lesson")
 public class Vocabulary {
 
     @Id

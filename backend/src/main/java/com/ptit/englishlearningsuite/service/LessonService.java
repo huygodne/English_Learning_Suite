@@ -55,7 +55,6 @@ public class LessonService {
         return convertToDetailDto(lesson);
     }
 
-    // --- CÁC HÀM CHUYỂN ĐỔI (MAPPER) ---
 
     private LessonSummaryDTO convertToSummaryDto(Lesson lesson) {
         LessonSummaryDTO dto = new LessonSummaryDTO();
@@ -74,8 +73,6 @@ public class LessonService {
         dto.setName(lesson.getName());
         dto.setAudioUrl(lesson.getAudioUrl());
 
-        // KIỂM TRA KỸ PHẦN NÀY
-        // Chúng ta kiểm tra null để đảm bảo an toàn
         if (lesson.getVocabularies() != null) {
             dto.setVocabularies(lesson.getVocabularies().stream()
                     .map(this::convertVocabularyToDto).collect(Collectors.toSet()));
@@ -255,28 +252,21 @@ public class LessonService {
         return savedLesson;
     }
 
-    // --- [UPDATE] SỬA BÀI HỌC (FULL LOGIC) ---
     @Transactional
     public Lesson updateLesson(Long id, LessonRequestDTO req) {
-        // 1. Tìm bài học cũ
         Lesson lesson = lessonRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lesson not found with id: " + id));
 
-        // 2. Cập nhật thông tin cơ bản
         lesson.setName(req.getName());
         lesson.setLessonNumber(req.getLessonNumber());
         lesson.setLevel(req.getLevel());
-        // Chỉ update audio nếu có file mới (tránh ghi đè null nếu admin không up lại audio)
         if (req.getAudioUrl() != null && !req.getAudioUrl().isEmpty()) {
             lesson.setAudioUrl(req.getAudioUrl());
         }
 
-        // 3. Cập nhật TỪ VỰNG (Vocabularies)
         if (req.getVocabularies() != null) {
-            // Xóa hết từ cũ (Nhờ orphanRemoval=true trong Entity, DB sẽ tự xóa record)
             lesson.getVocabularies().clear();
 
-            // Thêm lại từ mới
             for (VocabularyDTO vDto : req.getVocabularies()) {
                 Vocabulary v = new Vocabulary();
                 v.setLesson(lesson); // Quan trọng: Gắn cha
@@ -292,7 +282,6 @@ public class LessonService {
             }
         }
 
-        // 4. Cập nhật NGỮ PHÁP (Grammars)
         if (req.getGrammars() != null) {
             lesson.getGrammars().clear();
 
@@ -306,7 +295,6 @@ public class LessonService {
             }
         }
 
-        // 5. Cập nhật HỘI THOẠI (Conversations) - Phức tạp hơn vì có Sentences con
         if (req.getConversations() != null) {
             lesson.getConversations().clear();
 
@@ -316,11 +304,6 @@ public class LessonService {
                 conv.setTitle(cDto.getTitle());
                 conv.setAudioUrl(cDto.getAudioUrl());
 
-                // Xử lý các câu thoại (Sentences) bên trong hội thoại
-                // Lưu ý: Cần đảm bảo Entity Conversation có:
-                // @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
-                // private Set<Sentence> sentences = new HashSet<>();
-
                 if (cDto.getSentences() != null) {
                     for (LessonRequestDTO.SentenceRequestDTO sDto : cDto.getSentences()) {
                         Sentence s = new Sentence();
@@ -329,9 +312,6 @@ public class LessonService {
                         s.setTextEnglish(sDto.getTextEnglish());
                         s.setTextVietnamese(sDto.getTextVietnamese());
 
-                        // Add sentence vào conversation
-                        // (Bạn cần tạo getter/setter getSentences() trong Entity Conversation)
-                        // Nếu getSentences() null thì khởi tạo mới
                         if (conv.getSentences() == null) conv.setSentences(new java.util.HashSet<>());
                         conv.getSentences().add(s);
                     }
@@ -348,16 +328,8 @@ public class LessonService {
         lessonRepository.deleteById(id);
     }
 
-    /**
-     * Submit practice question answer and process Elo update
-     * 
-     * @param lessonId ID of the lesson
-     * @param submission Practice submission DTO containing questionId and selectedOptionId
-     * @return Practice submission response with feedback and updated Elo
-     */
     @Transactional
     public PracticeSubmissionResponseDTO submitPractice(Long lessonId, PracticeSubmissionDTO submission) {
-        // Get current authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User not authenticated");
@@ -366,7 +338,6 @@ public class LessonService {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-        // Get question and verify lesson exists
         Question question = questionRepository.findById(submission.getQuestionId())
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + submission.getQuestionId()));
         
@@ -425,14 +396,6 @@ public class LessonService {
         return response;
     }
 
-    /**
-     * Submit answer for a practice question and process Elo update
-     * Simplified version using AnswerSubmissionDTO
-     * 
-     * @param lessonId ID of the lesson
-     * @param submission Answer submission DTO containing questionId and selectedOptionId
-     * @return Answer submission response with feedback and updated Elo
-     */
     @Transactional
     public AnswerSubmissionResponseDTO submitAnswer(Long lessonId, AnswerSubmissionDTO submission) {
         // Get current authenticated user

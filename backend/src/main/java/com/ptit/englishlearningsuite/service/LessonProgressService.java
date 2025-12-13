@@ -28,11 +28,9 @@ public class LessonProgressService {
     private LessonRepository lessonRepository;
 
     public LessonProgress completeLesson(LessonProgressDTO progressDto) {
-        // Lấy username của người dùng đang đăng nhập từ token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
 
-        // Tìm Account entity dựa trên username
         Account account = accountRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + currentUsername));
 
@@ -40,7 +38,6 @@ public class LessonProgressService {
         Lesson lesson = lessonRepository.findById(progressDto.getLessonId())
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
 
-        // Tìm tiến trình cũ hoặc tạo mới (dùng Account entity thay vì accountId)
         LessonProgress progress = lessonProgressRepository.findByAccountAndLesson(account, lesson)
                 .orElse(new LessonProgress());
 

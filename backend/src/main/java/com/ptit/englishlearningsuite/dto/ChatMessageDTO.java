@@ -7,6 +7,6 @@ import java.time.LocalDateTime;
 public class ChatMessageDTO {
     private Long id;
     private String messageContent;
-    private SenderRole sender; // "USER" hoặc "BOT"
+    private SenderRole sender;
     private LocalDateTime timestamp;
 }

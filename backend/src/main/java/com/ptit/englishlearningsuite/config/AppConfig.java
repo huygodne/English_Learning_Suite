@@ -18,19 +18,11 @@ public class AppConfig {
     @Value("${media.upload-dir:uploads}")
     private String uploadDir;
 
-    /**
-     * Cung cấp một Bean RestTemplate (phiên bản gốc)
-     * Gemini API rất nhanh, không cần cài đặt timeout dài.
-     */
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
 
-    /**
-     * Cấu hình ThreadPool cho async operations
-     * Giúp tối ưu việc lưu message không block response
-     */
     @Bean(name = "taskExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

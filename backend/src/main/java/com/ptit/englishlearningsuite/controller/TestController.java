@@ -26,7 +26,6 @@ public class TestController {
         return testService.getAllTests();
     }
 
-    // ENDPOINT MỚI
     @GetMapping("/{id}")
     public ResponseEntity<TestDetailDTO> getTestDetails(@PathVariable Long id) {
         try {

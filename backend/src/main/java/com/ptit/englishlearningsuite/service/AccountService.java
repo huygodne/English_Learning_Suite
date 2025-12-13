@@ -101,7 +101,6 @@ public class AccountService {
                 .orElse(null);
     }
 
-    // Hàm chuyển đổi từ Account Entity sang AccountDTO
     private AccountDTO convertToDto(Account account) {
         AccountDTO dto = new AccountDTO();
         dto.setId(account.getId());
